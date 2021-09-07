@@ -1,11 +1,24 @@
 //////////////////////////////////////////////////////////////////////////////
 // nv_joystick_code.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
 //////////////////////////////////////////////////////////////////////////////
+// Joystick handling code.
 // The following subroutines should be called from the main engine
 // as follows
 // JoyInit: Call once before main loop and before other routines
 // JoyScan: Call once every raster frame through the main loop
+// JoyIsXxx: Call whenever joystick state is needed
 // JoyCleanup: Call at end of program after main loop to clean up
+//
+// Note: Due to the design of the C64 joystick input (on port 1) also 
+//       looks like keyboard input so if looking for keyboard input at the
+//       same time as joystick input on port 1 you will have a bad time.
+//       The best strategy if possible is to not look for keyboard 
+//       characters that the joystick produces while the joystick is 
+//       in use.  Examples are:
+//           <space> key: indistinguishable from joystick 1 fire button.
+//           others, TBD:   
 //////////////////////////////////////////////////////////////////////////////
 
 

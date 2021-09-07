@@ -1,3 +1,10 @@
+//////////////////////////////////////////////////////////////////////////////
+// nv_keyboard_code.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
+// Contains keyboard subroutines
+
 #importonce
 
 #if !NV_C64_UTIL_DATA
@@ -9,6 +16,12 @@
 
 #import "nv_keyboard_macs.asm"
 
+//////////////////////////////////////////////////////////////////////////////
+// subroutine to wait for the user to press any key.  Works both after  
+// nv_key_init has been called and by using kernal routines if it hasn't
+// been called.
 NvKeyWaitAnyKey:
     nv_key_wait_any_key()
     rts
+// NvKeyWaitAnyKey - end
+//////////////////////////////////////////////////////////////////////////////

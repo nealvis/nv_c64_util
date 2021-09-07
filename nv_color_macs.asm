@@ -1,4 +1,11 @@
-// This assembler file defines colors for the C64
+
+//////////////////////////////////////////////////////////////////////////////
+// nv_color_macs.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
+// This assembler file defines colors for the C64.  these constants are
+// used throughout nv_c64_utils
 
 #importonce
 

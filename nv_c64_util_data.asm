@@ -1,13 +1,11 @@
-#importonce
+//////////////////////////////////////////////////////////////////////////////
+// nv_c64_util_data.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
+// file contains data used by the nv_c64_util macros and routines.
 
-// This is the default location for the data needed by all the 
-// macros and subroutines in the nv_util directory.  Its up to 
-// the user to make sure this doesn't conflict with their 
-// program or move it if it does.  The end of basic is 
-// usually $A000 so $9F00 is the 256 bytes before there
-// to place this data there, put this line right before importing
-// this file.
-//*=$9F00 "nv_util_data"   
+#importonce  
 
 // define this so that other nv_c64_util *_macs.asm files can 
 // verify that the data has been imported into the program 

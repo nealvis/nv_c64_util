@@ -1,3 +1,19 @@
+//////////////////////////////////////////////////////////////////////////////
+// nv_keyboard_macs.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
+// Keyboard macros for reading the keyboard from a program
+// without using the kernal routines.
+// main program needs to execute the code as follows
+// nv_key_init(): once before trying to read the keyboard or executing
+//                any other nv_keyboard code
+// nv_key_done(): once at end of program to clean up.  this should be
+//                the last nv_keyboard code to execute.
+// nv_key_scan(): once per screen refresh from main loop
+// nv_key_get_last_key_xxx : whenever the last key pressed is needed in 
+//                           the program.
+// nv_key_wait_xxx: whenever the program needs to wait in this way.
 #importonce
 
 #if !NV_C64_UTIL_DATA

@@ -1,4 +1,10 @@
+//////////////////////////////////////////////////////////////////////////////
+// nv_branch16_macs.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
 // This file contains macros to branch based on 16 bit values 
+
 #importonce
 #if !NV_C64_UTIL_DATA
 .error "Error - nv_branch16_macs.asm: NV_C64_UTIL_DATA not defined.  Import nv_c64_util_data.asm"

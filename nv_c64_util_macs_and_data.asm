@@ -1,5 +1,8 @@
 //////////////////////////////////////////////////////////////////////////////
 // nv_c64_util_macs_and_data.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
 // import this file to get all the macros and the data for the 
 // nv_c64_util "library"
 // The data will be placed in a memory block specified below so after

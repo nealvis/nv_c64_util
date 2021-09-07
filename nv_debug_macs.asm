@@ -1,3 +1,11 @@
+//////////////////////////////////////////////////////////////////////////////
+// nv_debug_macs.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
+// debug macros useful to debug code by printing values and saving
+// register state etc.
+
 #importonce
 
 #if !NV_C64_UTIL_DATA

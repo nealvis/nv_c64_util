@@ -1,6 +1,10 @@
 //////////////////////////////////////////////////////////////////////////////
 // nv_joystick_macs.asm
-
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
+// joystick macros that don't create code or data (unless the 
+// nv_c64_util_data.asm hasn't been imported yet.)
 #importonce
 
 #if !NV_C64_UTIL_DATA

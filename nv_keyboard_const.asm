@@ -1,4 +1,10 @@
-
+//////////////////////////////////////////////////////////////////////////////
+// nv_keyboard_const.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
+// contains key constants that can be used with nv_keyboard macros and 
+// subroutines.
 #importonce
 
 // For all the colX_tables below when there is no reasonable 

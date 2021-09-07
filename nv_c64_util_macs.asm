@@ -1,3 +1,12 @@
+//////////////////////////////////////////////////////////////////////////////
+//nv_c64_util_macs.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
+// includes all the non code generating files of nv_c64_utils.
+// this is only things like macros and const definitions, no
+// data or actual code.
+
 #importonce
 
 // verify that the nv_c64_util_data.asm file is imported some where

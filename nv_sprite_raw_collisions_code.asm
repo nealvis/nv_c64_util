@@ -1,3 +1,12 @@
+//////////////////////////////////////////////////////////////////////////////
+// nv_sprite_raw_collisions_code.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
+// Contains code, data, and supporting macros to determine current 
+// collisions between sprites using the raw sprite HW, not the 
+// sprite extra data block or sprite_info struct.
+
 #importonce
 
 #if !NV_C64_UTIL_DATA

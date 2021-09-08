@@ -1,4 +1,8 @@
 //////////////////////////////////////////////////////////////////////////////
+// nv_sprite_extra_code.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
 // this file contains subroutines that operate on sprites.  Usually the 
 // address of the extra data for a sprite is required to perform some
 // operation.  For these type of subroutines the address is usually 

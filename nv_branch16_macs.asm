@@ -96,6 +96,9 @@ Done:
 //   addr1: the address of the LSB of the word1
 //   addr2: the address of the LSB of the word2 
 //   label: the label to branch to if word1 < word2
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
 .macro nv_blt16(addr1, addr2, label)
 {
     nv_cmp16(addr1, addr2)
@@ -160,6 +163,9 @@ Done:
 //   addr1: the address of the LSB of the word1
 //   addr2: the address of the LSB of the word2 
 //   label: the label to branch to if word1 > word2
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
 .macro nv_bgt16(addr1, addr2, label)
 {
     nv_cmp16(addr1, addr2)
@@ -200,6 +206,9 @@ Done:
 //   addr1: the address of the LSB of the word1
 //   addr2: the address of the LSB of the word2 
 //   label: the label to branch to if word1 >= word2
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
 .macro nv_bge16(addr1, addr2, label)
 {
     nv_cmp16(addr1, addr2)

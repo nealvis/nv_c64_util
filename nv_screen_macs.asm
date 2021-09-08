@@ -1,6 +1,12 @@
+//////////////////////////////////////////////////////////////////////////////
 // nv_screen_macs.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
 // inline macros for screen releated functions
 // importing this file will not generate any code or data directly
+// unless the nv_c64_utils_data.asm wasn't already imported in which case
+// it will be here.
 
 #importonce
 

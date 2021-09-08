@@ -1,7 +1,11 @@
 //////////////////////////////////////////////////////////////////////////////
 // nv_sprite_macs.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
 // Contains inline macros for sprite releated stuff
-// Importing this file will not generate any code or data when assembled
+// Importing this file will not generate any code or data when assembled 
+// unless nv_c64_util_data.asm hasn't already been imported, then it will.
 //////////////////////////////////////////////////////////////////////////////
 
 #importonce

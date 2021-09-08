@@ -1,5 +1,9 @@
 //////////////////////////////////////////////////////////////////////////////
-// nv_sprite_raw_macs.asm contains macros for sprites at the HW level
+// nv_sprite_raw_macs.asm 
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
+// contains macros for sprites at the HW level
 // there is no dependency on the sprite_info struct or the sprite
 // extra data block in this file.
 // Also there is no actual code that will be placed in memory 

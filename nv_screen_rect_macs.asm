@@ -1,7 +1,11 @@
 //////////////////////////////////////////////////////////////////////////////
 // nv_screen_rect_macs.asm
-// contains inline macros for 8 bit math related functions.
-// importing this file will not allocate any memory for data or code.
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
+// contains inline macros for rectangle related operations
+// importing this file will not allocate any memory for data or code unless
+// nv_c64_utils_data.asm hasn't yet been imported in which case it will be.
 //////////////////////////////////////////////////////////////////////////////
 
 #importonce

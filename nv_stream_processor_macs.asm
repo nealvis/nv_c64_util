@@ -1,4 +1,8 @@
+//////////////////////////////////////////////////////////////////////////////
 // nv_stream_processor_macs.asm
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
 // inline macros for a stream procesor that accepts a command stream 
 // (a list of bytes less than 256 total)
 // and does things like store bytes to list of memory pointers
@@ -146,7 +150,8 @@ HitQuitCommand:
     sty ZERO_PAGE_HI
 }
 */
-
+//////////////////////////////////////////////////////////////////////////////
+// macro that generates a subroutine that is a stream processor
 // macros params
 //   temp_word: is a temp word used internally
 //   save_block: is a block of 4 bytes to save contents of 
@@ -348,6 +353,8 @@ HitQuitCommand:
     ldy save_block+3
     sty Z2_HI
 
+    // return from subroutine, but there is still
+    // code in the macro below
     rts
 
 //////////////////////////////////////////////////////////////////////////////
@@ -491,4 +498,5 @@ NotDoingBlockCopy:
 //////////////////////////////////////////////////////////////////////////////
 
 }
-
+// nv_stream_proc_sr end
+/////////////////////////////////////////////////////////////////////////////

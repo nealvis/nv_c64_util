@@ -1,7 +1,9 @@
 //////////////////////////////////////////////////////////////////////////////
 // nv_sprite_raw_code.asm 
-// contains instantiations of macros into actual code
-// like subroutines etc. for sprites at the HW level.
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+//////////////////////////////////////////////////////////////////////////////
+// contains code/subroutines for sprites at the HW level.
 // There is no dependency on the sprite_info struct or the sprite
 // extra data block in this file.
 
@@ -20,8 +22,6 @@
 #import "nv_sprite_raw_macs.asm"
 #import "nv_math8_macs.asm"
 #import "nv_math16_macs.asm"
-
-
 
 
 //////////////////////////////////////////////////////////////////////////////

@@ -1,7 +1,12 @@
 //////////////////////////////////////////////////////////////////////////////
 // nv_rand_macs.asm
-// contains inline macros random numbers
-// importing this file will not allocate any memory for data or code.
+// Copyright(c) 2021 Neal Smith.
+// License: MIT. See LICENSE file in root directory.
+/////////////////////////////////////////////////////////////////////////////
+// contains inline macros for random numbers
+// importing this file will not allocate any memory for data or code
+// unless nv_c64_util_data.asm not yet imported in which case it will
+// be imported.
 //////////////////////////////////////////////////////////////////////////////
 
 #importonce
@@ -18,7 +23,16 @@
 .const VOICE_3_CONTROL_REG_ADDR = $D412
 .const VOICE_3_WAVE_OUTPUT = $D41B
 
-
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to initialize random number macros and routines.
+// macro params:
+//   pre_calc: if true then will precalculate random numbers in a list
+//             that will be used later when random numbers needed.
+//             since the random number generator depends on the
+//             noise generator of the SID, generating random numbers
+//             will affect the sound if playing sounds while you 
+//             need random numbers.  So pass true and precalculate
+//             the numbers before you start the music to preven this.
 .macro nv_rand_init(pre_calc)
 {
     lda #$FF                        // load accum with max freq value
@@ -42,8 +56,16 @@
         beq OuterLoop
     }
 }
+//
+//////////////////////////////////////////////////////////////////////////////
 
-// load accum with random byte
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to load accum with random byte.
+// macro params:
+//   precalc: pass true use a precalculated random number
+//            if passing true then nv_rand_init() should have also 
+//            been executed with pre_calc as true.
 .macro nv_rand_byte_a(pre_calc)
 {
     .if (pre_calc)
@@ -57,20 +79,27 @@
         lda VOICE_3_WAVE_OUTPUT
     }
 }
+//
+//////////////////////////////////////////////////////////////////////////////
 
-// load accum with random byte
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to create a random color.   A random number from 0 to 15
+// will be loaded into the Accum.
+//   precalc: pass true use a precalculated random number
+//            if passing true then nv_rand_init() should have also 
+//            been executed with pre_calc as true.
 .macro nv_rand_color_a(pre_calc)
 {
     nv_rand_byte_a(pre_calc)
     and #$0F
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to expand after done using all the other macros in this file
 .macro nv_rand_done()
 {
-/*
-    lda #$00                        // back to 0 for these locations
-    sta VOICE_3_FREQ_REG_ADDR       
-    sta VOICE_3_FREQ_REG_ADDR+1     
-    sta VOICE_3_CONTROL_REG_ADDR    
-*/
+
 }
+//
+//////////////////////////////////////////////////////////////////////////////

@@ -25,6 +25,7 @@
 #import "nv_sprite_extra_macs.asm"
 #import "nv_sprite_raw_macs.asm"
 #import "nv_math16_macs.asm"
+#import "nv_screen_macs.asm"
 
 .macro nv_sprite_load_extra_ptr()
 {
@@ -716,6 +717,222 @@ SaveBlock:
 
 
 //////////////////////////////////////////////////////////////////////////////
+// reverse the x velocity of sprite
+// Accum: MSB of address of nv_sprite_extra_data
+// X Reg: LSB of address of the nv_sprite_extra_data
+.macro nv_sprite_extra_reverse_vel_x_sr()
+{
+    nv_sprite_standard_save(SaveBlock)
+
+    nv_sprite_load_extra_ptr()
+
+    // load accum with x velocity
+    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
+    
+    nv_twos_comp8_accum()
+
+    nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)
+
+    nv_sprite_standard_restore(SaveBlock)
+    rts
+    
+SaveBlock:
+    nv_sprite_standard_alloc()
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// reverse the y velocity of sprite
+// Accum: MSB of address of nv_sprite_extra_data
+// X Reg: LSB of address of the nv_sprite_extra_data
+.macro nv_sprite_extra_reverse_vel_y_sr()
+{
+    nv_sprite_standard_save(SaveBlock)
+
+    nv_sprite_load_extra_ptr()
+
+    // load accum with x velocity
+    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_Y_OFFSET)
+    
+    nv_twos_comp8_accum()
+
+    nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)
+
+    nv_sprite_standard_restore(SaveBlock)
+    rts
+    
+SaveBlock:
+    nv_sprite_standard_alloc()
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// make sure the sprite's x velocity is positive, if its negative, then 
+// then reverse it, if its alsready positive then do nothing.
+// Accum: MSB of address of nv_sprite_extra_data
+// X Reg: LSB of address of the nv_sprite_extra_data
+.macro nv_sprite_extra_assure_vel_pos_x_sr()
+{
+    nv_sprite_standard_save(SaveBlock)
+
+    nv_sprite_load_extra_ptr()
+
+    // load accum with x velocity
+    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
+    
+    bpl NothingToDo         // x velocity already positive, just return
+
+    nv_twos_comp8_accum()   // reverse the x velocity
+
+    nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)  // save back to extra data
+
+NothingToDo:
+    nv_sprite_standard_restore(SaveBlock)
+    rts
+    
+SaveBlock:
+    nv_sprite_standard_alloc()
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// make sure the sprite's x velocity is negative, if its positive, then 
+// then reverse it, if its alsready negative then do nothing.
+// Accum: MSB of address of nv_sprite_extra_data
+// X Reg: LSB of address of the nv_sprite_extra_data
+.macro nv_sprite_extra_assure_vel_neg_x_sr()
+{
+    nv_sprite_standard_save(SaveBlock)
+
+    nv_sprite_load_extra_ptr()
+
+    // load accum with x velocity
+    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
+    
+    bmi NothingToDo         // x velocity already positive, just return
+
+    nv_twos_comp8_accum()   // reverse the x velocity
+
+    nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)  // save back to extra data
+
+NothingToDo:
+    nv_sprite_standard_restore(SaveBlock)
+    rts
+    
+SaveBlock:
+    nv_sprite_standard_alloc()
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// assure the y velocity of sprite is positive.  If its negative then
+// reverse it.  If its alredy positive then do nothing.
+// Accum: MSB of address of nv_sprite_extra_data
+// X Reg: LSB of address of the nv_sprite_extra_data
+.macro nv_sprite_extra_assure_vel_pos_y_sr()
+{
+    nv_sprite_standard_save(SaveBlock)
+
+    nv_sprite_load_extra_ptr()
+
+    // load accum with x velocity
+    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_Y_OFFSET)
+    
+    bpl NothingToDo             // if already positive, then done
+
+    nv_twos_comp8_accum()       // reverse velocity
+
+    nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)  // save vel back to extra
+
+NothingToDo:
+    nv_sprite_standard_restore(SaveBlock)
+    rts
+    
+SaveBlock:
+    nv_sprite_standard_alloc()
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// assure the y velocity of sprite is negative. If its positive then 
+// reverse it.  If its already negative then do nothing.
+// Accum: MSB of address of nv_sprite_extra_data
+// X Reg: LSB of address of the nv_sprite_extra_data
+.macro nv_sprite_extra_assure_vel_neg_y_sr()
+{
+    nv_sprite_standard_save(SaveBlock)
+
+    nv_sprite_load_extra_ptr()
+
+    // load accum with x velocity
+    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_Y_OFFSET)
+    
+    bmi NothingToDo             // if already negative, then done
+
+    nv_twos_comp8_accum()       // reverse velocity
+
+    nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)  // save vel back to extra
+
+NothingToDo:
+    nv_sprite_standard_restore(SaveBlock)
+    rts
+    
+SaveBlock:
+    nv_sprite_standard_alloc()
+}
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+// macro subroutine to get the center X and Y screen position of a sprite's 
+// hitbox
+// Macro params:
+//   center_x_addr: the memory address pointing to a 16 bit word that will 
+//                  get the center X location
+//   center_y_addr: the memory address pointing to a 16 bit word that will 
+//                  get the center Y location
+// subroutine params 
+//   Accum: MSB of address of nv_sprite_extra_data
+//   X Reg: LSB of address of the nv_sprite_extra_data
+.macro nv_sprite_extra_get_hitbox_center_sr(center_x_addr, center_y_addr)
+{
+    nv_sprite_standard_save(SaveBlock)
+
+    nv_sprite_load_extra_ptr()
+
+    // get the sprite x center location
+    nv_sprite_extra_word_to_mem(NV_SPRITE_X_OFFSET, center_x_addr)
+    nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_LEFT_OFFSET, HitboxLeft)
+    nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_RIGHT_OFFSET, HitboxRight)
+    nv_sbc8(HitboxRight, HitboxLeft, HitboxWidth)
+    lsr HitboxWidth                 // hitbox width divided by 2
+    nv_adc16_8(center_x_addr, HitboxWidth, center_x_addr)
+
+    // get the sprite y center location
+    nv_sprite_extra_byte_to_a(NV_SPRITE_Y_OFFSET)
+    sta center_y_addr
+    lda #$00
+    sta center_y_addr+1
+    nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_TOP_OFFSET, HitboxTop)
+    nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_BOTTOM_OFFSET, HitboxBottom)
+
+    nv_sbc8(HitboxBottom, HitboxTop, HitboxHeight)
+    lsr HitboxHeight            // hitbox height divided by 2
+    nv_adc16_8(center_y_addr, HitboxHeight, center_y_addr)
+
+    nv_sprite_standard_restore(SaveBlock)
+    rts
+
+// use same words for left/top, right/bottom, width/height
+HitboxTop:
+HitboxLeft: .byte $00
+HitboxBottom:
+HitboxRight: .byte $00
+HitboxHeight:
+HitboxWidth: .byte $00
+SaveBlock:
+    nv_sprite_standard_alloc()
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////////////////////////
 // Inline macro to test if a sprite's hitbox overlaps with a prefilled
@@ -888,6 +1105,20 @@ NvSpriteExtraEnable:
 NvSpriteExtraDisable:
     nv_sprite_extra_disable_sr()
 
+//////////////////////////////////////////////////////////////////////////////
+// Reverses X Vel 
+//   Accum: MSB of address of nv_sprite_extra_data
+//   X Reg: LSB of address of the nv_sprite_extra_data
+NvSpriteReverseVelX:
+    nv_sprite_extra_reverse_vel_x_sr()
+
+//////////////////////////////////////////////////////////////////////////////
+// Reverses X Vel 
+//   Accum: MSB of address of nv_sprite_extra_data
+//   X Reg: LSB of address of the nv_sprite_extra_data
+NvSpriteReverseVelY:
+    nv_sprite_extra_reverse_vel_y_sr()
+
 
 //////////////////////////////////////////////////////////////////////////////
 // fill nv_sprite_check_overlap_rect_addr with a rectangle to test for 
@@ -898,7 +1129,6 @@ NvSpriteExtraDisable:
 NvSpriteCheckOverlapRect:
     nv_sprite_check_overlap_rect_sr(nv_sprite_check_overlap_rect_addr)
 
-
 nv_sprite_check_overlap_rect_addr: 
     nv_sprite_check_overlap_rect_left: .word 0
     nv_sprite_check_overlap_rect_top: .word 0
@@ -906,7 +1136,127 @@ nv_sprite_check_overlap_rect_addr:
     nv_sprite_check_overlap_rect_bottom: .word 0
 
 
+//////////////////////////////////////////////////////////////////////////////
+// get the X and Y screen location of the center of the hitbox for the 
+// sprite that has extra data pointed to by Accum and X Reg
+// Params: 
+//   Accum: MSB of address of nv_sprite_extra_data
+//   X Reg: LSB of address of the nv_sprite_extra_data
+// upon return nv_sprite_hitbox_center_x and nv_sprite_hitbox_center_y will have the 
+// center x and y screen coord filled in.
+NvSpriteGetHitboxCenter:
+    nv_sprite_extra_get_hitbox_center_sr(nv_sprite_hitbox_center_x, nv_sprite_hitbox_center_y)
+
+nv_sprite_hitbox_center_x: .word 0
+nv_sprite_hitbox_center_y: .word 0
 
 
 
+//////////////////////////////////////////////////////////////////////////////
+// get the X and Y distances between two sprites.  
+// subroutine Params: 
+//   nv_sprite1_extra_ptr_for_hitbox_center_dist: the address of a word
+//     that will contain the address of nv_sprite_extra_data for 
+//     sprite1 in the distance calculation
+//   nv_sprite2_extra_ptr_for_hitbox_center_dist: the address of a word
+//     that will contain the address of nv_sprite_extra_data for 
+//     sprite2 in the distance calculation
+// upon return nv_sprite_hitbox_center_dist_x and 
+//   nv_sprite_hitbox_center_dist_y will have the x and y distances betwen
+//   the two sprites.  note that the distances will always be positive
+//   regardless of sprite locations on the screen
+NvSpriteGetHitboxCenterDist:
+    lda nv_sprite1_extra_ptr_for_hitbox_center_dist+1
+    ldx nv_sprite1_extra_ptr_for_hitbox_center_dist
+    jsr NvSpriteGetHitboxCenter
+    
+    nv_xfer16_mem_mem(nv_sprite_hitbox_center_x, nv_sprite1_center_x)
+    nv_xfer16_mem_mem(nv_sprite_hitbox_center_y, nv_sprite1_center_y)
+
+    lda nv_sprite2_extra_ptr_for_hitbox_center_dist+1
+    ldx nv_sprite2_extra_ptr_for_hitbox_center_dist
+    jsr NvSpriteGetHitboxCenter
+    nv_xfer16_mem_mem(nv_sprite_hitbox_center_x, nv_sprite2_center_x)
+    nv_xfer16_mem_mem(nv_sprite_hitbox_center_y, nv_sprite2_center_y)
+
+GetDistX:
+    nv_bgt16(nv_sprite2_center_x, nv_sprite1_center_x, Sprite2GreaterX)
+
+Sprite1GreaterX:
+    nv_sbc16(nv_sprite1_center_x, nv_sprite2_center_x, nv_sprite_hitbox_center_dist_x)
+    jmp GetDistY
+
+Sprite2GreaterX:
+    nv_sbc16(nv_sprite2_center_x, nv_sprite1_center_x, nv_sprite_hitbox_center_dist_x)
+
+GetDistY:
+    nv_bgt16(nv_sprite2_center_y, nv_sprite1_center_y, Sprite2GreaterY)
+
+Sprite1GreaterY:
+    nv_sbc16(nv_sprite1_center_y, nv_sprite2_center_y, nv_sprite_hitbox_center_dist_y)
+    jmp HitboxCenterDistDone
+
+Sprite2GreaterY:
+    nv_sbc16(nv_sprite2_center_y, nv_sprite1_center_y, nv_sprite_hitbox_center_dist_y)
+
+HitboxCenterDistDone:
+    rts
+
+// input, set before calling
+nv_sprite1_extra_ptr_for_hitbox_center_dist: .word 0
+nv_sprite2_extra_ptr_for_hitbox_center_dist: .word 0
+
+// return vals
+nv_sprite_hitbox_center_dist_x: .word 0
+nv_sprite_hitbox_center_dist_y: .word 0
+
+// internal temp variables
+nv_sprite1_center_x: .word 0
+nv_sprite1_center_y: .word 0
+nv_sprite2_center_x: .word 0
+nv_sprite2_center_y: .word 0
+// end NvSpriteGetHitboxCenterDist 
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// subroutine to make sure the X velocity of a sprite is positive.
+// Params: 
+//   Accum: MSB of address of nv_sprite_extra_data
+//   X Reg: LSB of address of the nv_sprite_extra_data
+NvSpriteAssureVelPosX:
+    nv_sprite_extra_assure_vel_pos_x_sr()
+// end NvSpriteAssureVelPosX
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+// subroutine to make sure the X velocity of a sprite is negative.
+// Params: 
+//   Accum: MSB of address of nv_sprite_extra_data
+//   X Reg: LSB of address of the nv_sprite_extra_data
+NvSpriteAssureVelNegX:
+    nv_sprite_extra_assure_vel_neg_x_sr()
+// end NvSpriteAssureVelNegX
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// subroutine to make sure the Y velocity of a sprite is positive.
+// Params: 
+//   Accum: MSB of address of nv_sprite_extra_data
+//   X Reg: LSB of address of the nv_sprite_extra_data
+NvSpriteAssureVelPosY:
+    nv_sprite_extra_assure_vel_pos_y_sr()
+// end NvSpriteAssureVelPosY
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+// subroutine to make sure the Y velocity of a sprite is negative.
+// Params: 
+//   Accum: MSB of address of nv_sprite_extra_data
+//   X Reg: LSB of address of the nv_sprite_extra_data
+NvSpriteAssureVelNegY:
+    nv_sprite_extra_assure_vel_neg_y_sr()
+// end NvSpriteAssureVelNegY
+//////////////////////////////////////////////////////////////////////////////
 

@@ -107,6 +107,25 @@ Done:
 
 
 //////////////////////////////////////////////////////////////////////////////
+// inline macro to jump to a label if the contents of a word at one 
+// memory location are less than the contents in another memory location.
+// Macro can be used to branch greater than 255 bytes
+//   addr1: the address of the LSB of the word1
+//   addr2: the address of the LSB of the word2 
+//   label: the label to branch to if word1 < word2
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_blt16_long(addr1, addr2, label)
+{
+    nv_cmp16(addr1, addr2)
+    bcs NoJump
+    jmp label
+NoJump:
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory is less than 
 // an immediate 16 bit value
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)

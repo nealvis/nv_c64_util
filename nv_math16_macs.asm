@@ -228,7 +228,8 @@ Done:
 // num is the nubmer of rotations to do.
 // zeros will be rotated in to the high bits
 // the carry flag will be set if the last rotation rotated off
-// a one from the low bit 
+// a one from the low bit.  
+// Use this to divide by 2 or any power of two.
 .macro nv_lsr16(addr, num)
 {
     ldy #num

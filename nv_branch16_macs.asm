@@ -71,10 +71,30 @@ Done:
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   addr2: is the address of LSB of the other word (addr2+1 is MSB)
 //   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
 .macro nv_beq16(addr1, addr2, label)
 {
     nv_cmp16(addr1, addr2)
     beq label
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if two words in memory have the same contents.
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one word (addr1+1 is MSB)
+//   addr2: is the address of LSB of the other word (addr2+1 is MSB)
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_beq16_far(addr1, addr2, label)
+{
+    nv_cmp16(addr1, addr2)
+    bne Done
+    jmp label
+Done:
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -83,10 +103,32 @@ Done:
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
 //   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
 .macro nv_beq16_immediate(addr1, num, label)
 {
     nv_cmp16_immediate(addr1, num)
     beq label
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if one word in memory has the same content as 
+// an immediate 16 bit value
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one word (addr1+1 is MSB)
+//   num: is the immediate 16 bit value to compare with the contents of addr1
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_beq16_immediate_far(addr1, num, label)
+{
+    nv_cmp16_immediate(addr1, num)
+    bne Done
+    jmp label
+Done:
 }
 
 
@@ -109,19 +151,19 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to jump to a label if the contents of a word at one 
 // memory location are less than the contents in another memory location.
-// Macro can be used to branch greater than 255 bytes
+// The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the LSB of the word1
 //   addr2: the address of the LSB of the word2 
 //   label: the label to branch to if word1 < word2
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_blt16_long(addr1, addr2, label)
+.macro nv_blt16_far(addr1, addr2, label)
 {
     nv_cmp16(addr1, addr2)
-    bcs NoJump
+    bcs Done
     jmp label
-NoJump:
+Done:
 }
 
 
@@ -131,11 +173,32 @@ NoJump:
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
 //   label: is the label to branch to
-// todo: print macro
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
 .macro nv_blt16_immediate(addr1, num, label)
 {
     nv_cmp16_immediate(addr1, num)
     bcc label
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if one word in memory is less than 
+// an immediate 16 bit value
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one word (addr1+1 is MSB)
+//   num: is the immediate 16 bit value to compare with the contents of addr1
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_blt16_immediate_far(addr1, num, label)
+{
+    nv_cmp16_immediate(addr1, num)
+    bcs Done
+    jmp label
+Done:    
 }
 
 
@@ -158,13 +221,34 @@ NoJump:
     beq label
 }
 
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a word at one memory location  
+// are less than or equal to the contents in another memory location.
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: the address of the LSB of the word1
+//   addr2: the address of the LSB of the word2 
+//   label: the label to branch to if word1 < word2
+// Accum: changes
+// X Reg: remains unchanged
+// Y Reg: remains unchanged
+.macro nv_ble16_far(addr1, addr2, label)
+{
+    nv_bgt16(addr1, addr2, Done)
+    jmp label
+Done:    
+}
+
+
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory is less than or equal to
 // an immediate 16 bit value
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
 //   label: is the label to branch to
-// todo: print macro
+// Accum: changes
+// X Reg: remains unchanged
+// Y Reg: remains unchanged
 .macro nv_ble16_immediate(addr1, num, label)
 {
     nv_cmp16_immediate(addr1, num)
@@ -173,6 +257,23 @@ NoJump:
 
     bcc label
     beq label
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if one word in memory is less than or equal to
+// an immediate 16 bit value.
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one word (addr1+1 is MSB)
+//   num: is the immediate 16 bit value to compare with the contents of addr1
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: remains unchanged
+// Y Reg: remains unchanged
+.macro nv_ble16_immediate_far(addr1, num, label)
+{
+    nv_bgt16_immediate(addr1, num, Done)
+    jmp label
+Done:
 }
 
 
@@ -193,6 +294,24 @@ NoJump:
 
     beq Done    // equal so not greater than, we're done
     bcs label   // >= but we already tested for == so must be greater than
+Done:
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a word at one memory location  
+// are greater than the contents in another memory location.
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: the address of the LSB of the word1
+//   addr2: the address of the LSB of the word2 
+//   label: the label to branch to if word1 > word2
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bgt16_far(addr1, addr2, label)
+{
+    nv_ble16(addr1, addr2, Done)
+    jmp label
 Done:
 }
 
@@ -220,6 +339,25 @@ Done:
 
 
 //////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if one word in memory is greater than
+// an immediate 16 bit value.
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one word (addr1+1 is MSB)
+//   num: is the immediate 16 bit value to compare with the contents of addr1
+//   label: is the label to branch to
+// todo print macro
+//   Accum: changes
+//   X Reg: no change
+//   Y Reg: no change
+.macro nv_bgt16_immediate_far(addr1, num, label)
+{
+    nv_ble16_immediate(addr1, num, Done)
+    jmp label
+Done:
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a word at one memory location  
 // are greater than or equal to the contents in another memory location 
 //   addr1: the address of the LSB of the word1
@@ -234,6 +372,25 @@ Done:
     // Carry Flag	Set if addr1 >= addr2
 
     bcs label
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a word at one memory location  
+// are greater than or equal to the contents in another memory location.
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: the address of the LSB of the word1
+//   addr2: the address of the LSB of the word2 
+//   label: the label to branch to if word1 >= word2
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bge16_far(addr1, addr2, label)
+{
+    nv_cmp16(addr1, addr2)
+    // Carry Flag	Set if addr1 >= addr2
+    bcc Done
+    jmp label
+Done:
 }
 
 
@@ -252,4 +409,20 @@ Done:
     bcs label
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if one word in memory is greater or equal tothan
+// an immediate 16 bit value.
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one word (addr1+1 is MSB)
+//   num: is the immediate 16 bit value to compare with the contents of addr1
+//   label: is the label to branch to
+// todo print macro
+.macro nv_bge16_immediate_far(addr1, num, label)
+{
+    nv_cmp16_immediate(addr1, num)
+    // Carry Flag	Set if addr1 >= num
+    bcc Done
+    jmp label
+Done:
+}
 

@@ -1138,6 +1138,154 @@ Loop3:
     dec NV_SCREEN_BACKGROUND_COLOR_REG_ADDR
 }
 
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// green for future calls to nv_screen_print_str.
+.macro nv_screen_green_fg_str()
+{
+    .text @"\$1E\$00"
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// white for future calls to nv_screen_print_str.
+.macro nv_screen_white_fg_str()
+{
+    .text @"\$05\$00"
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// white for future calls to nv_screen_print_str.
+.macro nv_screen_red_fg_str()
+{
+    .text @"\$1C\$00"
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// blue for future calls to nv_screen_print_str.
+.macro nv_screen_blue_fg_str()
+{
+    .text @"\$1F\$00"
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// orange for future calls to nv_screen_print_str.
+.macro nv_screen_orange_fg_str()
+{
+    .text @"\$81\$00"
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// black for future calls to nv_screen_print_str.
+.macro nv_screen_black_fg_str()
+{
+    .text @"\$90\$00"
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// brown for future calls to nv_screen_print_str.
+.macro nv_screen_brown_fg_str()
+{
+    .text @"\$95\$00"
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// brown for future calls to nv_screen_print_str.
+.macro nv_screen_dark_grey_fg_str()
+{
+    .text @"\$97\$00"
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// lite red for future calls to nv_screen_print_str.
+.macro nv_screen_lite_red_fg_str()
+{
+    .text @"\$96\$00"
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// brown for future calls to nv_screen_print_str.
+.macro nv_screen_grey_fg_str()
+{
+    .text @"\$98\$00"
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// lite green for future calls to nv_screen_print_str.
+.macro nv_screen_lite_green_fg_str()
+{
+    .text @"\$99\$00"
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// lite blue for future calls to nv_screen_print_str.
+.macro nv_screen_lite_blue_fg_str()
+{
+    .text @"\$9A\$00"
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// lite grey for future calls to nv_screen_print_str.
+.macro nv_screen_lite_grey_fg_str()
+{
+    .text @"\$9B\$00"
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// purple for future calls to nv_screen_print_str.
+.macro nv_screen_purple_fg_str()
+{
+    .text @"\$9C\$00"
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// yellow for future calls to nv_screen_print_str.
+.macro nv_screen_yellow_fg_str()
+{
+    .text @"\$9E\$00"
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that creates a text string the address of which can be
+// sent to nv_screen_print_str in order to change the foreground color to 
+// cyan for future calls to nv_screen_print_str.
+.macro nv_screen_cyan_fg_str()
+{
+    .text @"\$9F\$00"
+}
+
+
 //////////////////////////////////////////////////////////////////////////////
 // macros for custom char sets below
 //////////////////////////////////////////////////////////////////////////////

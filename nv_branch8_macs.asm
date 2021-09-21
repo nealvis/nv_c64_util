@@ -128,6 +128,42 @@ Done:
 Done:
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are less than the contents an immediate 8 bit value 
+//   addr1: the address of the first byte
+//   num: the immediate byte
+//   label: the label to branch to if first byte < immediate value
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_blt8_immediate(addr1, num, label)
+{
+    lda addr1
+    cmp #num
+    bcc label
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are less than the contents an immediate 8 bit value.
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: the address of the first byte
+//   num: the immediate byte
+//   label: the label to branch to if first byte < immediate value
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_blt8_immediate_far(addr1, num, label)
+{
+    lda addr1
+    cmp #num
+    bcs Done
+    jmp label
+Done:
+}
+
+
 /*
 
 //////////////////////////////////////////////////////////////////////////////

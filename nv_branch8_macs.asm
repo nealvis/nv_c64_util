@@ -163,44 +163,146 @@ Done:
 Done:
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are less than or equal to the contents in another memory location 
+//   addr1: the address of the first byte
+//   addr2: the address of the second byte 
+//   label: the label to branch to if first byte <= second byte
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_ble8(addr1, addr2, label)
+{
+    lda addr1
+    cmp addr2
+    bcc label
+    beq label
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are less than or equal to the contents in another memory location 
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: the address of the first byte
+//   addr2: the address of the second byte 
+//   label: the label to branch to if first byte <= second byte
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_ble8_far(addr1, addr2, label)
+{
+    // after cmp: 
+    // Carry Flag	Set if addr1 >= addr2
+    // Zero Flag	Set if addr1 == addr2
+
+    lda addr1
+    cmp addr2
+    bcs GTE
+LT:
+    jmp label       // not greater than or equal to, is less than so branch
+
+GTE:
+    bne Done        // greater than but not equal so no branch
+
+EQ:                 // must be equal so jump
+    jmp label
+Done:
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are less than or equal to an immediate 8 bit value 
+//   addr1: the address of the first byte
+//   num: the immediate 8 bit value 
+//   label: the label to branch to if first byte <= second byte
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_ble8_immediate(addr1, num, label)
+{
+    lda addr1
+    cmp #num
+    bcc label
+    beq label
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are less than or equal to the contents of an immediate 8 bit value 
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: the address of the first byte
+//   num: the immediate 8 bit value of the second byte 
+//   label: the label to branch to if first byte <= second byte
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_ble8_immediate_far(addr1, num, label)
+{
+    // after cmp: 
+    // Carry Flag	Set if addr1 >= addr2
+    // Zero Flag	Set if addr1 == addr2
+
+    lda addr1
+    cmp #num
+    bcs GTE
+LT:
+    jmp label       // not greater than or equal to, is less than so branch
+
+GTE:
+    bne Done        // greater than but not equal so no branch
+
+EQ:                 // must be equal so jump
+    jmp label
+Done:
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are greater than the contents in another memory location 
+//   addr1: the address of byte1
+//   addr2: the address of byte2 
+//   label: the label to branch to if byte1 > byte2
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bgt8(addr1, addr2, label)
+{
+    // Carry Flag	Set if addr1 >= addr2
+    // Zero Flag	Set if addr1 == addr2
+    lda addr1
+    cmp addr2
+    beq Done    // equal so not greater than, we're done
+    bcs label   // >= but we already tested for == so must be greater than
+Done:
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are greater than the contents in another memory location 
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: the address of byte1
+//   addr2: the address of byte2 
+//   label: the label to branch to if byte1 > byte2
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bgt8_far(addr1, addr2, label)
+{
+    // Carry Flag	Set if addr1 >= addr2
+    // Zero Flag	Set if addr1 == addr2
+    lda addr1
+    cmp addr2
+    beq Done    // equal so not greater than, we're done
+    bcc Done    // addr1 < addr2 so not greater than
+    jmp label   // didn't branch because equal or less than so jmp
+Done:
+}
+
+
 
 /*
-
-//////////////////////////////////////////////////////////////////////////////
-// inline macro to branch if one word in memory is less than 
-// an immediate 16 bit value
-//   addr1: is the address of LSB of one word (addr1+1 is MSB)
-//   num: is the immediate 16 bit value to compare with the contents of addr1
-//   label: is the label to branch to
-// Accum: changes
-// X Reg: unchanged
-// Y Reg: unchanged
-.macro nv_blt16_immediate(addr1, num, label)
-{
-    nv_cmp16_immediate(addr1, num)
-    bcc label
-}
-
-
-//////////////////////////////////////////////////////////////////////////////
-// inline macro to branch if one word in memory is less than 
-// an immediate 16 bit value
-// The branch label's address can be farther than +127/-128 bytes away
-//   addr1: is the address of LSB of one word (addr1+1 is MSB)
-//   num: is the immediate 16 bit value to compare with the contents of addr1
-//   label: is the label to branch to
-// Accum: changes
-// X Reg: unchanged
-// Y Reg: unchanged
-.macro nv_blt16_immediate_far(addr1, num, label)
-{
-    nv_cmp16_immediate(addr1, num)
-    bcs Done
-    jmp label
-Done:    
-}
-
-
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a word at one memory location  
 // are less than or equal to the contents in another memory location 

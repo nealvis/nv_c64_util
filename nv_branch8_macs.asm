@@ -555,10 +555,11 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has same contents as accumulator
+// branch if addr1 = accum
 // macro params:
 //   accum: has a value to compare with that at addr1
 //   addr1: is the address of one byte in memory
-//   label: is the label to branch to if bytes are equal
+//   label: is the label to branch to if condition is met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -570,10 +571,11 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has same contents as accumulator
+// branch if addr1 = accum
 // macro params:
 //   accum: has a value to compare with that at addr1
 //   addr1: is the address of one byte in memory
-//   label: is the label to branch to if bytes are equal
+//   label: is the label to branch to if condition is met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -587,8 +589,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has different contents than accum
+// branch if addr1 != accum
 //   addr1: is the address of one byte in memory
-//   label: is the label to branch to
+//   label: is the label to branch to if condition is met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -600,9 +603,10 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if one bytes in memory has different contents than accum.
+// branch if addr1 = accum
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of one byte in memory
-//   label: is the label to branch to
+//   label: is the label to branch to if condition is met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -619,7 +623,7 @@ Done:
 // are greater than the contents of the accum.
 // branch if addr1 > accum
 //   addr1: the address of byte1
-//   label: the label to branch to if byte1 > byte2
+//   label: the label to branch to if condition is met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -636,7 +640,7 @@ Done:
 // branch if addr1 > accum
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of byte1
-//   label: the label to branch to if byte1 > byte2
+//   label: the label to branch to if condition is met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -655,7 +659,7 @@ Done:
 // are greater than or equal to the contents of accum
 // branch if addr1 >= accum
 //   addr1: the address of byte1
-//   label: the label to branch to if byte1 >= accum
+//   label: the label to branch to if condition is met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -672,7 +676,7 @@ Done:
 // branch if addr1 >= accum
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of byte1
-//   label: the label to branch to if byte1 >= accum
+//   label: the label to branch to if condition is met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -692,7 +696,7 @@ Done:
 // are less than the contents of accum.
 // branch if addr1 <= accum
 //   addr1: the address of the byte in memory
-//   label: the label to branch to if first byte < second byte
+//   label: the label to branch to if condition is met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -712,7 +716,7 @@ Done:
 // branch if addr1 < accum
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the byte in memory
-//   label: the label to branch to if first byte < second byte
+//   label: the label to branch to if condition is met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -733,7 +737,7 @@ Done:
 // are less than or equal to the contents the accumulator 
 // branch if addr1 <= accum
 //   addr1: the address of the first byte
-//   label: the label to branch to if first byte <= second byte
+//   label: the label to branch to if condition is met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -750,7 +754,7 @@ Done:
 // branch if addr1 <= accum
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the first byte
-//   label: the label to branch to if first byte <= second byte
+//   label: the label to branch to if condition is met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -1221,4 +1225,279 @@ Done:
     jmp label
 Done:
 }
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+// macros with immediate number and accum as an opperand
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if a bytes in memory has same contents as accumulator
+// macro params:
+// branch if num = accum
+//   accum: has a value to compare
+//   num: is the immediate 8 bit value to compare
+//   label: is the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_beq8_immed_a(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+    cmp #num
+    beq label
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if a bytes in memory has same contents as accumulator
+// branch if num = accum
+// The branch label's address can be farther than +127/-128 bytes away
+// macro params:
+//   accum: has a value to compare 
+//   num: is the immediate 8 bit value to compare
+//   label: is the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_beq8_immed_a_far(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+    cmp #num
+    bne Done
+    jmp label
+Done:
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if a an 8 bit immediate value is  different than contents of accum
+// branch if num != accum
+//   num: is the immediate 8 bit value
+//   label: is the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bne8_immed_a(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+    cmp #num
+    bne label
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if immiediate 8 bit value is different than accum.
+// branch if num != accum
+// The branch label's address can be farther than +127/-128 bytes away
+//   num: is the immediate 8 bit number to compare
+//   label: is the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bne8_immed_a_far(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+    cmp #num
+    beq Done    // is equal, don't branch/jump to label
+    jmp label
+Done:
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value is greater than accum  
+// branch if num > accum
+//   num: the 8 bit immediate value to compare
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bgt8_immed_a(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+    cmp #num   // carry will be set if num <= accum
+    bcc label   // num > accum
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8bit immed value   
+// is greater than the contents of the accum.
+// branch if num > accum
+// The branch label's address can be farther than +127/-128 bytes away
+//   num: the 8 bit immdediate value to compare
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bgt8_immed_a_far(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+    cmp #num   // carry will be set if num <= accum
+    bcs Done    // carry set so no branch
+    jmp label   // num > accum
+Done:
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value   
+// is greater than or equal to the contents of accum
+// branch if num >= accum
+//   num: the 8 bit immediate value to compare
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bge8_immed_a(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+    cmp #num   // carry will be set if num <= accum
+    beq label   // num = accum, so branch
+    bcc label   // num > accum, so branch
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value 
+// is greater than or equal to the contents of accum
+// branch if num >= accum
+// The branch label's address can be farther than +127/-128 bytes away
+//   num: the 8 bit immediate value to compare
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bge8_immed_a_far(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+    cmp #num     // carry will be set if num <= accum
+    bne NotEqual  // not equal so check less/greater
+    jmp label     // num = accum, so branch
+NotEqual:
+    bcs Done      // num < accum because checked for equal above, no branch
+    jmp label     // num > accum, so branch
+Done:
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value  
+// is less than the contents of accum.
+// branch if num <= accum
+//   num: the 8 bit immediate value to compare
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_blt8_immed_a(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+    // want to branch if num < accum
+    cmp #num  // carry will be set if num <= accum
+    beq Done   // if equal then its not less than
+    bcs label  // num <= accum, but already check for = so its <
+Done:
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value  
+// is less than the contents of accum.
+// branch if num < accum
+// The branch label's address can be farther than +127/-128 bytes away
+//   num: the 8 bit immediate value to compare
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_blt8_immed_a_far(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+   // want to branch if num < accum
+    cmp #num  // carry will be set if num <= accum
+    bcc Done   // num > accum, no branch
+    beq Done   // addr == accum, no branch
+    jmp label
+Done:
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value  
+// is less than or equal to the contents the accumulator 
+// branch if num <= accum
+//   num: the 8 bit immediate value to compare
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_ble8_immed_a(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+    cmp #num  // carry will be set if num <= accum
+    bcs label
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value  
+// is less than or equal to the contents the accumulator 
+// branch if num <= accum
+// The branch label's address can be farther than +127/-128 bytes away
+//   num: the 8 bit immediate value to compare
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_ble8_immed_a_far(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+    cmp #num  // carry will be set if num <= accum
+    bcc Done
+    jmp label
+Done:
+}
+
 

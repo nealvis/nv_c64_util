@@ -774,7 +774,7 @@ Done:
 // macro params:
 //   x reg: has a value to compare with that at addr1
 //   addr1: is the address of one byte in memory
-//   label: is the label to branch to if bytes are equal
+//   label: is the label to branch to if condition met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -791,7 +791,7 @@ Done:
 // macro params:
 //   x reg: has a value to compare with that at addr1
 //   addr1: is the address of one byte in memory
-//   label: is the label to branch to if bytes are equal
+//   label: is the label to branch to if condition met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -808,7 +808,7 @@ Done:
 // branch if addr1 != X Reg
 //   addr1: is the address of one byte in memory
 //   X Reg: value to compare with addr1 contents
-//   label: is the label to branch to
+//   label: is the label to branch to if condition met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -819,12 +819,12 @@ Done:
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// branch if one bytes in memory has different contents than accum.
+// branch if one bytes in memory has different contents than x reg.
 // branch if addr1 != x reg
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of one byte in memory
 //   X reg: holds value to compare with whats at addr1
-//   label: is the label to branch to
+//   label: is the label to branch to if condition met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -842,14 +842,14 @@ Done:
 // branch if addr1 > x reg
 //   addr1: the address of byte1
 //   x reg: value to compare with contents at addr1
-//   label: the label to branch to if byte1 > byte2
+//   label: the label to branch to if condition met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
 .macro nv_bgt8_x(addr1, label)
 {
-    cpx addr1   // carry will be set if addr1 <= accum
-    bcc label   // addr1 > accum
+    cpx addr1   // carry will be set if addr1 <= x reg
+    bcc label   // addr1 > x reg
 }
 
 
@@ -860,15 +860,15 @@ Done:
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of byte1
 //   x reg: holds value to compare with byte at addr1
-//   label: the label to branch to if byte1 > byte2
+//   label: the label to branch to if condition met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
 .macro nv_bgt8_x_far(addr1, label)
 {
-    cpx addr1   // carry will be set if addr1 <= accum
+    cpx addr1   // carry will be set if addr1 <= x reg
     bcs Done    // carry set so no branch
-    jmp label   // addr1 > accum
+    jmp label   // addr1 > x reg
 Done:
 }
 
@@ -880,15 +880,15 @@ Done:
 // branch if addr1 >= x reg
 //   addr1: the address of byte1
 //   x reg: holds value to compare with contents of addr1
-//   label: the label to branch to if byte1 >= accum
+//   label: the label to branch to if condition met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
 .macro nv_bge8_x(addr1, label)
 {
-    cpx addr1   // carry will be set if addr1 <= accum
-    beq label   // addr1 = accum, so branch
-    bcc label   // addr1 > accum, so branch
+    cpx addr1   // carry will be set if addr1 <= x reg
+    beq label   // addr1 = x reg, so branch
+    bcc label   // addr1 > x reg, so branch
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -898,18 +898,18 @@ Done:
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of byte1
 //   x reg: holds value to compare with byte at addr1
-//   label: the label to branch to if byte1 >= accum
+//   label: the label to branch to if condition met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
 .macro nv_bge8_x_far(addr1, label)
 {
-    cpx addr1     // carry will be set if addr1 <= accum
+    cpx addr1     // carry will be set if addr1 <= x reg
     bne NotEqual  // not equal so check less/greater
-    jmp label     // addr1 = accum, so branch
+    jmp label     // addr1 = x reg, so branch
 NotEqual:
-    bcs Done      // addr < accum because checked for equal above, no branch
-    jmp label     // addr1 > accum, so branch
+    bcs Done      // addr < x reg because checked for equal above, no branch
+    jmp label     // addr1 > x reg, so branch
 Done:
 }
 
@@ -919,16 +919,16 @@ Done:
 // branch if addr1 <= x reg
 //   addr1: the address of the byte in memory
 //   x reg: holds value to compare with byte at addr1
-//   label: the label to branch to if first byte < second byte
+//   label: the label to branch to if condition met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
 .macro nv_blt8_x(addr1, label)
 {
-    // want to branch if addr1 < accum
-    cpx addr1  // carry will be set if addr1 <= accum
+    // want to branch if addr1 < x reg
+    cpx addr1  // carry will be set if addr1 <= x reg
     beq Done   // if equal then its not less than
-    bcs label  // addr <= accum, but already check for = so its <
+    bcs label  // addr <= x reg, but already check for = so its <
 Done:
 }
 
@@ -940,16 +940,16 @@ Done:
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the byte in memory
 //   x reg: holds value to compare with byte at addr1
-//   label: the label to branch to if first byte < second byte
+//   label: the label to branch to if condition met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
 .macro nv_blt8_x_far(addr1, label)
 {
-    // want to branch if addr1 < accum
-    cpx addr1  // carry will be set if addr1 <= accum
-    bcc Done   // addr1 > accum, no branch
-    beq Done   // addr == accum, no branch
+    // want to branch if addr1 < x reg
+    cpx addr1  // carry will be set if addr1 <= x reg
+    bcc Done   // addr1 > x reg, no branch
+    beq Done   // addr == x reg, no branch
     jmp label
 Done:
 }
@@ -962,13 +962,13 @@ Done:
 // branch if addr1 <= x reg
 //   addr1: the address of the first byte
 //   x reg: holds value to compare with byte at addr1
-//   label: the label to branch to if first byte <= second byte
+//   label: the label to branch to if condition met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
 .macro nv_ble8_x(addr1, label)
 {
-    cpx addr1  // carry will be set if addr1 <= accum
+    cpx addr1  // carry will be set if addr1 <= x reg
     bcs label
 }
 
@@ -980,16 +980,245 @@ Done:
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the first byte
 //   x reg: holds value to compare with byte at addr1
-//   label: the label to branch to if first byte <= second byte
+//   label: the label to branch to if condition met
 // Accum: unchanged
 // X Reg: unchanged
 // Y Reg: unchanged
 .macro nv_ble8_x_far(addr1, label)
 {
-    cpx addr1  // carry will be set if addr1 <= accum
+    cpx addr1  // carry will be set if addr1 <= x reg
     bcc Done
     jmp label
 Done:
 }
 
+
+//////////////////////////////////////////////////////////////////////////////
+// macros with Y Reg as an opperand
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if a bytes in memory has same contents as Y reg
+// branch if addr1 = Y Reg
+// macro params:
+//   y reg: has a value to compare with that at addr1
+//   addr1: is the address of one byte in memory
+//   label: is the label to branch to if condition met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_beq8_y(addr1, label)
+{
+    cpy addr1
+    beq label
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if a bytes in memory has same contents as Y Reg
+// branch if addr1 = Y Reg
+// The branch label's address can be farther than +127/-128 bytes away
+// macro params:
+//   y reg: has a value to compare with that at addr1
+//   addr1: is the address of one byte in memory
+//   label: is the label to branch to if condition met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_beq8_y_far(addr1, label)
+{
+    cpy addr1
+    bne Done
+    jmp label
+Done:
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if a byte in memory has different contents than y reg
+// branch if addr1 != Y Reg
+//   addr1: is the address of one byte in memory
+//   Y Reg: value to compare with addr1 contents
+//   label: is the label to branch to if condition met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bne8_y(addr1, label)
+{
+    cpy addr1
+    bne label
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if one bytes in memory has different contents than y reg.
+// branch if addr1 != y reg
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of one byte in memory
+//   Y reg: holds value to compare with whats at addr1
+//   label: is the label to branch to if condition met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bne8_y_far(addr1, label)
+{
+    cpy addr1
+    beq Done    // is equal, don't branch/jump to label
+    jmp label
+Done:
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are greater than the contents of the y reg.
+// branch if addr1 > y reg
+//   addr1: the address of byte1
+//   y reg: value to compare with contents at addr1
+//   label: the label to branch to if condition met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bgt8_y(addr1, label)
+{
+    cpy addr1   // carry will be set if addr1 <= y reg
+    bcc label   // addr1 > y reg
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are greater than the contents of the y reg.
+// branch if addr1 > y reg
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: the address of byte1
+//   y reg: holds value to compare with byte at addr1
+//   label: the label to branch to if condition met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bgt8_y_far(addr1, label)
+{
+    cpy addr1   // carry will be set if addr1 <= y reg
+    bcs Done    // carry set so no branch
+    jmp label   // addr1 > y reg
+Done:
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are greater than or equal to the contents of y reg
+// branch if addr1 >= y reg
+//   addr1: the address of byte1
+//   y reg: holds value to compare with contents of addr1
+//   label: the label to branch to if condition met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bge8_y(addr1, label)
+{
+    cpy addr1   // carry will be set if addr1 <= y reg
+    beq label   // addr1 = y reg, so branch
+    bcc label   // addr1 > y reg, so branch
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are greater than or equal to the contents of y reg
+// branch if addr1 >= y reg
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: the address of byte1
+//   y reg: holds value to compare with byte at addr1
+//   label: the label to branch to if condition met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bge8_y_far(addr1, label)
+{
+    cpy addr1     // carry will be set if addr1 <= y reg
+    bne NotEqual  // not equal so check less/greater
+    jmp label     // addr1 = y reg, so branch
+NotEqual:
+    bcs Done      // addr < y reg because checked for equal above, no branch
+    jmp label     // addr1 > y reg, so branch
+Done:
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are less than the contents of y reg.
+// branch if addr1 <= y reg
+//   addr1: the address of the byte in memory
+//   y reg: holds value to compare with byte at addr1
+//   label: the label to branch to if condition met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_blt8_y(addr1, label)
+{
+    // want to branch if addr1 < y reg
+    cpy addr1  // carry will be set if addr1 <= y reg
+    beq Done   // if equal then its not less than
+    bcs label  // addr <= y reg, but already check for = so its <
+Done:
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are less than the contents of y reg.
+// branch if addr1 < y reg
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: the address of the byte in memory
+//   y reg: holds value to compare with byte at addr1
+//   label: the label to branch to if condition met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_blt8_y_far(addr1, label)
+{
+    // want to branch if addr1 < y reg
+    cpy addr1  // carry will be set if addr1 <= y reg
+    bcc Done   // addr1 > y reg, no branch
+    beq Done   // addr == y reg, no branch
+    jmp label
+Done:
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are less than or equal to the contents the y reg 
+// branch if addr1 <= y reg
+//   addr1: the address of the first byte
+//   y reg: holds value to compare with byte at addr1
+//   label: the label to branch to if condition met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_ble8_y(addr1, label)
+{
+    cpy addr1  // carry will be set if addr1 <= y reg
+    bcs label
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of a byte at one memory location  
+// are less than or equal to the contents the y reg 
+// branch if addr1 <= y reg
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: the address of the first byte
+//   y reg: holds value to compare with byte at addr1
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_ble8_y_far(addr1, label)
+{
+    cpy addr1  // carry will be set if addr1 <= y reg
+    bcc Done
+    jmp label
+Done:
+}
 

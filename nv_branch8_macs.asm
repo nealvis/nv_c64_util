@@ -276,6 +276,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than or equal to the contents in another memory location 
+// branch if addr1 <= addr2
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the first byte
 //   addr2: the address of the second byte 
@@ -286,22 +287,15 @@ Done:
 .macro nv_ble8_far(addr1, addr2, label)
 {
     // after cmp: 
-    // Carry Flag	Set if addr1 >= addr2
-    // Zero Flag	Set if addr1 == addr2
-
-    lda addr1
-    cmp addr2
-    bcs GTE
-LT:
-    jmp label       // not greater than or equal to, is less than so branch
-
-GTE:
-    bne Done        // greater than but not equal so no branch
-
-EQ:                 // must be equal so jump
+    // Carry Flag	Set if addr2 >= addr1
+    // Zero Flag	Set if addr2 == addr1
+    lda addr2
+    cmp addr1
+    bcc Done
     jmp label
 Done:
 }
+
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
@@ -343,19 +337,11 @@ Done:
     }
 
     // after cmp: 
-    // Carry Flag	Set if addr1 >= addr2
-    // Zero Flag	Set if addr1 == addr2
-
-    lda addr1
-    cmp #num
-    bcs GTE
-LT:
-    jmp label       // not greater than or equal to, is less than so branch
-
-GTE:
-    bne Done        // greater than but not equal so no branch
-
-EQ:                 // must be equal so jump
+    // Carry Flag	Set if addr2 >= addr1
+    // Zero Flag	Set if addr2 == addr1
+    lda #num
+    cmp addr1
+    bcc Done
     jmp label
 Done:
 }

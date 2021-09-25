@@ -57,11 +57,11 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_beq8_immediate(addr1, num, label)
+.macro nv_beq8_immed(addr1, num, label)
 {
     .if (num > $00FF)
     {
-        .error "Error - nv_beq8_immediate, immediate value too big"
+        .error "Error - immediate value too big"
     }
     lda #num
     cmp addr1
@@ -79,11 +79,11 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_beq8_immediate_far(addr1, num, label)
+.macro nv_beq8_immed_far(addr1, num, label)
 {
     .if (num > $00FF)
     {
-        .error "Error - nv_beq8_immediate_far, immediate value too big"
+        .error "Error - immediate value too big"
     }
     lda #num
     cmp addr1
@@ -136,11 +136,11 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_bne8_immediate(addr1, num, label)
+.macro nv_bne8_immed(addr1, num, label)
 {
     .if (num > $00FF)
     {
-        .error "Error - nv_beq8_immediate, immediate value too big"
+        .error "Error - immediate value too big"
     }
     lda #num
     cmp addr1
@@ -158,11 +158,11 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_bne8_immediate_far(addr1, num, label)
+.macro nv_bne8_immed_far(addr1, num, label)
 {
     .if (num > $00FF)
     {
-        .error "Error - nv_beq8_immediate_far, immediate value too big"
+        .error "Error - immediate value too big"
     }
     lda #num
     cmp addr1
@@ -219,11 +219,11 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_blt8_immediate(addr1, num, label)
+.macro nv_blt8_immed(addr1, num, label)
 {
     .if (num > $00FF)
     {
-        .error "Error - nv_blt8_immediate, immediate value too big"
+        .error "Error - immediate value too big"
     }
 
     lda addr1
@@ -241,11 +241,11 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_blt8_immediate_far(addr1, num, label)
+.macro nv_blt8_immed_far(addr1, num, label)
 {
     .if (num > $00FF)
     {
-        .error "Error - nv_blt8_immediate_far, immediate value too big"
+        .error "Error - immediate value too big"
     }
 
     lda addr1
@@ -306,11 +306,11 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_ble8_immediate(addr1, num, label)
+.macro nv_ble8_immed(addr1, num, label)
 {
     .if (num > $00FF)
     {
-        .error "Error - nv_ble8_immediate, immediate value too big"
+        .error "Error - immediate value too big"
     }
 
     lda addr1
@@ -329,11 +329,11 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_ble8_immediate_far(addr1, num, label)
+.macro nv_ble8_immed_far(addr1, num, label)
 {
     .if (num > $00FF)
     {
-        .error "Error - nv_ble8_immediate_far, immediate value too big"
+        .error "Error - immediate value too big"
     }
 
     // after cmp: 
@@ -399,11 +399,11 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_bgt8_immediate(addr1, num, label)
+.macro nv_bgt8_immed(addr1, num, label)
 {
     .if (num > $00FF)
     {
-        .error "Error - nv_bgt8_immediate, immediate value too big"
+        .error "Error - immediate value too big"
     }
 
     // Carry Flag	Set if addr1 >= addr2
@@ -425,11 +425,11 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_bgt8_immediate_far(addr1, num, label)
+.macro nv_bgt8_immed_far(addr1, num, label)
 {
     .if (num > $00FF)
     {
-        .error "Error - nv_bgt8_immediate_far, immediate value too big"
+        .error "Error - immediate value too big"
     }
 
     // Carry Flag	Set if addr1 >= addr2
@@ -494,11 +494,11 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_bge8_immediate(addr1, num, label)
+.macro nv_bge8_immed(addr1, num, label)
 {
     .if (num > $00FF)
     {
-        .error "Error - nv_bge8_immediate, immediate value too big"
+        .error "Error -  immediate value too big"
     }
 
     lda addr1
@@ -518,11 +518,11 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_bge8_immediate_far(addr1, num, label)
+.macro nv_bge8_immed_far(addr1, num, label)
 {
     .if (num > $00FF)
     {
-        .error "Error - nv_bge8_immediate_far, immediate value too big"
+        .error "Error - immediate value too big"
     }
 
     lda addr1

@@ -1505,6 +1505,7 @@ Done:
 // macros with immediate number and X reg as an opperand
 //////////////////////////////////////////////////////////////////////////////
 
+
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has same contents as X reg
 // macro params:
@@ -1604,8 +1605,8 @@ Done:
     {
         .error "Error - immediate value too big"
     }
-    cpx #num   // carry will be set if num <= accum
-    bcc label   // num > accum
+    cpx #num   // carry will be set if num <= x reg
+    bcc label   // num > x reg
 }
 
 
@@ -1627,9 +1628,9 @@ Done:
         .error "Error - immediate value too big"
     }
 
-    cpx #num   // carry will be set if num <= accum
+    cpx #num   // carry will be set if num <= x reg
     bcs Done    // carry set so no branch
-    jmp label   // num > accum
+    jmp label   // num > x reg
 Done:
 }
 
@@ -1652,9 +1653,9 @@ Done:
         .error "Error - immediate value too big"
     }
 
-    cpx #num   // carry will be set if num <= accum
-    beq label   // num = accum, so branch
-    bcc label   // num > accum, so branch
+    cpx #num   // carry will be set if num <= x reg
+    beq label   // num = x reg, so branch
+    bcc label   // num > x reg, so branch
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1677,10 +1678,10 @@ Done:
 
     cpx #num     // carry will be set if num <= accum
     bne NotEqual  // not equal so check less/greater
-    jmp label     // num = accum, so branch
+    jmp label     // num = x reg, so branch
 NotEqual:
-    bcs Done      // num < accum because checked for equal above, no branch
-    jmp label     // num > accum, so branch
+    bcs Done      // num < x reg because checked for equal above, no branch
+    jmp label     // num > x reg, so branch
 Done:
 }
 
@@ -1701,10 +1702,10 @@ Done:
         .error "Error - immediate value too big"
     }
 
-    // want to branch if num < accum
-    cpx #num  // carry will be set if num <= accum
+    // want to branch if num < x reg
+    cpx #num  // carry will be set if num <= x reg
     beq Done   // if equal then its not less than
-    bcs label  // num <= accum, but already check for = so its <
+    bcs label  // num <= x reg, but already check for = so its <
 Done:
 }
 
@@ -1727,10 +1728,10 @@ Done:
         .error "Error - immediate value too big"
     }
 
-   // want to branch if num < accum
-    cpx #num  // carry will be set if num <= accum
-    bcc Done   // num > accum, no branch
-    beq Done   // addr == accum, no branch
+   // want to branch if num < x reg
+    cpx #num  // carry will be set if num <= x reg
+    bcc Done   // num > x reg, no branch
+    beq Done   // addr == x reg, no branch
     jmp label
 Done:
 }
@@ -1740,7 +1741,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if an 8 bit immediate value  
 // is less than or equal to the contents the x reg 
-// branch if num <= accum
+// branch if num <= x reg
 //   num: the 8 bit immediate value to compare
 //   x reg: holds one value for comparison
 //   label: the label to branch to if condition is met
@@ -1754,7 +1755,7 @@ Done:
         .error "Error - immediate value too big"
     }
 
-    cpx #num  // carry will be set if num <= accum
+    cpx #num  // carry will be set if num <= x reg
     bcs label
 }
 
@@ -1776,10 +1777,294 @@ Done:
         .error "Error - immediate value too big"
     }
 
-    cpx #num  // carry will be set if num <= accum
+    cpx #num  // carry will be set if num <= x reg
     bcc Done
     jmp label
 Done:
 }
+
+
+//////////////////////////////////////////////////////////////////////////////
+// macros with immediate number and Y reg as an opperand
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if a bytes in memory has same contents as y reg
+// macro params:
+// branch if num = y reg
+//   y reg: has a value to compare
+//   num: is the immediate 8 bit value to compare
+//   label: is the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_beq8_immed_y(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+    cpy #num
+    beq label
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if a bytes in memory has same contents as y reg
+// branch if num = y reg
+// The branch label's address can be farther than +127/-128 bytes away
+// macro params:
+//   y reg: has a value to compare 
+//   num: is the immediate 8 bit value to compare
+//   label: is the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_beq8_immed_y_far(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+    cpy #num
+    bne Done
+    jmp label
+Done:
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if a an 8 bit immediate value is  different than contents of y reg
+// branch if num != y reg
+//   y reg: is hold one value to compare
+//   num: is the immediate 8 bit value to compare
+//   label: is the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bne8_immed_y(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+    cpy  #num
+    bne label
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if immiediate 8 bit value is different than y reg.
+// branch if num != y reg
+// The branch label's address can be farther than +127/-128 bytes away
+//   num: is the immediate 8 bit number to compare
+//   y reg: holds one value to compare
+//   label: is the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bne8_immed_y_far(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+    cpy #num
+    beq Done    // is equal, don't branch/jump to label
+    jmp label
+Done:
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value is greater than y reg  
+// branch if num > y reg
+//   num: the 8 bit immediate value to compare
+//   y reg: holds one value for comparison
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bgt8_immed_y(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+    cpy #num   // carry will be set if num <= y reg
+    bcc label   // num > y reg
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8bit immed value   
+// is greater than the contents of the y reg.
+// branch if num > y reg
+// The branch label's address can be farther than +127/-128 bytes away
+//   num: the 8 bit immdediate value to compare
+//   y reg: holds one value for comparison
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bgt8_immed_y_far(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+    cpy #num   // carry will be set if num <= y reg
+    bcs Done    // carry set so no branch
+    jmp label   // num > y reg
+Done:
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value   
+// is greater than or equal to the contents of y reg
+// branch if num >= y reg
+//   num: the 8 bit immediate value to compare
+//   y reg: holds one value for comparison
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bge8_immed_y(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+    cpy #num   // carry will be set if num <= y reg
+    beq label   // num = y reg, so branch
+    bcc label   // num > y reg, so branch
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value 
+// is greater than or equal to the contents of y reg
+// branch if num >= y reg
+// The branch label's address can be farther than +127/-128 bytes away
+//   num: the 8 bit immediate value to compare
+//   y reg: holds one value for comparison
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bge8_immed_y_far(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+    cpy #num     // carry will be set if num <= accum
+    bne NotEqual  // not equal so check less/greater
+    jmp label     // num = y reg, so branch
+NotEqual:
+    bcs Done      // num < y reg because checked for equal above, no branch
+    jmp label     // num > y reg, so branch
+Done:
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value  
+// is less than the contents of y reg.
+// branch if num <= y reg
+//   num: the 8 bit immediate value to compare
+//   y reg: holds one value for comparison
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_blt8_immed_y(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+    // want to branch if num < y reg
+    cpy #num  // carry will be set if num <= y reg
+    beq Done   // if equal then its not less than
+    bcs label  // num <= y reg, but already check for = so its <
+Done:
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value  
+// is less than the contents of y reg.
+// branch if num < y reg
+// The branch label's address can be farther than +127/-128 bytes away
+//   num: the 8 bit immediate value to compare
+//   y reg: holds one value for comparison
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_blt8_immed_y_far(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+   // want to branch if num < y reg
+    cpy #num  // carry will be set if num <= y reg
+    bcc Done   // num > y reg, no branch
+    beq Done   // addr == y reg, no branch
+    jmp label
+Done:
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value  
+// is less than or equal to the contents the y reg 
+// branch if num <= y reg
+//   num: the 8 bit immediate value to compare
+//   y reg: holds one value for comparison
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_ble8_immed_y(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+    cpy #num  // carry will be set if num <= y reg
+    bcs label
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if an 8 bit immediate value  
+// is less than or equal to the contents the y reg 
+// branch if num <= y reg
+// The branch label's address can be farther than +127/-128 bytes away
+//   num: the 8 bit immediate value to compare
+//   label: the label to branch to if condition is met
+// Accum: unchanged
+// y reg: unchanged
+// Y Reg: unchanged
+.macro nv_ble8_immed_y_far(num, label)
+{
+    .if (num > $00FF)
+    {
+        .error "Error - immediate value too big"
+    }
+
+    cpy #num  // carry will be set if num <= y reg
+    bcc Done
+    jmp label
+Done:
+}
+
 
 

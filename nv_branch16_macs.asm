@@ -131,6 +131,38 @@ Done:
 Done:
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// branch if two words in memory have the different contents
+//   addr1: is the address of LSB of one word (addr1+1 is MSB)
+//   addr2: is the address of LSB of the other word (addr2+1 is MSB)
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bne16(addr1, addr2, label)
+{
+    nv_cmp16(addr1, addr2)
+    bne label
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if two words in memory have the different contents.
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one word (addr1+1 is MSB)
+//   addr2: is the address of LSB of the other word (addr2+1 is MSB)
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bne16_far(addr1, addr2, label)
+{
+    nv_cmp16(addr1, addr2)
+    beq Done
+    jmp label
+Done:
+}
+
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a word at one memory location  

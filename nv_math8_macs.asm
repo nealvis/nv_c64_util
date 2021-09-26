@@ -140,7 +140,13 @@ MaskDone:
 
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to do twos compliment on accum
+// inline macro to do subtraction between two 8bit values, both 
+// in memory.
+// result_addr = addr1 - addr2
+// Params: 
+//   addr1: address of op1 for subtraction
+//   addr2: address of op2 for subtraction
+//   restult_addr: address to place result of subtration 
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
@@ -149,7 +155,7 @@ MaskDone:
     sec
     lda addr1
     sbc addr2
-    sta result_addr
+    sta result_addr  // sta doesn't modify status register
 }
 //
 //////////////////////////////////////////////////////////////////////////////

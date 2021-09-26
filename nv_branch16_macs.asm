@@ -163,6 +163,39 @@ Done:
 Done:
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if one word in memory has different content than 
+// an immediate 16 bit value
+//   addr1: is the address of LSB of one word (addr1+1 is MSB)
+//   num: is the immediate 16 bit value to compare with the contents of addr1
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bne16_immed(addr1, num, label)
+{
+    nv_cmp16_immed(addr1, num)
+    bne label
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if one word in memory has different contents than 
+// an immediate 16 bit value
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one word (addr1+1 is MSB)
+//   num: is the immediate 16 bit value to compare with the contents of addr1
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bne16_immed_far(addr1, num, label)
+{
+    nv_cmp16_immed(addr1, num)
+    beq Done
+    jmp label
+Done:
+}
+
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a word at one memory location  

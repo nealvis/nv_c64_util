@@ -51,7 +51,7 @@ Done:
 // Accum: changes
 // X Reg: no change
 // Y Reg: no change
-.macro nv_cmp16_immediate(addr1, num)
+.macro nv_cmp16_immed(addr1, num)
 {
     // first compare the MSBs
     lda addr1+1
@@ -106,9 +106,9 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_beq16_immediate(addr1, num, label)
+.macro nv_beq16_immed(addr1, num, label)
 {
-    nv_cmp16_immediate(addr1, num)
+    nv_cmp16_immed(addr1, num)
     beq label
 }
 
@@ -123,9 +123,9 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_beq16_immediate_far(addr1, num, label)
+.macro nv_beq16_immed_far(addr1, num, label)
 {
-    nv_cmp16_immediate(addr1, num)
+    nv_cmp16_immed(addr1, num)
     bne Done
     jmp label
 Done:
@@ -176,9 +176,9 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_blt16_immediate(addr1, num, label)
+.macro nv_blt16_immed(addr1, num, label)
 {
-    nv_cmp16_immediate(addr1, num)
+    nv_cmp16_immed(addr1, num)
     bcc label
 }
 
@@ -193,9 +193,9 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_blt16_immediate_far(addr1, num, label)
+.macro nv_blt16_immed_far(addr1, num, label)
 {
-    nv_cmp16_immediate(addr1, num)
+    nv_cmp16_immed(addr1, num)
     bcs Done
     jmp label
 Done:    
@@ -249,9 +249,9 @@ Done:
 // Accum: changes
 // X Reg: remains unchanged
 // Y Reg: remains unchanged
-.macro nv_ble16_immediate(addr1, num, label)
+.macro nv_ble16_immed(addr1, num, label)
 {
-    nv_cmp16_immediate(addr1, num)
+    nv_cmp16_immed(addr1, num)
     // Carry Flag	Set if addr1 >= addr2
     // Zero Flag	Set if addr1 == addr2
 
@@ -269,9 +269,9 @@ Done:
 // Accum: changes
 // X Reg: remains unchanged
 // Y Reg: remains unchanged
-.macro nv_ble16_immediate_far(addr1, num, label)
+.macro nv_ble16_immed_far(addr1, num, label)
 {
-    nv_bgt16_immediate(addr1, num, Done)
+    nv_bgt16_immed(addr1, num, Done)
     jmp label
 Done:
 }
@@ -326,9 +326,9 @@ Done:
 //   Accum: changes
 //   X Reg: no change
 //   Y Reg: no change
-.macro nv_bgt16_immediate(addr1, num, label)
+.macro nv_bgt16_immed(addr1, num, label)
 {
-    nv_cmp16_immediate(addr1, num)
+    nv_cmp16_immed(addr1, num)
     // Carry Flag	Set if addr1 >= addr2
     // Zero Flag	Set if addr1 == addr2
 
@@ -349,9 +349,9 @@ Done:
 //   Accum: changes
 //   X Reg: no change
 //   Y Reg: no change
-.macro nv_bgt16_immediate_far(addr1, num, label)
+.macro nv_bgt16_immed_far(addr1, num, label)
 {
-    nv_ble16_immediate(addr1, num, Done)
+    nv_ble16_immed(addr1, num, Done)
     jmp label
 Done:
 }
@@ -401,9 +401,9 @@ Done:
 //   num: is the immediate 16 bit value to compare with the contents of addr1
 //   label: is the label to branch to
 // todo print macro
-.macro nv_bge16_immediate(addr1, num, label)
+.macro nv_bge16_immed(addr1, num, label)
 {
-    nv_cmp16_immediate(addr1, num)
+    nv_cmp16_immed(addr1, num)
     // Carry Flag	Set if addr1 >= num
 
     bcs label
@@ -417,9 +417,9 @@ Done:
 //   num: is the immediate 16 bit value to compare with the contents of addr1
 //   label: is the label to branch to
 // todo print macro
-.macro nv_bge16_immediate_far(addr1, num, label)
+.macro nv_bge16_immed_far(addr1, num, label)
 {
-    nv_cmp16_immediate(addr1, num)
+    nv_cmp16_immed(addr1, num)
     // Carry Flag	Set if addr1 >= num
     bcc Done
     jmp label

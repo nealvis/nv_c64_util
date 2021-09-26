@@ -22,6 +22,8 @@
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to create a bit mask for a bit number between 0 and 7.
+// if bit_num_addr contains 0 then the accum will be $01
+// if bit_num_addr contains 1 then the accum will be $02
 //   macro parameters:
 //     bit_num_addr: is the address of a byte that contains the bit
 //                   number for which a bit mask will be created. 
@@ -81,11 +83,11 @@ MaskDone:
 // macro parameters
 //   addr: the address in which to store the immediate value
 //   immed_value: is the value to store ($00 - $FF)
-.macro nv_store8_immediate(addr, immed_value)
+.macro nv_store8_immed(addr, immed_value)
 {
     .if (immed_value > $00FF)
     {
-        .error("Error - nv_store8_immediate: immed_value, was larger than 8 bits")
+        .error("Error - nv_store8_immed: immed_value, was larger than 8 bits")
     }
     lda #immed_value
     sta addr
@@ -105,7 +107,7 @@ MaskDone:
 //////////////////////////////////////////////////////////////////////////////
 // multiply the contents of the accum with the immediate
 // number and put result in accum
-.macro nv_mul8_immediate(num)
+.macro nv_mul8_immed(num)
 {
     .error ("ERROR - nv_mul8_immediate: not implemented")
 }

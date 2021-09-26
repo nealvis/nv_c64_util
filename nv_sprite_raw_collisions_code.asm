@@ -70,7 +70,7 @@
 
     // initialize closest sprite to $FF which is an invalid sprite
     // if its still this at the end, then no collision with sprite_num
-    nv_store8_immediate(closest_sprite, $FF)
+    nv_store8_immed(closest_sprite, $FF)
 
     lda collision_bit
     nv_debug_print_labeled_byte_mem_coll(10, 0, collision_bit_label1, 17, 
@@ -111,7 +111,7 @@ WasSprite0:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8_immediate(closest_sprite, 0)
+    nv_store8_immed(closest_sprite, 0)
     
 
 CheckSprite1:
@@ -132,7 +132,7 @@ WasSprite1:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8_immediate(closest_sprite, 1)
+    nv_store8_immed(closest_sprite, 1)
 
 CheckSprite2:
     ror collision_bit        // rotate bit for sprite 2 bit to carry
@@ -152,7 +152,7 @@ WasSprite2:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8_immediate(closest_sprite, 2)
+    nv_store8_immed(closest_sprite, 2)
 
 
 CheckSprite3:
@@ -173,7 +173,7 @@ WasSprite3:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8_immediate(closest_sprite, 3)
+    nv_store8_immed(closest_sprite, 3)
 
 CheckSprite4:
     ror collision_bit        // rotate bit for sprite 4 bit to carry
@@ -193,7 +193,7 @@ WasSprite4:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8_immediate(closest_sprite, 4)
+    nv_store8_immed(closest_sprite, 4)
 
 
 CheckSprite5:
@@ -215,7 +215,7 @@ WasSprite5:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8_immediate(closest_sprite, 5)
+    nv_store8_immed(closest_sprite, 5)
 
 
 CheckSprite6:
@@ -236,7 +236,7 @@ WasSprite6:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8_immediate(closest_sprite, 6)
+    nv_store8_immed(closest_sprite, 6)
 
 
 CheckSprite7:
@@ -256,7 +256,7 @@ WasSprite7:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8_immediate(closest_sprite, 7)
+    nv_store8_immed(closest_sprite, 7)
 
 DoneChecking:
 

@@ -116,8 +116,14 @@ MaskDone:
 
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to do twos compliment on accum
-.macro nv_twos_comp8_accum()
+// inline macro to perform twos compliment on accum
+// note: that twos compliment on $80 (-128, the min neg value)
+//       is $80 (itself, since +128 is unrepresentable in 8bits).  
+//       The consumer of this macro should check for that case
+// accum: changed to hold the twos compliment of what it held when called
+// x reg: unchanged
+// y reg: unchanged
+.macro nv_twos_comp8_a()
 {
     eor #$FF
     clc

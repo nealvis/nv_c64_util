@@ -133,7 +133,17 @@ MaskDone:
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to do twos compliment on accum
+// inline macro to do an in place twos compliment on the 8 bit value 
+// at a memory addr
+// macro params: 
+//   addr: the memory address to a byte that holds the value to perform
+//         the twos compliment on.  After the macro executes this
+//         byte will be the twos compliment of the value it was prior
+// Note: that twos compliment of -128 will be -128 since +128 can't be
+//       represented in 8 signed bits of twos compliment encoded numbers.
+// Accum: changes
+// x reg: unchanged
+// y reg: unchanged
 .macro nv_twos_comp8_mem(addr)
 {
     lda addr

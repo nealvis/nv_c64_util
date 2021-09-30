@@ -103,7 +103,33 @@ Op2Positive:
     adc addr8
     sta result_addr
     lda addr16+1
+bcc SkipAddition
     adc #0
+SkipAddition:
+    sta result_addr+1
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to add the accum to a 16 bit word in memory
+// and store the result to a 16 bit word in memory
+// carry bit will be set if carry occured
+// params:
+//   addr16 is the address of the LSB of 16 bit operand
+//   accum: contains the value to add to addr16  Since this is an
+//         unsigned operation, when the value is $FF, the result won't be to
+//         adding a negative 1 but will be adding 255 to the 16 bit value.    
+//   result_addr is the address to store the result.
+.macro nv_adc16_a_unsigned(addr16, result_addr)
+{
+    clc
+    adc addr16          // add LSB of addr16 with accum/x reg
+    sta result_addr     // above addition is LSB of result
+    lda addr16+1        // load MSB of addr16 to update 
+    bcc SkipAdd         // carry is clear, we are done MSB is unchanged
+    adc #0              // add 0, carry will be set if appropriate
+SkipAdd:
     sta result_addr+1
 }
 //
@@ -242,6 +268,47 @@ Loop:
 }
 //
 //////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// rotate bits left in a 16 bit location in memory
+// addr is the address of the lo byte and addr+1 is the MSB
+// num is an immediate value that is the nubmer of rotations to do.
+// zeros will be rotated in to the low bits
+// the carry flag will be set if the last rotation rotated off
+// a one from the low bit.  
+// Use this to multiply by 2 or any power of two.
+.macro nv_asl16_immed(addr, num)
+{
+    ldy #num
+    nv_asl16_y(addr)
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// rotate bits left in a 16 bit location in memory
+// params:
+//   addr: is the address of the lo byte and addr+1 is the MSB
+//   y reg: must be loaded with the nubmer of rotations to do.
+// zeros will be rotated in to the low bits
+// the carry flag will be set if the last rotation rotated off
+// a one from the low bit.  
+// Use this to multiply by 2 or any power of two.
+// Accum: unchanged
+// Y reg: changes, will be zero after macro executes
+// X reg: unchanged
+.macro nv_asl16_y(addr)
+{
+    clc
+Loop:
+    asl addr
+    rol addr+1
+    dey
+    bne Loop
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to negate a 16 bit number at addr specified

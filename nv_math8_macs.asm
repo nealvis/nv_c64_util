@@ -19,6 +19,8 @@
 // if data hasn't been imported yet, import it into default location
 #importif !NV_C64_UTIL_DATA "nv_c64_util_default_data.asm"
 
+#import "nv_branch8_macs.asm"
+#import "nv_math16_macs.asm"
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to create a bit mask for a bit number between 0 and 7.
@@ -93,24 +95,243 @@ MaskDone:
     sta addr
 }
 
+
 //////////////////////////////////////////////////////////////////////////////
-// multiply byte at a memory address with byte in accum
-// result is in accum
-.macro nv_mul8(addr)
+// multiply byte at a memory address with byte in at another mem addr
+// and place result in a third (16 bit) memory address
+// params:
+//   addr1: addr of first 8bit operand for multiplication
+//   addr2: addr of second 8bit operand for multiplication
+//   result: address of a 16bit word in memory for the result
+// Accum: changes
+// X Reg: changes
+// Y Reg: changes
+.macro nv_mul8_mem_mem(addr1, addr2, result)
 {
-    .error ("ERROR - nv_mul8: not implemented")
+    lda #0 
+    sta result
+    sta result+1
+    nv_beq8_immed_far(addr1, $00, ResultReady)
+    nv_beq8_immed_far(addr2, $00, ResultReady)
+
+    // start with addr1 
+    lda addr1
+    sta result
+
+    // figure out which power of two fits into addr2
+    lda addr2
+Try128:
+    nv_bgt8_immed_a(128, Try64)
+    // 256 > addr2 >= 128 
+    sec
+    // lda addr2  accum already loaded from addr2 
+    sbc #128  // 128 is only bit 7 set
+    ldy #7    // bit 7
+    jmp HaveRotateNum 
+
+Try64:
+    nv_bgt8_immed_a(64, Try32)
+    // 128 > addr2 >= 64
+    sec
+    // lda addr2  accum already loaded from addr2 
+    sbc #64   // 64 is only bit 6 set
+    ldy #6    // bit 6
+    jmp HaveRotateNum 
+
+Try32:
+    nv_bgt8_immed_a(32, Try16)
+    // 64 > addr2 >= 32
+    sec
+    // lda addr2 accum already loaded from addr2 
+    sbc #32   // 32 is only bit 5 set
+    ldy #5    // bit 5  
+    jmp HaveRotateNum 
+
+Try16:
+    nv_bgt8_immed_a(16, Try8)
+    // 32 > addr2 >= 16
+    sec
+    // lda addr2  accum already loaded from addr2 
+    sbc #16   // 16 is only bit 4 set
+    ldy #4    // bit 4
+    jmp HaveRotateNum 
+
+Try8:
+    nv_bgt8_immed_a(8, Try4)
+    // 16 > addr2 >= 8
+    sec
+    // lda addr2  accum already loaded from addr2 
+    sbc #8    // 8 is only bit 3 set
+    ldy #3    // bit 3
+    jmp HaveRotateNum 
+
+Try4:
+    nv_bgt8_immed_a(4, Try2)
+    // 8 > addr2 >= 4
+    sec
+    // lda addr2  accum already loaded from addr2 
+    sbc #4    // 4 is only bit 2 set
+    ldy #2    // bit 2
+    jmp HaveRotateNum 
+
+Try2:
+    nv_bgt8_immed_a(2, Try1)
+    // 4 > addr2 >= 2
+    sec
+    // lda addr2  accum already loaded from addr2 
+    sbc #2    // 2 is only bit 1 set
+    ldy #1    // bit 1
+    jmp HaveRotateNum 
+
+Try1:
+    // 2 > addr2 and tested for 0 already so,  must be 1
+    // so result is ready, MSB already set to 0 and LSB set to addr1
+    jmp ResultReady
+
+HaveRotateNum: 
+    // when get here y reg should have the number of bits to 
+    // rotate left and the accum should have the remaining 
+    // number of times multiples of addr1 needs to be added to 
+    // the result after its shifted
+
+    // shift left to multiply by the largest power of two
+    // that we can which is in the y reg. 
+    nv_asl16_y(result)
+
+    // move number of additions to the x reg
+    tax
+
+LoopTop:
+    beq ResultReady
+    nv_adc16_8unsigned(result, addr1, result)
+    dex
+jmp LoopTop
+
+ResultReady:
 }
+
 //
 //////////////////////////////////////////////////////////////////////////////
 
-
 //////////////////////////////////////////////////////////////////////////////
-// multiply the contents of the accum with the immediate
-// number and put result in accum
-.macro nv_mul8_immed(num)
+// multiply byte at a memory address with an immediate value
+// and place result in a third (16 bit) memory address
+// params:
+//   addr1: addr of first 8bit operand for multiplication
+//   num: immediate value which is the second  8bit operand for mult
+//   result: address of a 16bit word in memory for the result
+// Accum: changes
+// X Reg: changes
+// Y Reg: changes
+.macro nv_mul8_mem_immed(addr1, num, result)
 {
-    .error ("ERROR - nv_mul8_immediate: not implemented")
+    .if (num > $00FF)
+    {
+        .error("Error - nv_mul8_mem_immed: num, was larger than 8 bits")
+    }
+
+    lda #0 
+    sta result
+    sta result+1
+    nv_beq8_immed_far(addr1, $00, ResultReady)
+    nv_beq8_immed_a_far(num, ResultReady)
+
+    // start with addr1 
+    lda addr1
+    sta result
+
+    // figure out which power of two fits into #num
+    lda #num
+Try128:
+    nv_bgt8_immed_a(128, Try64)
+    // 256 > num >= 128 
+    sec
+    // lda #num  accum already loaded from #num 
+    sbc #128  // 128 is only bit 7 set
+    ldy #7    // bit 7
+    jmp HaveRotateNum 
+
+Try64:
+    nv_bgt8_immed_a(64, Try32)
+    // 128 > num >= 64
+    sec
+    // lda #num  accum already loaded from #num 
+    sbc #64   // 64 is only bit 6 set
+    ldy #6    // bit 6
+    jmp HaveRotateNum 
+
+Try32:
+    nv_bgt8_immed_a(32, Try16)
+    // 64 > addr2 >= 32
+    sec
+    // lda #num accum already loaded from #num 
+    sbc #32   // 32 is only bit 5 set
+    ldy #5    // bit 5  
+    jmp HaveRotateNum 
+
+Try16:
+    nv_bgt8_immed_a(16, Try8)
+    // 32 > num >= 16
+    sec
+    // lda #num  accum already loaded from #num 
+    sbc #16   // 16 is only bit 4 set
+    ldy #4    // bit 4
+    jmp HaveRotateNum 
+
+Try8:
+    nv_bgt8_immed_a(8, Try4)
+    // 16 > #num >= 8
+    sec
+    // lda #num  accum already loaded from #num 
+    sbc #8    // 8 is only bit 3 set
+    ldy #3    // bit 3
+    jmp HaveRotateNum 
+
+Try4:
+    nv_bgt8_immed_a(4, Try2)
+    // 8 > num >= 4
+    sec
+    // lda #num  accum already loaded from #num 
+    sbc #4    // 4 is only bit 2 set
+    ldy #2    // bit 2
+    jmp HaveRotateNum 
+
+Try2:
+    nv_bgt8_immed_a(2, Try1)
+    // 4 > num >= 2
+    sec
+    // lda #num  accum already loaded from #num 
+    sbc #2    // 2 is only bit 1 set
+    ldy #1    // bit 1
+    jmp HaveRotateNum 
+
+Try1:
+    // 2 > addr2 and tested for 0 already so,  must be 1
+    // so result is ready, MSB already set to 0 and LSB set to addr1
+    jmp ResultReady
+
+HaveRotateNum: 
+    // when get here y reg should have the number of bits to 
+    // rotate left and the accum should have the remaining 
+    // number of times multiples of addr1 needs to be added to 
+    // the result after its shifted
+
+    // shift left to multiply by the largest power of two
+    // that we can which is in the y reg. 
+    nv_asl16_y(result)
+
+    // move number of additions to the x reg
+    tax
+
+LoopTop:
+    beq ResultReady
+    nv_adc16_8unsigned(result, addr1, result)
+    dex
+jmp LoopTop
+
+ResultReady:
 }
+
 //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -175,3 +396,25 @@ MaskDone:
 }
 //
 //////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to do subtraction between two 8bit values, one in memory 
+// and the other is an immediate number
+// result_addr = addr1 - num
+// Params: 
+//   addr1: address of op1 for subtraction
+//   num: the immediate number to use as op2 for subtraction
+//   restult_addr: address to place result of subtration 
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_sbc8_mem_immed(addr1, num, result_addr)
+{
+    sec
+    lda addr1
+    sbc #num
+    sta result_addr  // sta doesn't modify status register
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+

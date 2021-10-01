@@ -121,10 +121,13 @@ SkipAddition:
 //         unsigned operation, when the value is $FF, the result won't be to
 //         adding a negative 1 but will be adding 255 to the 16 bit value.    
 //   result_addr is the address to store the result.
+// accum: changes
+// x reg: unchanged
+// y reg: unchanged
 .macro nv_adc16_a_unsigned(addr16, result_addr)
 {
     clc
-    adc addr16          // add LSB of addr16 with accum/x reg
+    adc addr16          // add LSB of addr16 with accum
     sta result_addr     // above addition is LSB of result
     lda addr16+1        // load MSB of addr16 to update 
     bcc SkipAdd         // carry is clear, we are done MSB is unchanged

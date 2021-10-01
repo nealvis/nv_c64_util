@@ -96,6 +96,7 @@ MaskDone:
 }
 
 
+
 //////////////////////////////////////////////////////////////////////////////
 // multiply byte at a memory address with byte in at another mem addr
 // and place result in a third (16 bit) memory address
@@ -108,117 +109,16 @@ MaskDone:
 // Y Reg: changes
 .macro nv_mul8_mem_mem(addr1, addr2, result)
 {
-    lda #0 
-    sta result
-    sta result+1
-    nv_beq8_immed_far(addr1, $00, ResultReady)
-    nv_beq8_immed_far(addr2, $00, ResultReady)
-
-    // start with addr1 
-    lda addr1
-    sta result
-
-    // figure out which power of two fits into addr2
     lda addr2
-Try128:
-    nv_bgt8_immed_a(128, Try64)
-    // 256 > addr2 >= 128 
-    sec
-    // lda addr2  accum already loaded from addr2 
-    sbc #128  // 128 is only bit 7 set
-    ldy #7    // bit 7
-    jmp HaveRotateNum 
-
-Try64:
-    nv_bgt8_immed_a(64, Try32)
-    // 128 > addr2 >= 64
-    sec
-    // lda addr2  accum already loaded from addr2 
-    sbc #64   // 64 is only bit 6 set
-    ldy #6    // bit 6
-    jmp HaveRotateNum 
-
-Try32:
-    nv_bgt8_immed_a(32, Try16)
-    // 64 > addr2 >= 32
-    sec
-    // lda addr2 accum already loaded from addr2 
-    sbc #32   // 32 is only bit 5 set
-    ldy #5    // bit 5  
-    jmp HaveRotateNum 
-
-Try16:
-    nv_bgt8_immed_a(16, Try8)
-    // 32 > addr2 >= 16
-    sec
-    // lda addr2  accum already loaded from addr2 
-    sbc #16   // 16 is only bit 4 set
-    ldy #4    // bit 4
-    jmp HaveRotateNum 
-
-Try8:
-    nv_bgt8_immed_a(8, Try4)
-    // 16 > addr2 >= 8
-    sec
-    // lda addr2  accum already loaded from addr2 
-    sbc #8    // 8 is only bit 3 set
-    ldy #3    // bit 3
-    jmp HaveRotateNum 
-
-Try4:
-    nv_bgt8_immed_a(4, Try2)
-    // 8 > addr2 >= 4
-    sec
-    // lda addr2  accum already loaded from addr2 
-    sbc #4    // 4 is only bit 2 set
-    ldy #2    // bit 2
-    jmp HaveRotateNum 
-
-Try2:
-    nv_bgt8_immed_a(2, Try1)
-    // 4 > addr2 >= 2
-    sec
-    // lda addr2  accum already loaded from addr2 
-    sbc #2    // 2 is only bit 1 set
-    ldy #1    // bit 1
-    jmp HaveRotateNum 
-
-Try1:
-    // 2 > addr2 and tested for 0 already so,  must be 1
-    // so result is ready, MSB already set to 0 and LSB set to addr1
-    jmp ResultReady
-
-HaveRotateNum: 
-    // when get here y reg should have the number of bits to 
-    // rotate left and the accum should have the remaining 
-    // number of times multiples of addr1 needs to be added to 
-    // the result after its shifted
-
-    // shift left to multiply by the largest power of two
-    // that we can which is in the y reg. 
-    nv_asl16_y(result)
-
-    // move number of additions to the x reg
-    tax
-
-LoopTop:
-    beq ResultReady
-    nv_adc16_8unsigned(result, addr1, result)
-    dex
-jmp LoopTop
-
-ResultReady:
+    nv_mul8_mem_a(addr1, result)
 }
-
-//
-//////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 // multiply byte at a memory address with an immediate value
 // and place result in a third (16 bit) memory address
 // params:
 //   addr1: addr of first 8bit operand for multiplication
-//   num: immediate value which is the second  8bit operand for mult
+//   num: the immediate 8 bit value
 //   result: address of a 16bit word in memory for the result
 // Accum: changes
 // X Reg: changes
@@ -230,83 +130,111 @@ ResultReady:
         .error("Error - nv_mul8_mem_immed: num, was larger than 8 bits")
     }
 
-    lda #0 
-    sta result
-    sta result+1
-    nv_beq8_immed_far(addr1, $00, ResultReady)
-    nv_beq8_immed_a_far(num, ResultReady)
-
-    // start with addr1 
-    lda addr1
-    sta result
-
-    // figure out which power of two fits into #num
     lda #num
+    nv_mul8_mem_a(addr1, result)
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// multiply accum with the 8 bit value at memory address
+// and place result in a word at a memory address
+// params:
+//   accum: addr of first 8bit operand for multiplication
+//   addr2: addr of second 8bit operand for multiplication
+//   result: address of a 16bit word in memory for the result
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: changes
+.macro nv_mul8_mem_a(addr1, result)
+{
+    ldy #0 
+    sty result
+    sty result+1
+
+    cmp #$00
+    bne AccumNotZero
+    // accum is zero if here
+    jmp ResultReady
+    
+AccumNotZero:
+    ldy #$00
+    cpy addr1
+    bne Addr1NotZero
+    // addr2 holds a zero if here
+    jmp ResultReady
+
+Addr1NotZero:
+    // start with addr1 
+    ldy addr1
+    sty result
+
+    // figure out which power of two fits into the value in accum
+    // the accum needs to still have the initial value from before the 
+    // macro at this point, if not then we messed up and overwrote it above.
 Try128:
     nv_bgt8_immed_a(128, Try64)
-    // 256 > num >= 128 
+    // 256 > accum >= 128 
     sec
-    // lda #num  accum already loaded from #num 
+    // lda accum  accum already loaded from accum 
     sbc #128  // 128 is only bit 7 set
     ldy #7    // bit 7
     jmp HaveRotateNum 
 
 Try64:
     nv_bgt8_immed_a(64, Try32)
-    // 128 > num >= 64
+    // 128 > accum >= 64
     sec
-    // lda #num  accum already loaded from #num 
+    // lda accum  accum already loaded from accum 
     sbc #64   // 64 is only bit 6 set
     ldy #6    // bit 6
     jmp HaveRotateNum 
 
 Try32:
     nv_bgt8_immed_a(32, Try16)
-    // 64 > addr2 >= 32
+    // 64 > accum >= 32
     sec
-    // lda #num accum already loaded from #num 
+    // lda accum accum already loaded from accum 
     sbc #32   // 32 is only bit 5 set
     ldy #5    // bit 5  
     jmp HaveRotateNum 
 
 Try16:
     nv_bgt8_immed_a(16, Try8)
-    // 32 > num >= 16
+    // 32 > accum >= 16
     sec
-    // lda #num  accum already loaded from #num 
+    // lda accum  accum already loaded from accum 
     sbc #16   // 16 is only bit 4 set
     ldy #4    // bit 4
     jmp HaveRotateNum 
 
 Try8:
     nv_bgt8_immed_a(8, Try4)
-    // 16 > #num >= 8
+    // 16 > accum >= 8
     sec
-    // lda #num  accum already loaded from #num 
+    // lda accum  accum already loaded from accum 
     sbc #8    // 8 is only bit 3 set
     ldy #3    // bit 3
     jmp HaveRotateNum 
 
 Try4:
     nv_bgt8_immed_a(4, Try2)
-    // 8 > num >= 4
+    // 8 > accum >= 4
     sec
-    // lda #num  accum already loaded from #num 
+    // lda accum  accum already loaded from accum 
     sbc #4    // 4 is only bit 2 set
     ldy #2    // bit 2
     jmp HaveRotateNum 
 
 Try2:
     nv_bgt8_immed_a(2, Try1)
-    // 4 > num >= 2
+    // 4 > accum >= 2
     sec
-    // lda #num  accum already loaded from #num 
+    // lda accum  accum already loaded from accum 
     sbc #2    // 2 is only bit 1 set
     ldy #1    // bit 1
     jmp HaveRotateNum 
 
 Try1:
-    // 2 > addr2 and tested for 0 already so,  must be 1
+    // 2 > accum and tested for 0 already so,  must be 1
     // so result is ready, MSB already set to 0 and LSB set to addr1
     jmp ResultReady
 
@@ -321,15 +249,144 @@ HaveRotateNum:
     nv_asl16_y(result)
 
     // move number of additions to the x reg
-    tax
+    tay
 
 LoopTop:
     beq ResultReady
     nv_adc16_8unsigned(result, addr1, result)
-    dex
+    dey
 jmp LoopTop
 
-ResultReady:
+ResultReady:    
+}
+
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// multiply accum with the 8 bit value at memory address
+// and place result in a word at a memory address
+// params:
+//   accum: addr of first 8bit operand for multiplication
+//   num: immediate 8 bit value which is second operand for mult
+//   result: address of a 16bit word in memory for the result
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: changes
+.macro nv_mul8_immed_a(num, result)
+{
+    ldy #0 
+    sty result
+    sty result+1
+
+    cmp #$00
+    bne AccumNotZero
+    // accum is zero if here
+    jmp ResultReady
+    
+AccumNotZero:
+    ldy #$00
+    cpy #num
+    bne Addr1NotZero
+    // addr2 holds a zero if here
+    jmp ResultReady
+
+Addr1NotZero:
+    // start with num 
+    ldy #num
+    sty result
+
+    // figure out which power of two fits into the value in accum
+    // the accum needs to still have the initial value from before the 
+    // macro at this point, if not then we messed up and overwrote it above.
+Try128:
+    nv_bgt8_immed_a(128, Try64)
+    // 256 > accum >= 128 
+    sec
+    // lda accum  accum already loaded from accum 
+    sbc #128  // 128 is only bit 7 set
+    ldy #7    // bit 7
+    jmp HaveRotateNum 
+
+Try64:
+    nv_bgt8_immed_a(64, Try32)
+    // 128 > accum >= 64
+    sec
+    // lda accum  accum already loaded from accum 
+    sbc #64   // 64 is only bit 6 set
+    ldy #6    // bit 6
+    jmp HaveRotateNum 
+
+Try32:
+    nv_bgt8_immed_a(32, Try16)
+    // 64 > accum >= 32
+    sec
+    // lda accum accum already loaded from accum 
+    sbc #32   // 32 is only bit 5 set
+    ldy #5    // bit 5  
+    jmp HaveRotateNum 
+
+Try16:
+    nv_bgt8_immed_a(16, Try8)
+    // 32 > accum >= 16
+    sec
+    // lda accum  accum already loaded from accum 
+    sbc #16   // 16 is only bit 4 set
+    ldy #4    // bit 4
+    jmp HaveRotateNum 
+
+Try8:
+    nv_bgt8_immed_a(8, Try4)
+    // 16 > accum >= 8
+    sec
+    // lda accum  accum already loaded from accum 
+    sbc #8    // 8 is only bit 3 set
+    ldy #3    // bit 3
+    jmp HaveRotateNum 
+
+Try4:
+    nv_bgt8_immed_a(4, Try2)
+    // 8 > accum >= 4
+    sec
+    // lda accum  accum already loaded from accum 
+    sbc #4    // 4 is only bit 2 set
+    ldy #2    // bit 2
+    jmp HaveRotateNum 
+
+Try2:
+    nv_bgt8_immed_a(2, Try1)
+    // 4 > accum >= 2
+    sec
+    // lda accum  accum already loaded from accum 
+    sbc #2    // 2 is only bit 1 set
+    ldy #1    // bit 1
+    jmp HaveRotateNum 
+
+Try1:
+    // 2 > accum and tested for 0 already so,  must be 1
+    // so result is ready, MSB already set to 0 and LSB set to num
+    jmp ResultReady
+
+HaveRotateNum: 
+    // when get here y reg should have the number of bits to 
+    // rotate left and the accum should have the remaining 
+    // number of times multiples of num needs to be added to 
+    // the result after its shifted
+
+    // shift left to multiply by the largest power of two
+    // that we can which is in the y reg. 
+    nv_asl16_y(result)
+
+    // move number of additions to the x reg
+    tay
+
+LoopTop:
+    beq ResultReady
+    nv_adc16_immediate(result, num, result)
+    dey
+jmp LoopTop
+
+ResultReady:    
 }
 
 //

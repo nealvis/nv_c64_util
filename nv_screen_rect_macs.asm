@@ -51,7 +51,7 @@
     // LEFT
     // (col * CHAR_PIXEL_WIDTH) + LEFT_OFFSET
     nv_store16_immediate(r_left, CHAR_PIXEL_WIDTH)
-    nv_mul16_x(r_left, r_left)
+    nv_mul16_x(r_left, r_left, NV_PROCSTAT_NONE)
     nv_adc16_immediate(r_left, LEFT_OFFSET, r_left)
     
     // TOP
@@ -105,7 +105,7 @@
     // LEFT
     // (col * CHAR_PIXEL_WIDTH) + LEFT_OFFSET
     nv_store16_immediate(r_left, CHAR_PIXEL_WIDTH)
-    nv_mul16_x(r_left, r_left)
+    nv_mul16_x(r_left, r_left, NV_PROCSTAT_NONE)
     nv_adc16_immediate(r_left, LEFT_OFFSET, r_left)
     
     // TOP
@@ -151,7 +151,7 @@
     // Set the right pixel coord value for char.  First need to set it to 
     // the left coord and then add the pixel width to get to the right
     nv_store16_immediate(r_right, CHAR_PIXEL_WIDTH)
-    nv_mul16_x(r_right, r_right)
+    nv_mul16_x(r_right, r_right, NV_PROCSTAT_NONE)
     nv_adc16_immediate(r_right, LEFT_OFFSET, r_right)
     // above code sets r_right to the left pixel position for char
     // now add char pixel width to it and it will be the right pixel position
@@ -208,7 +208,7 @@
     
     // RIGHT
     nv_store16_immediate(r_right, CHAR_PIXEL_WIDTH)       // start width
-    nv_mul16_x(r_right, r_right)                          // mul by X for inc
+    nv_mul16_x(r_right, r_right, NV_PROCSTAT_NONE)        // mul by X for inc
     nv_adc16(r_left, r_right, r_right)
     nv_adc16_immediate(r_right, CHAR_PIXEL_WIDTH, r_right)
 

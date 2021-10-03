@@ -20,6 +20,7 @@
 #importif !NV_C64_UTIL_DATA "nv_c64_util_default_data.asm"
 
 #import "nv_branch16_macs.asm"
+#import "nv_processor_status_macs.asm"
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to add two 16 bit values and store the result in another
@@ -171,14 +172,14 @@ SkipAdd:
 //   num is the immeidate 8 bit number to multiply addr1 by 
 //   result_addr is the address of the LSB of the 16 bit memory location 
 //               to store the result.
-.macro nv_mul16_immediate8(addr1, num8, result_addr)
+.macro nv_mul16_immediate8(addr1, num8, result_addr, proc_flags)
 {
     .if (num8 > 255)
     {
         .error "ERROR - nv_mul16_immediate8: num8 too large"
     }
     ldx #num8
-    nv_mul16_x(addr1, result_addr)
+    nv_mul16_x(addr1, result_addr, proc_flags)
 }
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -186,17 +187,42 @@ SkipAdd:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to multiply one 16 bit value by an 8 bit value in x reg
 // and store the result in another 16bit value.  
-// carry bit will be set if carry occured
+// Can optionally set overflow and/or zero processor status flags
 // macro params:
 //   addr1 is the address of the LSB of 16 bit value in memory
 //   result_addr is the address of the LSB of the 16 bit memory location 
 //               to store the result.
+//   proc_flags  set the bits in this 8 bit value to be 
+//               one or more (ORed together) of the NV_PROCSTAT_XXX consts
+//               The following bits can be checked, and if they 
+//               are then the corresponding flag will be set if appropriate
+//                  NV_PROCSTAT_OVERFLOW: pass value with this bit set if 
+//                                        you want overflow flag to be set
+//                                        in the case that the result overflows
+//                                        16 bits.  If overflow in status register
+//                                        is set after this executes that means 
+//                                        the reslt only has the low 16 bits
+//                                        of the multiplication result and the
+//                                        rest is lost
+//                  NV_PROCSTAT_ZERO:     pass value with this bit set if you 
+//                                        want the zero flag set in the case 
+//                                        were multiplication result in zero.
 // params:
 //   x reg should be set to the 8 bit number to multiply by prior to 
 //         this macro
 // Note: Y Reg is unchanged
-.macro nv_mul16_x(addr1, result_addr)
+.macro nv_mul16_x(addr1, result_addr, proc_flags)
 {
+    .if ((proc_flags & NV_PROCSTAT_OVERFLOW) != 0)
+    {   // clear overflow flag 
+        clv 
+    }
+    .if (proc_flags != NV_PROCSTAT_NONE)
+    {   // if we care about any flag then push the flags on stack
+        // later we can them off and set appropriately.   
+        php  // push on the stack the proc status flags
+    }
+
     cpx #$00
     beq MultByZero
     lda addr1
@@ -204,6 +230,15 @@ SkipAdd:
     nv_store16_immediate(scratch_word, $0000)
 LoopTop:
     nv_adc16(addr1, scratch_word, scratch_word)
+    .if ((proc_flags & NV_PROCSTAT_OVERFLOW) !=0)
+    {   // user cares about overflow so check the carry flag
+        bcc NoCarry
+        // if there was a carry then we had an overflow
+        pla                         // pull proc status from stack to accum
+        ora #NV_PROCSTAT_OVERFLOW   // set overflow flag
+        pha                         // push updated proc status to stack
+    NoCarry:
+    }
     dex
     bne LoopTop
  
@@ -212,7 +247,18 @@ LoopTop:
 
 MultByZero:
     nv_store16_immediate(result_addr, $0000)
-Done:    
+    .if ((proc_flags & NV_PROCSTAT_ZERO) != 0)
+    {
+        pla                   // pull the flags from stack
+        ora #NV_PROCSTAT_ZERO // set zero flag
+        pha                   // push updated flags back to stack
+    }
+Done:
+    .if (proc_flags != NV_PROCSTAT_NONE)
+    {   // if we care about any flag then push the flags on stack
+        // later we can them off and set appropriately.   
+        plp  // pull new flags from the stack
+    }
 }
 //
 //////////////////////////////////////////////////////////////////////////////

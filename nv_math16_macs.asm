@@ -575,7 +575,7 @@ Loop:
 // Accum: changes
 // X Reg: No change
 // Y Reg: No Change
-.macro nv_bcd_sbc16_immediate(addr1, num, result_addr)
+.macro nv_bcd_sbc16_immed(addr1, num, result_addr)
 {
     sed                         // set decimal (BCD) mode
     sec                         // set carry for subtraction

@@ -66,7 +66,7 @@
     .var sprite_mask_negated = sprite_mask ^ $FF
 
     // initialize closest relative distance to largest positive number
-    nv_store16_immediate(closest_rel_dist, $8FFF)
+    nv_store16_immed(closest_rel_dist, $8FFF)
 
     // initialize closest sprite to $FF which is an invalid sprite
     // if its still this at the end, then no collision with sprite_num

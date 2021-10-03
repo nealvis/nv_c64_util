@@ -234,7 +234,7 @@ SkipAdd:
     beq MultByZero
     lda addr1
     beq MultByZero
-    nv_store16_immediate(scratch_word, $0000)
+    nv_store16_immed(scratch_word, $0000)
 LoopTop:
     nv_adc16(addr1, scratch_word, scratch_word)
     .if ((proc_flags & NV_PROCSTAT_OVERFLOW) !=0)
@@ -253,7 +253,7 @@ LoopTop:
     jmp Done
 
 MultByZero:
-    nv_store16_immediate(result_addr, $0000)
+    nv_store16_immed(result_addr, $0000)
     .if ((proc_flags & NV_PROCSTAT_ZERO) != 0)
     {
         pla                   // pull the flags from stack
@@ -317,7 +317,7 @@ Done:
     beq MultByZero
     lda addr1
     beq MultByZero
-    nv_store16_immediate(scratch_word, $0000)
+    nv_store16_immed(scratch_word, $0000)
 LoopTop:
     nv_adc16(addr1, scratch_word, scratch_word)
     .if ((proc_flags & NV_PROCSTAT_OVERFLOW) !=0)
@@ -336,7 +336,7 @@ LoopTop:
     jmp Done
 
 MultByZero:
-    nv_store16_immediate(result_addr, $0000)
+    nv_store16_immed(result_addr, $0000)
     .if ((proc_flags & NV_PROCSTAT_ZERO) != 0)
     {
         pla                   // pull the flags from stack
@@ -462,7 +462,7 @@ Loop:
 //////////////////////////////////////////////////////////////////////////////
 // inlne macro to store 16 bit immediate value into the word with LSB 
 // at lsb_addr
-.macro nv_store16_immediate(lsb_addr, value)
+.macro nv_store16_immed(lsb_addr, value)
 {
     lda #(value & $00FF)
     sta lsb_addr

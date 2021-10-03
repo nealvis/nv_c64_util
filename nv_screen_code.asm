@@ -37,7 +37,7 @@
     sta save_zero_hi
 
     //.var screen_poke_start = SCREEN_START + (40*row) + col 
-    nv_store16_immediate(screen_poke_start, SCREEN_START)
+    nv_store16_immed(screen_poke_start, SCREEN_START)
     lda nv_a8
     sta row_counter  // counter starts with row number
     beq DoneAddingRows

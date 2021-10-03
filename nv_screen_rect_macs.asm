@@ -57,7 +57,7 @@
     // TOP
     // (row * CHAR_PIXEL_HEIGHT) + TOP_OFFSET
     nv_store16_immediate(r_top, CHAR_PIXEL_HEIGHT)
-    nv_mul16_y(r_top, r_top)
+    nv_mul16_y(r_top, r_top, NV_PROCSTAT_NONE)
     nv_adc16_immediate(r_top, TOP_OFFSET, r_top)
 
     // RIGHT
@@ -111,7 +111,7 @@
     // TOP
     // (row * CHAR_PIXEL_HEIGHT) + TOP_OFFSET
     nv_store16_immediate(r_top, CHAR_PIXEL_HEIGHT)
-    nv_mul16_y(r_top, r_top)
+    nv_mul16_y(r_top, r_top, NV_PROCSTAT_NONE)
     nv_adc16_immediate(r_top, TOP_OFFSET, r_top)
 }
 
@@ -162,7 +162,7 @@
     // Set the bottom pixel coord value for char.  First need to set it to 
     // the top coord and then add the pixel height to get to the bottom
     nv_store16_immediate(r_bottom, CHAR_PIXEL_HEIGHT)
-    nv_mul16_y(r_bottom, r_bottom)
+    nv_mul16_y(r_bottom, r_bottom, NV_PROCSTAT_NONE)
     nv_adc16_immediate(r_bottom, TOP_OFFSET, r_bottom)
     // above code sets r_bottom to the top pixel position for char
     // now add char pixel height to it and it will be the bottom pixel position
@@ -215,7 +215,7 @@
     // BOTTOM
     // add height to the top to get the bottom
     nv_store16_immediate(r_bottom, CHAR_PIXEL_HEIGHT)       // start width
-    nv_mul16_y(r_bottom, r_bottom)                          // mul by Y for inc
+    nv_mul16_y(r_bottom, r_bottom, NV_PROCSTAT_NONE)                          // mul by Y for inc
     nv_adc16(r_top, r_bottom, r_bottom)
     nv_adc16_immediate(r_bottom, CHAR_PIXEL_HEIGHT, r_bottom)
 }

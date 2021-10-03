@@ -530,7 +530,7 @@ Loop:
 // Accum: changes
 // X Reg: No change
 // Y Reg: No Change
-.macro nv_bcd_adc16_immediate(addr1, num, result_addr)
+.macro nv_bcd_adc16_immed(addr1, num, result_addr)
 {
     sed
     lda addr1

@@ -42,7 +42,7 @@
     sta row_counter  // counter starts with row number
     beq DoneAddingRows
 RowLoop:
-    nv_adc16_immediate(screen_poke_start, 40, screen_poke_start)
+    nv_adc16_immed(screen_poke_start, 40, screen_poke_start)
     dec row_counter
     bne RowLoop
 DoneAddingRows:

@@ -382,7 +382,7 @@ DestBlockLoop:
     lda temp_word         // temp_word LSB is the src byte
     ldx #$00              // load x reg with 0 / no offset
     sta (ZERO_PAGE_LO,x)  // store accum to pointed to dest addr
-    nv_adc16_immediate(ZERO_PAGE_LO, 1, ZERO_PAGE_LO)            // inc the dest addr
+    nv_adc16_immed(ZERO_PAGE_LO, 1, ZERO_PAGE_LO)            // inc the dest addr
     nv_ble16(ZERO_PAGE_LO, dest_block_end_addr, DestBlockLoop)   // loop if not done
     
 DestBlockDone:
@@ -486,7 +486,7 @@ BlockCopyLoopTop:
     lda (Z2_LO), y       // read next byte in stream
     iny
     sta (ZERO_PAGE_LO,x)  // store accum to pointed to addr
-    nv_adc16_immediate(ZERO_PAGE_LO, 1, ZERO_PAGE_LO)
+    nv_adc16_immed(ZERO_PAGE_LO, 1, ZERO_PAGE_LO)
     dec blk_cpy_num_bytes
     bne BlockCopyLoopTop
 

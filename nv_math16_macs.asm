@@ -146,11 +146,11 @@ SkipAdd:
 // carry bit will be set if carry occured
 // params:
 //   addr1 is the address of the LSB of 16 bit value in memory
-//   num is the immeidate number to add
+//   num is the 16 bit immeidate number to add
 //   result_addr is the address of the LSB of the 16 bit memory location 
 //               to store the result.
 // Note: X and Y Regs are unchanged
-.macro nv_adc16_immediate(addr1, num, result_addr)
+.macro nv_adc16_immed(addr1, num, result_addr)
 {
     lda addr1
     clc
@@ -437,7 +437,7 @@ Loop:
 .macro nv_twos_comp_16(addr16, result_addr16)
 {
     negate16(addr16, result_addr16)
-    nv_adc16_immediate(result_addr16, 1, result_addr16)
+    nv_adc16_immed(result_addr16, 1, result_addr16)
 }
 //
 //////////////////////////////////////////////////////////////////////////////

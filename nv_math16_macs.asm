@@ -172,11 +172,14 @@ SkipAdd:
 //   num is the immeidate 8 bit number to multiply addr1 by 
 //   result_addr is the address of the LSB of the 16 bit memory location 
 //               to store the result.
-.macro nv_mul16_immediate8(addr1, num8, result_addr, proc_flags)
+// Accum: changes
+// X Reg: changes
+// Y Reg: unchanged.
+.macro nv_mul16_immed8(addr1, num8, result_addr, proc_flags)
 {
     .if (num8 > 255)
     {
-        .error "ERROR - nv_mul16_immediate8: num8 too large"
+        .error "ERROR - nv_mul16_immed8: num8 too large"
     }
     ldx #num8
     nv_mul16_x(addr1, result_addr, proc_flags)
@@ -186,7 +189,9 @@ SkipAdd:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to multiply one 16 bit value by an 8 bit value in x reg
-// and store the result in another 16bit value.  
+// and store the result in another 16bit value.  This is an unsigned
+// multiplication.  For example if an operand is $FF its multiplying
+// by 255 not by -1
 // Can optionally set overflow and/or zero processor status flags
 // macro params:
 //   addr1 is the address of the LSB of 16 bit value in memory
@@ -267,7 +272,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to multiply one 16 bit value by an 8 bit value in y reg
-// and store the result in another 16bit value.  
+// and store the result in another 16bit value.  This is an unsigned
+// multiplication.  For example if an operand is $FF its multiplying
+// by 255 not by -1
 // Can optionally set overflow and/or zero processor status flags
 // macro params:
 //   addr1 is the address of the LSB of 16 bit value in memory

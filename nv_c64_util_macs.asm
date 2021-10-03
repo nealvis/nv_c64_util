@@ -12,7 +12,7 @@
 // verify that the nv_c64_util_data.asm file is imported some where
 // because the _macs.asm files will depend on this.
 #if !NV_C64_UTIL_DATA
-//.error "Error - nv_c64_util_macs.asm: NV_C64_UTIL_DATA not defined.  Import nv_c64_util_data.asm"
+.error "Error - nv_c64_util_macs.asm: NV_C64_UTIL_DATA not defined.  Import nv_c64_util_data.asm"
 #endif
 
 // the #if above doesn't seem to always work so..

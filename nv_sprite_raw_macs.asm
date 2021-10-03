@@ -238,7 +238,7 @@
 // macro params:
 //   sprite_num: the c64 sprite number (0-7 are valid)
 //   new_color:  a number 0-7 specifying which c64 color to set
-.macro nv_sprite_set_raw_color_immediate(sprite_num, new_color)
+.macro nv_sprite_set_raw_color_immed(sprite_num, new_color)
 {
     lda #new_color                  // The color is the low nibble of the
                                     // byte.  We'll just write the whole 

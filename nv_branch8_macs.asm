@@ -16,7 +16,9 @@
 
 
 //////////////////////////////////////////////////////////////////////////////
-// branch if two bytes in memory have the same contents
+// branch if two bytes in memory have the same contents.
+// branch if addr1 == addr2
+// full name: nv_beq8u_mem8u_mem8u
 //   addr1: is the address of one byte in memory
 //   addr2: is the address of the other byte in memory
 //   label: is the label to branch to if bytes are equal
@@ -32,6 +34,8 @@
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if two bytes in memory have the same contents.
+// full name: nv_beq8u_mem8u_mem8u_far
+// branch if addr1 == addr2
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address one byte in memory
 //   addr2: is the address of the other byte
@@ -51,6 +55,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one byte in memory has the same content as 
 // an immediate 8 bit value
+// branch if addr1 == num
+// full name: nv_beq8u_mem8u_immed8u
 //   addr1: is the address of the byte in memory
 //   num: is the immediate 8 bit value to compare with the contents of addr1
 //   label: is the label to branch to
@@ -71,7 +77,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory has the same content as 
-// an immediate 16 bit value
+// an immediate 16 bit value.
+// branch if addr1 == num
+// full name: nv_beq8u_mem8u_immed8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
@@ -93,7 +101,9 @@ Done:
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// branch if two bytes in memory have the different contents
+// branch if two bytes in memory have the different contents.
+// branch if addr1 != addr2
+// full name: nv_bne8u_mem8u_mem8u
 //   addr1: is the address of one byte in memory
 //   addr2: is the address of the other byte in memory
 //   label: is the label to branch to
@@ -110,6 +120,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if two bytes in memory have the different contents.
+// branch if addr1 != addr2
+// full name: nv_bne8u_mem8u_mem8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of one byte in memory
 //   addr2: is the address of the other byte in memory
@@ -129,7 +141,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one byte in memory has the same content as 
-// an immediate 8 bit value
+// an immediate 8 bit value.
+// branch if addr1 != num
+// full name: nv_bne8u_mem8u_immed8u
 //   addr1: is the address of the byte in memory
 //   num: is the immediate 8 bit value to compare with the contents of addr1
 //   label: is the label to branch to
@@ -150,7 +164,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory has the same content as 
-// an immediate 16 bit value
+// an immediate 16 bit value.
+// branch if addr1 != num
+// full name: nv_bne8u_mem8u_immed8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
@@ -172,11 +188,11 @@ Done:
 }
 
 
-
-
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
-// are less than the contents in another memory location 
+// are less than the contents in another memory location.
+// branch if addr1 < addr2
+// full name: nv_blt8u_mem8u_mem8u
 //   addr1: the address of the first byte
 //   addr2: the address of the second byte 
 //   label: the label to branch to if first byte < second byte
@@ -195,6 +211,8 @@ Done:
 // inline macro to jump to a label if the contents of a word at one 
 // memory location are less than the contents in another memory location.
 // The branch label's address can be farther than +127/-128 bytes away
+// branch if addr1 < addr2
+// full name: nv_blt8u_mem8u_mem8u_far
 //   addr1: the address of the LSB of the word1
 //   addr2: the address of the LSB of the word2 
 //   label: the label to branch to if word1 < word2
@@ -212,7 +230,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
-// are less than the contents an immediate 8 bit value 
+// are less than the contents an immediate 8 bit value.
+// branch if addr1 < num
+// full name: nv_blt8u_mem8u_immed8u
 //   addr1: the address of the first byte
 //   num: the immediate byte
 //   label: the label to branch to if first byte < immediate value
@@ -234,6 +254,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than the contents an immediate 8 bit value.
+// branch if addr1 < num
+// full name: nv_blt8u_mem8u_immed8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the first byte
 //   num: the immediate byte
@@ -258,6 +280,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than or equal to the contents in another memory location 
+// branch if addr1 <= addr2
+// full name: nv_ble8u_mem8u_mem8u
 //   addr1: the address of the first byte
 //   addr2: the address of the second byte 
 //   label: the label to branch to if first byte <= second byte
@@ -275,7 +299,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
-// are less than or equal to the contents in another memory location 
+// are less than or equal to the contents in another memory location. 
+// full name: nv_ble8u_mem8u_mem8u_far
 // branch if addr1 <= addr2
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the first byte
@@ -299,7 +324,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
-// are less than or equal to an immediate 8 bit value 
+// are less than or equal to an immediate 8 bit value.
+// branch if addr1 <= num
+// full name: nv_ble8u_mem8u_immed8u
 //   addr1: the address of the first byte
 //   num: the immediate 8 bit value 
 //   label: the label to branch to if first byte <= second byte
@@ -322,6 +349,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than or equal to the contents of an immediate 8 bit value 
+// branch if addr1 <= num
+// full name: nv_ble8u_mem8u_immed8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the first byte
 //   num: the immediate 8 bit value of the second byte 
@@ -349,7 +378,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
-// are greater than the contents in another memory location 
+// are greater than the contents in another memory location.
+// branch if addr1 > addr2
+// full name: nv_bgt8u_mem8u_mem8u
 //   addr1: the address of byte1
 //   addr2: the address of byte2 
 //   label: the label to branch to if byte1 > byte2
@@ -370,8 +401,10 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
-// are greater than the contents in another memory location 
+// are greater than the contents in another memory location.
+// branch if addr1 > addr2
 // The branch label's address can be farther than +127/-128 bytes away
+// full name: nv_bgt8u_mem8u_mem8u_far
 //   addr1: the address of byte1
 //   addr2: the address of byte2 
 //   label: the label to branch to if byte1 > byte2
@@ -392,7 +425,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
-// are greater than the contents in another memory location 
+// are greater than the contents in another memory location.
+// branch if addr1 > num
+// full name: nv_bgt8u_mem8u_immed8u
 //   addr1: the address of byte1
 //   num: the immediate 8 bit number 
 //   label: the label to branch to if byte1 > num
@@ -417,7 +452,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
-// are greater than the an immediate 8 bit number 
+// are greater than the an immediate 8 bit number.
+// branch if addr1 > num
+// full name: nv_bgt8u_mem8u_immed8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of byte1
 //   num: the immediate 8 bit number 
@@ -445,7 +482,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
-// are greater than or equal to the contents in another byte in memory 
+// are greater than or equal to the contents in another byte in memory.
+// branch if addr1 >= addr2
+// full name: nv_bge8u_mem8u_mem8u
 //   addr1: the address of byte1
 //   addr2: the address of byte2 
 //   label: the label to branch to if byte1 >= byte2
@@ -462,11 +501,12 @@ Done:
 }
 
 
-
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than or equal to the contents in another byte in memory
+// branch if addr1 >= addr2
 // The branch label's address can be farther than +127/-128 bytes away
+// full name: nv_bge8u_mem8u_mem8u_far
 //   addr1: the address of byte1
 //   addr2: the address of byte2 
 //   label: the label to branch to if byte1 >= byte2
@@ -488,6 +528,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than or equal to an immediate 8 bit value 
+// branch if addr1 >= num
+// full name: nv_bge8u_mem8u_immed8u
 //   addr1: the address of byte1
 //   num: the immediate 8 bit value
 //   label: the label to branch to if byte1 >= byte2
@@ -510,7 +552,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
-// are greater than or equal to an immediate 8 bit value 
+// are greater than or equal to an immediate 8 bit value.
+// branch if addr1 >= num
+// full name: nv_bge8u_mem8u_immed8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of byte1
 //   num: the immediate 8 bit value
@@ -541,7 +585,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has same contents as accumulator
-// branch if addr1 = accum
+// branch if addr1 == accum
+// full name: nv_beq8u_mem8u_a8u
 // macro params:
 //   accum: has a value to compare with that at addr1
 //   addr1: is the address of one byte in memory
@@ -557,7 +602,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has same contents as accumulator
-// branch if addr1 = accum
+// branch if addr1 == accum
+// full name: nv_beq8u_mem8u_a8u_far
 // macro params:
 //   accum: has a value to compare with that at addr1
 //   addr1: is the address of one byte in memory
@@ -576,6 +622,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has different contents than accum
 // branch if addr1 != accum
+// full name: nv_bne8u_mem8u_a8u
 //   addr1: is the address of one byte in memory
 //   label: is the label to branch to if condition is met
 // Accum: unchanged
@@ -589,7 +636,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if one bytes in memory has different contents than accum.
-// branch if addr1 = accum
+// branch if addr1 != accum
+// full name: nv_bne8u_mem8u_a8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of one byte in memory
 //   label: is the label to branch to if condition is met
@@ -608,6 +656,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than the contents of the accum.
 // branch if addr1 > accum
+// full name: nv_bgt8u_mem8u_a8u
 //   addr1: the address of byte1
 //   label: the label to branch to if condition is met
 // Accum: unchanged
@@ -624,6 +673,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than the contents of the accum.
 // branch if addr1 > accum
+// full name: nv_bgt8u_mem8u_a8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of byte1
 //   label: the label to branch to if condition is met
@@ -644,6 +694,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than or equal to the contents of accum
 // branch if addr1 >= accum
+// full name: nv_bge8u_mem8u_a8u
 //   addr1: the address of byte1
 //   label: the label to branch to if condition is met
 // Accum: unchanged
@@ -660,6 +711,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than or equal to the contents of accum
 // branch if addr1 >= accum
+// full name: nv_bge8u_mem8u_a8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of byte1
 //   label: the label to branch to if condition is met
@@ -680,7 +732,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than the contents of accum.
-// branch if addr1 <= accum
+// branch if addr1 < accum
+// full name: nv_blt8u_mem8u_a8u
 //   addr1: the address of the byte in memory
 //   label: the label to branch to if condition is met
 // Accum: unchanged
@@ -700,6 +753,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than the contents of accum.
 // branch if addr1 < accum
+// full name: nv_blt8u_mem8u_a8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the byte in memory
 //   label: the label to branch to if condition is met
@@ -722,6 +776,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than or equal to the contents the accumulator 
 // branch if addr1 <= accum
+// full name: nv_ble8u_mem8u_a8u
 //   addr1: the address of the first byte
 //   label: the label to branch to if condition is met
 // Accum: unchanged
@@ -738,6 +793,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than or equal to the contents the accumulator 
 // branch if addr1 <= accum
+// full name: nv_ble8u_mem8u_a8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the first byte
 //   label: the label to branch to if condition is met
@@ -760,7 +816,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has same contents as X reg
-// branch if addr1 = X Reg
+// branch if addr1 == X Reg
+// full name: nv_beq8u_mem8u_x8u
 // macro params:
 //   x reg: has a value to compare with that at addr1
 //   addr1: is the address of one byte in memory
@@ -776,7 +833,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has same contents as X Reg
-// branch if addr1 = X Reg
+// branch if addr1 == X Reg
+// full name: nv_beq8u_mem8u_x8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 // macro params:
 //   x reg: has a value to compare with that at addr1
@@ -796,6 +854,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // branch if a byte in memory has different contents than x reg
 // branch if addr1 != X Reg
+// full name: nv_bne8u_mem8u_x8u
 //   addr1: is the address of one byte in memory
 //   X Reg: value to compare with addr1 contents
 //   label: is the label to branch to if condition met
@@ -811,6 +870,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // branch if one bytes in memory has different contents than x reg.
 // branch if addr1 != x reg
+// full name: nv_beq8u_mem8u_x8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of one byte in memory
 //   X reg: holds value to compare with whats at addr1
@@ -830,6 +890,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than the contents of the x reg.
 // branch if addr1 > x reg
+// full name: nv_bgt8u_mem8u_x8u
 //   addr1: the address of byte1
 //   x reg: value to compare with contents at addr1
 //   label: the label to branch to if condition met
@@ -847,6 +908,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than the contents of the x reg.
 // branch if addr1 > x reg
+// full name: nv_bgt8u_mem8u_x8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of byte1
 //   x reg: holds value to compare with byte at addr1
@@ -868,6 +930,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than or equal to the contents of x reg
 // branch if addr1 >= x reg
+// full name: nv_bge8u_mem8u_x8u
 //   addr1: the address of byte1
 //   x reg: holds value to compare with contents of addr1
 //   label: the label to branch to if condition met
@@ -885,6 +948,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than or equal to the contents of x reg
 // branch if addr1 >= x reg
+// full name: nv_bge8u_mem8u_x8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of byte1
 //   x reg: holds value to compare with byte at addr1
@@ -906,7 +970,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than the contents of x reg.
-// branch if addr1 <= x reg
+// branch if addr1 < x reg
+// full name: nv_blt8u_mem8u_x8u
 //   addr1: the address of the byte in memory
 //   x reg: holds value to compare with byte at addr1
 //   label: the label to branch to if condition met
@@ -927,6 +992,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than the contents of x reg.
 // branch if addr1 < x reg
+// full name: nv_blt8u_mem8u_x8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the byte in memory
 //   x reg: holds value to compare with byte at addr1
@@ -950,6 +1016,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than or equal to the contents the x reg 
 // branch if addr1 <= x reg
+// full name: nv_ble8u_mem8u_x8u
 //   addr1: the address of the first byte
 //   x reg: holds value to compare with byte at addr1
 //   label: the label to branch to if condition met
@@ -967,6 +1034,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than or equal to the contents the x reg 
 // branch if addr1 <= x reg
+// full name: nv_ble8u_mem8u_x8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the first byte
 //   x reg: holds value to compare with byte at addr1
@@ -990,7 +1058,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has same contents as Y reg
-// branch if addr1 = Y Reg
+// branch if addr1 == Y Reg
+// full name: nv_beq8u_mem8u_y8u
 // macro params:
 //   y reg: has a value to compare with that at addr1
 //   addr1: is the address of one byte in memory
@@ -1006,7 +1075,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has same contents as Y Reg
-// branch if addr1 = Y Reg
+// branch if addr1 == Y Reg
+// full name: nv_beq8u_mem8u_y8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 // macro params:
 //   y reg: has a value to compare with that at addr1
@@ -1026,6 +1096,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // branch if a byte in memory has different contents than y reg
 // branch if addr1 != Y Reg
+// full name: nv_bne8u_mem8u_y8u
 //   addr1: is the address of one byte in memory
 //   Y Reg: value to compare with addr1 contents
 //   label: is the label to branch to if condition met
@@ -1041,6 +1112,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // branch if one bytes in memory has different contents than y reg.
 // branch if addr1 != y reg
+// full name: nv_bne8u_mem8u_y8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of one byte in memory
 //   Y reg: holds value to compare with whats at addr1
@@ -1060,6 +1132,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than the contents of the y reg.
 // branch if addr1 > y reg
+// full name: nv_bgt8u_mem8u_y8u
 //   addr1: the address of byte1
 //   y reg: value to compare with contents at addr1
 //   label: the label to branch to if condition met
@@ -1077,6 +1150,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than the contents of the y reg.
 // branch if addr1 > y reg
+// full name: nv_bgt8u_mem8u_y8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of byte1
 //   y reg: holds value to compare with byte at addr1
@@ -1098,6 +1172,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than or equal to the contents of y reg
 // branch if addr1 >= y reg
+// full name: nv_bge8u_mem8u_y8u
 //   addr1: the address of byte1
 //   y reg: holds value to compare with contents of addr1
 //   label: the label to branch to if condition met
@@ -1115,6 +1190,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are greater than or equal to the contents of y reg
 // branch if addr1 >= y reg
+// full name: nv_bge8u_mem8u_y8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of byte1
 //   y reg: holds value to compare with byte at addr1
@@ -1136,7 +1212,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than the contents of y reg.
-// branch if addr1 <= y reg
+// branch if addr1 < y reg
+// full name: nv_blt8u_mem8u_y8u
 //   addr1: the address of the byte in memory
 //   y reg: holds value to compare with byte at addr1
 //   label: the label to branch to if condition met
@@ -1157,6 +1234,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than the contents of y reg.
 // branch if addr1 < y reg
+// full name: nv_blt8u_mem8u_y8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the byte in memory
 //   y reg: holds value to compare with byte at addr1
@@ -1180,6 +1258,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than or equal to the contents the y reg 
 // branch if addr1 <= y reg
+// full name: nv_ble8u_mem8u_y8u
 //   addr1: the address of the first byte
 //   y reg: holds value to compare with byte at addr1
 //   label: the label to branch to if condition met
@@ -1197,6 +1276,7 @@ Done:
 // inline macro to branch if the contents of a byte at one memory location  
 // are less than or equal to the contents the y reg 
 // branch if addr1 <= y reg
+// full name: nv_ble8u_mem8u_y8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the first byte
 //   y reg: holds value to compare with byte at addr1
@@ -1219,9 +1299,10 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// branch if a bytes in memory has same contents as accumulator
+// branch if an immediate value has same contents as accumulator
 // macro params:
-// branch if num = accum
+// branch if num == accum
+// full name: nv_beq8u_immed8u_a8u
 //   accum: has a value to compare
 //   num: is the immediate 8 bit value to compare
 //   label: is the label to branch to if condition is met
@@ -1239,8 +1320,9 @@ Done:
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// branch if a bytes in memory has same contents as accumulator
-// branch if num = accum
+// branch if an immediate value has same contents as accumulator
+// branch if num == accum
+// full name: nv_beq8u_immed8u_a8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 // macro params:
 //   accum: has a value to compare 
@@ -1264,6 +1346,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // branch if a an 8 bit immediate value is  different than contents of accum
 // branch if num != accum
+// full name: nv_bne8u_immed8u_a8u
 //   num: is the immediate 8 bit value
 //   label: is the label to branch to if condition is met
 // Accum: unchanged
@@ -1282,6 +1365,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // branch if immiediate 8 bit value is different than accum.
 // branch if num != accum
+// full name: nv_bne8u_immed8u_a8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: is the immediate 8 bit number to compare
 //   label: is the label to branch to if condition is met
@@ -1303,6 +1387,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if an 8 bit immediate value is greater than accum  
 // branch if num > accum
+// full name: nv_bgt8u_immed8u_a8u
 //   num: the 8 bit immediate value to compare
 //   label: the label to branch to if condition is met
 // Accum: unchanged
@@ -1323,6 +1408,7 @@ Done:
 // inline macro to branch if an 8bit immed value   
 // is greater than the contents of the accum.
 // branch if num > accum
+// full name: nv_bgt8u_immed8u_a8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: the 8 bit immdediate value to compare
 //   label: the label to branch to if condition is met
@@ -1348,6 +1434,7 @@ Done:
 // inline macro to branch if an 8 bit immediate value   
 // is greater than or equal to the contents of accum
 // branch if num >= accum
+// full name: nv_bge8u_immed8u_a8u
 //   num: the 8 bit immediate value to compare
 //   label: the label to branch to if condition is met
 // Accum: unchanged
@@ -1369,6 +1456,7 @@ Done:
 // inline macro to branch if an 8 bit immediate value 
 // is greater than or equal to the contents of accum
 // branch if num >= accum
+// full name: nv_bge8u_immed8u_a8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: the 8 bit immediate value to compare
 //   label: the label to branch to if condition is met
@@ -1394,7 +1482,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if an 8 bit immediate value  
 // is less than the contents of accum.
-// branch if num <= accum
+// branch if num < accum
+// full name: nv_blt8u_immed8u_a8u
 //   num: the 8 bit immediate value to compare
 //   label: the label to branch to if condition is met
 // Accum: unchanged
@@ -1419,6 +1508,7 @@ Done:
 // inline macro to branch if an 8 bit immediate value  
 // is less than the contents of accum.
 // branch if num < accum
+// full name: nv_blt8u_immed8u_a8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: the 8 bit immediate value to compare
 //   label: the label to branch to if condition is met
@@ -1441,11 +1531,11 @@ Done:
 }
 
 
-
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if an 8 bit immediate value  
 // is less than or equal to the contents the accumulator 
 // branch if num <= accum
+// full name: nv_ble8u_immed8u_a8u
 //   num: the 8 bit immediate value to compare
 //   label: the label to branch to if condition is met
 // Accum: unchanged
@@ -1467,6 +1557,7 @@ Done:
 // inline macro to branch if an 8 bit immediate value  
 // is less than or equal to the contents the accumulator 
 // branch if num <= accum
+// full name: nv_ble8u_immed8u_a8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: the 8 bit immediate value to compare
 //   label: the label to branch to if condition is met
@@ -1495,7 +1586,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has same contents as X reg
 // macro params:
-// branch if num = x reg
+// branch if num == x reg
+// full name: nv_beq8u_immed8u_x8u
 //   x reg: has a value to compare
 //   num: is the immediate 8 bit value to compare
 //   label: is the label to branch to if condition is met
@@ -1514,7 +1606,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has same contents as x reg
-// branch if num = x reg
+// branch if num == x reg
+// full name: nv_beq8u_immed8u_x8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 // macro params:
 //   x reg: has a value to compare 
@@ -1538,6 +1631,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // branch if a an 8 bit immediate value is  different than contents of x reg
 // branch if num != x reg
+// full name: nv_bne8u_immed8u_x8u
 //   x reg: is hold one value to compare
 //   num: is the immediate 8 bit value to compare
 //   label: is the label to branch to if condition is met
@@ -1557,6 +1651,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // branch if immiediate 8 bit value is different than x reg.
 // branch if num != x reg
+// full name: nv_bne8u_immed8u_x8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: is the immediate 8 bit number to compare
 //   x reg: holds one value to compare
@@ -1579,6 +1674,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if an 8 bit immediate value is greater than x reg  
 // branch if num > x reg
+// full name: nv_bgt8u_immed8u_x8u
 //   num: the 8 bit immediate value to compare
 //   x reg: holds one value for comparison
 //   label: the label to branch to if condition is met
@@ -1600,6 +1696,7 @@ Done:
 // inline macro to branch if an 8bit immed value   
 // is greater than the contents of the x reg.
 // branch if num > x reg
+// full name: nv_bgt8u_immed8u_x8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: the 8 bit immdediate value to compare
 //   x reg: holds one value for comparison
@@ -1626,6 +1723,7 @@ Done:
 // inline macro to branch if an 8 bit immediate value   
 // is greater than or equal to the contents of x reg
 // branch if num >= x reg
+// full name: nv_bge8u_immed8u_x8u
 //   num: the 8 bit immediate value to compare
 //   x reg: holds one value for comparison
 //   label: the label to branch to if condition is met
@@ -1648,6 +1746,7 @@ Done:
 // inline macro to branch if an 8 bit immediate value 
 // is greater than or equal to the contents of x reg
 // branch if num >= x reg
+// full name: nv_bge8u_immed8u_x8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: the 8 bit immediate value to compare
 //   x reg: holds one value for comparison
@@ -1674,7 +1773,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if an 8 bit immediate value  
 // is less than the contents of x reg.
-// branch if num <= x reg
+// branch if num < x reg
+// full name: nv_blt8u_immed8u_x8u
 //   num: the 8 bit immediate value to compare
 //   x reg: holds one value for comparison
 //   label: the label to branch to if condition is met
@@ -1699,7 +1799,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if an 8 bit immediate value  
 // is less than the contents of x reg.
-// branch if num < x reg
+// branch if num < x reg_far
+// full name: nv_blt8u_immed8u_x8u
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: the 8 bit immediate value to compare
 //   x reg: holds one value for comparison
@@ -1728,6 +1829,7 @@ Done:
 // inline macro to branch if an 8 bit immediate value  
 // is less than or equal to the contents the x reg 
 // branch if num <= x reg
+// full name: nv_ble8u_immed8u_x8u
 //   num: the 8 bit immediate value to compare
 //   x reg: holds one value for comparison
 //   label: the label to branch to if condition is met
@@ -1750,6 +1852,7 @@ Done:
 // inline macro to branch if an 8 bit immediate value  
 // is less than or equal to the contents the x reg 
 // branch if num <= x reg
+// full name: nv_ble8u_immed8u_x8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: the 8 bit immediate value to compare
 //   label: the label to branch to if condition is met
@@ -1778,7 +1881,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has same contents as y reg
 // macro params:
-// branch if num = y reg
+// branch if num == y reg
+// full name: nv_beq8u_immed8u_y8u
 //   y reg: has a value to compare
 //   num: is the immediate 8 bit value to compare
 //   label: is the label to branch to if condition is met
@@ -1797,7 +1901,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if a bytes in memory has same contents as y reg
-// branch if num = y reg
+// branch if num == y reg
+// full name: nv_beq8u_immed8u_y8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 // macro params:
 //   y reg: has a value to compare 
@@ -1821,6 +1926,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // branch if a an 8 bit immediate value is  different than contents of y reg
 // branch if num != y reg
+// full name: nv_bne8u_immed8u_y8u
 //   y reg: is hold one value to compare
 //   num: is the immediate 8 bit value to compare
 //   label: is the label to branch to if condition is met
@@ -1840,6 +1946,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // branch if immiediate 8 bit value is different than y reg.
 // branch if num != y reg
+// full name: nv_bne8u_immed8u_y8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: is the immediate 8 bit number to compare
 //   y reg: holds one value to compare
@@ -1862,6 +1969,7 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if an 8 bit immediate value is greater than y reg  
 // branch if num > y reg
+// full name: nv_bgt8u_immed8u_y8u
 //   num: the 8 bit immediate value to compare
 //   y reg: holds one value for comparison
 //   label: the label to branch to if condition is met
@@ -1883,6 +1991,7 @@ Done:
 // inline macro to branch if an 8bit immed value   
 // is greater than the contents of the y reg.
 // branch if num > y reg
+// full name: nv_bgt8u_immed8u_y8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: the 8 bit immdediate value to compare
 //   y reg: holds one value for comparison
@@ -1909,6 +2018,7 @@ Done:
 // inline macro to branch if an 8 bit immediate value   
 // is greater than or equal to the contents of y reg
 // branch if num >= y reg
+// full name: nv_bge8u_immed8u_y8u
 //   num: the 8 bit immediate value to compare
 //   y reg: holds one value for comparison
 //   label: the label to branch to if condition is met
@@ -1931,6 +2041,7 @@ Done:
 // inline macro to branch if an 8 bit immediate value 
 // is greater than or equal to the contents of y reg
 // branch if num >= y reg
+// full name: nv_bge8u_immed8u_y8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: the 8 bit immediate value to compare
 //   y reg: holds one value for comparison
@@ -1957,7 +2068,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if an 8 bit immediate value  
 // is less than the contents of y reg.
-// branch if num <= y reg
+// branch if num < y reg
+// full name: nv_blt8u_immed8u_y8u
 //   num: the 8 bit immediate value to compare
 //   y reg: holds one value for comparison
 //   label: the label to branch to if condition is met
@@ -1983,6 +2095,7 @@ Done:
 // inline macro to branch if an 8 bit immediate value  
 // is less than the contents of y reg.
 // branch if num < y reg
+// full name: nv_blt8u_immed8u_y8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: the 8 bit immediate value to compare
 //   y reg: holds one value for comparison
@@ -2011,6 +2124,7 @@ Done:
 // inline macro to branch if an 8 bit immediate value  
 // is less than or equal to the contents the y reg 
 // branch if num <= y reg
+// full name: nv_ble8u_immed8u_y8u
 //   num: the 8 bit immediate value to compare
 //   y reg: holds one value for comparison
 //   label: the label to branch to if condition is met
@@ -2033,6 +2147,7 @@ Done:
 // inline macro to branch if an 8 bit immediate value  
 // is less than or equal to the contents the y reg 
 // branch if num <= y reg
+// full name: nv_ble8u_immed8u_y8u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   num: the 8 bit immediate value to compare
 //   label: the label to branch to if condition is met

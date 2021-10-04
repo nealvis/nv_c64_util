@@ -26,6 +26,64 @@ jsr WaitScanSubroutine
 nv_sprite_wait_last_scanline()
 ```
 
+### Branch and Math Macro Naming
+There are a number of macros for conditional branching and math operations that are named so that by looking at the name the following things are clear:
+  - The operation
+  - The bit width (8 bit or 16 bit) of the operands 
+  - The sign of operand (signed or unsigned)
+  - For conditional branching (if branch is near(within 127/-128 bytes) or far (any address)
+ 
+To this end these macros are named based on the following:
+- FullName := nv_OperationSpecifier_OperandSpecifier_OperandSpecifier_FarSpecifier
+- OperationSpecifier := Operation[OperationWidth][Sign]
+- OperandSpecifier := Operand[OperandWidth][Sign]
+- FarSpecifier := [near|far]
+- Operation := [mul|adc|etc]
+- OperationWidth := [8|16] no default
+- OperandWidth := [8|16] if missing then assume same as OperationWidth
+- Sign := [u|s] default assume u
+- Operand:= mem|immed|a|x|y
+
+The FullName above should be fully descriptive for these type of operations but these full names can be clunky so the following short cut rules were created
+
+Rules:
+if operation width omitted then must have operand widths
+if operation sign is ommited, then assume unsigned operation
+if operand is omitted then assume the operand is mem which is a memory address
+if operand width is omitted then assume operation width which is required 
+if operand specifier is omitted then assume mem
+if operand sign is ommited, then assume operand sign is the same as operation sign
+If FarSpecifier is left off assume near
+
+Here are some examples of FullNames and equivilant short names along with some explaination 
+#### **beq8u_mem8u_mem8u** -> **nv_beq8**   
+This is an example for a macro that does a near branch to a label if one 8bit value in memory is equal to another 8bit value in memory.  The short hand name **nv_beq8**  specifies everything that the full name specifies because it follows the following rules
+- Operation is beq as seen in shorthand name
+- OperationWidth is 8 bit as seen in the short name
+- Operation sign is unsigned based on the rule that ommitted operation signs are assumed to be unsigned
+- Operation is for a near branch since "far" isn't specified in the macro name.
+- First operand is a memory address based on the rule that omitted operands in the name are assumed to be mem
+- First operand width is 8 bit based on the rule that omitted operand width are assumed to match the operation width
+- First operand sign is unsigned base don the rule that omitted operand sign is assumed to match operation sign
+- Second operand is a memory address based on the rule that omitted operands in the name are assumed to be mem
+- Second operand width is 8 bit based on the rule that omitted operand width are assumed to match the operation width
+- Second operand sign is unsigned base don the rule that omitted operand sign is assumed to match operation sign
+
+#### **nv_beq8u_immed8u_x8u_far** -> **nv_blt8_immed_x_far**   
+This is an example for a macro that does a far branch to a label if an immediate 8bit value is less than to the 8bit value the x register.  The short hand name **nv_blt8_immed_x_far**  specifies everything that the full name specifies because it follows the following rules
+- Operation is blt (brach if less than) as seen in short name
+- OperationWidth is 8 bit as seen in the shorthand name
+- Operation sign is unsigned based on the rule that ommitted operation signs are assumed to be unsigned
+- Operation is for a far branch as seen in the short name.
+- First operand is a an immediate number as specified by "immed" in the short name
+- First operand width is 8 bit based on the rule that omitted operand width are assumed to match the operation width
+- First operand sign is unsigned base don the rule that omitted operand sign is assumed to match operation sign
+- Second operand is the x register as specified by "x" in the short name
+- Second operand width is 8 bit based on the rule that omitted operand width are assumed to match the operation width
+- Second operand sign is unsigned base don the rule that omitted operand sign is assumed to match operation sign
+
+
+
 ## Usage
 There are macros and data parts of the library.  The macros depend on some data variables and lookup tables etc.  All the data can be assembled into
 any file by

@@ -67,7 +67,7 @@ This is an example for a macro that does a near branch to a label if one 8bit va
 - First operand sign is unsigned base don the rule that omitted operand sign is assumed to match operation sign
 - Second operand is a memory address based on the rule that omitted operands in the name are assumed to be mem
 - Second operand width is 8 bit based on the rule that omitted operand width are assumed to match the operation width
-- Second operand sign is unsigned base don the rule that omitted operand sign is assumed to match operation sign
+- Second operand sign is unsigned based on the rule that omitted operand sign is assumed to match operation sign
 
 #### **nv_beq8u_immed8u_x8u_far** -> **nv_blt8_immed_x_far**   
 This is an example for a macro that does a far branch to a label if an immediate 8bit value is less than to the 8bit value the x register.  The short hand name **nv_blt8_immed_x_far**  specifies everything that the full name specifies because it follows the following rules
@@ -80,8 +80,19 @@ This is an example for a macro that does a far branch to a label if an immediate
 - First operand sign is unsigned base don the rule that omitted operand sign is assumed to match operation sign
 - Second operand is the x register as specified by "x" in the short name
 - Second operand width is 8 bit based on the rule that omitted operand width are assumed to match the operation width
-- Second operand sign is unsigned base don the rule that omitted operand sign is assumed to match operation sign
+- Second operand sign is unsigned based on the rule that omitted operand sign is assumed to match operation sign
 
+#### **nv_adc16u_mem16u_mem16u** -> **nv_adc16**   
+This is an example for a macro that does an add with carry on two 16bit words in memory.  The short hand name **nv_adc16**  specifies everything that the full name specifies because it follows the following rules
+- Operation is adc (add with carry) as seen in short name
+- OperationWidth is 16 bit as seen in the shorthand name
+- Operation sign is unsigned based on the rule that ommitted operation signs are assumed to be unsigned
+- First operand is a an address to the LSB of a 16bit word in memory because omitted operands are assumed to be mem
+- First operand width is 16 bit based on the rule that omitted operand width are assumed to match the operation width
+- First operand sign is unsigned base don the rule that omitted operand sign is assumed to match operation sign
+- Second operand is a an address to the LSB of a 16bit word in memory because omitted operands are assumed to be mem
+- Second operand width is 16 bit based on the rule that omitted operand width are assumed to match the operation width
+- Second operand sign is unsigned based on the rule that omitted operand sign is assumed to match operation sign
 
 
 ## Usage

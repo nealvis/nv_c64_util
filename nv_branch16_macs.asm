@@ -17,6 +17,7 @@
 
 //////////////////////////////////////////////////////////////////////////////
 // compare the contents of two 16 bit words and set flags accordingly.
+// full name is nv_cmp16u_mem16u_mem16u
 // params are:
 //   addr1: 16 bit address of op1
 //   addr2: 16 bit address of op2
@@ -42,6 +43,7 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // compare the contents of two 16 bit words and set flags accordingly.
+// full name is nv_cmp16u_mem16u_immed16u
 // params are:
 //   addr1: 16 bit address of op1
 //   addr2: 16 bit address of op2
@@ -68,6 +70,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if two words in memory have the same contents
+// branch if addr1 == addr2
+// full name is nv_beq16u_mem16u_mem16u
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   addr2: is the address of LSB of the other word (addr2+1 is MSB)
 //   label: is the label to branch to
@@ -82,6 +86,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if two words in memory have the same contents.
+// branch if addr1 == addr2
+// full name is nv_beq16u_mem16u_mem16u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   addr2: is the address of LSB of the other word (addr2+1 is MSB)
@@ -99,7 +105,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory has the same content as 
-// an immediate 16 bit value
+// an immediate 16 bit value.
+// branch if addr1 == num
+// full name is nv_beq16u_mem16u_immed16u
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
 //   label: is the label to branch to
@@ -115,7 +123,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory has the same content as 
-// an immediate 16 bit value
+// an immediate 16 bit value.
+// branch if addr1 == num
+// full name is nv_beq16u_mem16u_immed16u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
@@ -133,6 +143,8 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if two words in memory have the different contents
+// branch if addr1 != addr2
+// full name is nv_bne16u_mem16u_mem16u
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   addr2: is the address of LSB of the other word (addr2+1 is MSB)
 //   label: is the label to branch to
@@ -165,7 +177,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory has different content than 
-// an immediate 16 bit value
+// an immediate 16 bit value.
+// branch if addr1 != num
+// full name is nv_bne16u_mem16u_num16u
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
 //   label: is the label to branch to
@@ -180,7 +194,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory has different contents than 
-// an immediate 16 bit value
+// an immediate 16 bit value.
+// branch if addr1 != num
+// full name is nv_bne16u_mem16u_num16u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
@@ -199,7 +215,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a word at one memory location  
-// are less than the contents in another memory location 
+// are less than the contents in another memory location .
+// branch if addr1 < addr2
+// full name is nv_blt16u_mem16u_mem16u
 //   addr1: the address of the LSB of the word1
 //   addr2: the address of the LSB of the word2 
 //   label: the label to branch to if word1 < word2
@@ -216,6 +234,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to jump to a label if the contents of a word at one 
 // memory location are less than the contents in another memory location.
+// branch if addr1 < addr2
+// full name is nv_blt16u_mem16u_mem16u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the LSB of the word1
 //   addr2: the address of the LSB of the word2 
@@ -234,7 +254,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory is less than 
-// an immediate 16 bit value
+// an immediate 16 bit value.
+// branch if addr1 < num
+// full name is nv_blt16u_mem16u_immed16u
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
 //   label: is the label to branch to
@@ -251,6 +273,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory is less than 
 // an immediate 16 bit value
+// branch if addr1 < num
+// full name is nv_blt16u_mem16u_immed16u far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
@@ -269,7 +293,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a word at one memory location  
-// are less than or equal to the contents in another memory location 
+// are less than or equal to the contents in another memory location.
+// branch if addr1 <= addr2
+// full name is nv_ble16u_mem16u_mem16u
 //   addr1: the address of the LSB of the word1
 //   addr2: the address of the LSB of the word2 
 //   label: the label to branch to if word1 < word2
@@ -290,6 +316,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a word at one memory location  
 // are less than or equal to the contents in another memory location.
+// branch if addr1 <= addr2
+// full name is nv_ble16u_mem16u_mem16u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the LSB of the word1
 //   addr2: the address of the LSB of the word2 
@@ -307,7 +335,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory is less than or equal to
-// an immediate 16 bit value
+// an immediate 16 bit value.
+// branch if addr1 <= num
+// full name is nv_ble16u_mem16u_immed16u
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
 //   label: is the label to branch to
@@ -327,6 +357,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory is less than or equal to
 // an immediate 16 bit value.
+// branch if addr1 <= num
+// full name is nv_ble16u_mem16u_immed16u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
@@ -344,7 +376,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a word at one memory location  
-// are greater than the contents in another memory location 
+// are greater than the contents in another memory location.
+// branch if addr1 > addr2
+// full name is nv_bgt16u_mem16u_mem16u
 //   addr1: the address of the LSB of the word1
 //   addr2: the address of the LSB of the word2 
 //   label: the label to branch to if word1 > word2
@@ -366,6 +400,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a word at one memory location  
 // are greater than the contents in another memory location.
+// branch if addr1 > addr2
+// full name is nv_bgt16u_mem16u_mem16u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the LSB of the word1
 //   addr2: the address of the LSB of the word2 
@@ -383,7 +419,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory is greater than
-// an immediate 16 bit value
+// an immediate 16 bit value.
+// branch if addr1 > num
+// full name is nv_bgt16u_mem16u_immed16u
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
 //   label: is the label to branch to
@@ -406,6 +444,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory is greater than
 // an immediate 16 bit value.
+// branch if addr1 > num
+// full name is nv_bgt16u_mem16u_immed16u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
@@ -424,7 +464,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a word at one memory location  
-// are greater than or equal to the contents in another memory location 
+// are greater than or equal to the contents in another memory location.
+// branch if addr1 >= addr2
+// full name is nv_bge16u_mem16u_mem16u
 //   addr1: the address of the LSB of the word1
 //   addr2: the address of the LSB of the word2 
 //   label: the label to branch to if word1 >= word2
@@ -442,6 +484,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of a word at one memory location  
 // are greater than or equal to the contents in another memory location.
+// branch if addr1 >= addr2
+// full name is nv_bge16u_mem16u_mem16u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: the address of the LSB of the word1
 //   addr2: the address of the LSB of the word2 
@@ -461,7 +505,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory is greater or equal tothan
-// an immediate 16 bit value
+// an immediate 16 bit value.
+// branch if addr1 >= num
+// full name is nv_bge16u_mem16u_immed16u
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1
 //   label: is the label to branch to
@@ -477,6 +523,8 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one word in memory is greater or equal tothan
 // an immediate 16 bit value.
+// branch if addr1 >= num
+// full name is nv_bge16u_mem16u_immed16u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of LSB of one word (addr1+1 is MSB)
 //   num: is the immediate 16 bit value to compare with the contents of addr1

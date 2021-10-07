@@ -30,7 +30,7 @@ nv_sprite_wait_last_scanline()
 There are a number of macros for conditional branching and math operations that are named so that by looking at the name the following things are clear:
   - The operation
   - The bit width (8 bit or 16 bit) of the operands 
-  - The sign of operand (signed or unsigned)
+  - The sign of operand (signed or unsigned, or either)
   - For conditional branching (if branch is near(within 127/-128 bytes) or far (any address)
  
 To this end these macros are named based on the following:
@@ -41,7 +41,7 @@ To this end these macros are named based on the following:
 - Operation := [mul|adc|etc]
 - OperationWidth := [8|16] no default
 - OperandWidth := [8|16] if missing then assume same as OperationWidth
-- Sign := [u|s] default assume u
+- Sign := [u|s|x] s=signed, u=unsigned, x=either signed or unsigned.   Note that signed implies twos compliment for negative values.  Default is u
 - Operand:= mem|immed|a|x|y
 
 The FullName above should be fully descriptive for these type of operations but these full names can be clunky so the following short cut rules were created

@@ -270,6 +270,7 @@ ResultReady:
 //////////////////////////////////////////////////////////////////////////////
 // multiply accum with the 8 bit value at memory address
 // and place result in a word at a memory address.
+// result = num * accum
 // full name is nv_mul8u_immed8u_a8u
 // params:
 //   accum: addr of first 8bit operand for multiplication
@@ -400,14 +401,14 @@ ResultReady:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to perform twos compliment on accum.
-// full name is nv_twos_comp8u_a8u
+// full name is nv_twos_comp8x_a8x
 // note: that twos compliment on $80 (-128, the min neg value)
 //       is $80 (itself, since +128 is unrepresentable in 8bits).  
 //       The consumer of this macro should check for that case
 // accum: changed to hold the twos compliment of what it held when called
 // x reg: unchanged
 // y reg: unchanged
-.macro nv_twos_comp8_a()
+.macro nv_twos_comp8x_a()
 {
     eor #$FF
     clc
@@ -419,7 +420,7 @@ ResultReady:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to do an in place twos compliment on the 8 bit value 
 // at a memory addr.
-// full name is nv_twos_comp8u_mem8u
+// full name is nv_twos_comp8x_mem8x
 // macro params: 
 //   addr: the memory address to a byte that holds the value to perform
 //         the twos compliment on.  After the macro executes this
@@ -429,7 +430,7 @@ ResultReady:
 // Accum: changes
 // x reg: unchanged
 // y reg: unchanged
-.macro nv_twos_comp8_mem(addr)
+.macro nv_twos_comp8x_mem(addr)
 {
     lda addr
     eor #$FF

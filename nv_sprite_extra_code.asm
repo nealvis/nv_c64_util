@@ -729,7 +729,7 @@ SaveBlock:
     // load accum with x velocity
     nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
     
-    nv_twos_comp8_a()
+    nv_twos_comp8x_a()
 
     nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)
 
@@ -753,7 +753,7 @@ SaveBlock:
     // load accum with x velocity
     nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_Y_OFFSET)
     
-    nv_twos_comp8_a()
+    nv_twos_comp8x_a()
 
     nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)
 
@@ -781,7 +781,7 @@ SaveBlock:
     
     bpl NothingToDo         // x velocity already positive, just return
 
-    nv_twos_comp8_a()   // reverse the x velocity
+    nv_twos_comp8x_a()   // reverse the x velocity
 
     nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)  // save back to extra data
 
@@ -809,7 +809,7 @@ SaveBlock:
     
     bmi NothingToDo         // x velocity already positive, just return
 
-    nv_twos_comp8_a()   // reverse the x velocity
+    nv_twos_comp8x_a()   // reverse the x velocity
 
     nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)  // save back to extra data
 
@@ -837,7 +837,7 @@ SaveBlock:
     
     bpl NothingToDo             // if already positive, then done
 
-    nv_twos_comp8_a()       // reverse velocity
+    nv_twos_comp8x_a()       // reverse velocity
 
     nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)  // save vel back to extra
 
@@ -865,7 +865,7 @@ SaveBlock:
     
     bmi NothingToDo             // if already negative, then done
 
-    nv_twos_comp8_a()       // reverse velocity
+    nv_twos_comp8x_a()       // reverse velocity
 
     nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)  // save vel back to extra
 

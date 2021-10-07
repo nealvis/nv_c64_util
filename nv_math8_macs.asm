@@ -24,8 +24,8 @@
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to create a bit mask for a bit number between 0 and 7.
-// if bit_num_addr contains 0 then the accum will be $01
-// if bit_num_addr contains 1 then the accum will be $02
+// if bit_num_addr contains 0 then the accum will be set to $01
+// if bit_num_addr contains 1 then the accum will be set to $02
 //   macro parameters:
 //     bit_num_addr: is the address of a byte that contains the bit
 //                   number for which a bit mask will be created. 
@@ -82,14 +82,15 @@ MaskDone:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to store an immediate 8 bit value in a byte in memory
-// macro parameters
+// macro parameters.
+// full name is nv_store8x_mem8x_immed8x
 //   addr: the address in which to store the immediate value
 //   immed_value: is the value to store ($00 - $FF)
-.macro nv_store8_immed(addr, immed_value)
+.macro nv_store8x_immed(addr, immed_value)
 {
     .if (immed_value > $00FF)
     {
-        .error("Error - nv_store8_immed: immed_value, was larger than 8 bits")
+        .error("Error - nv_store8x_immed: immed_value, was larger than 8 bits")
     }
     lda #immed_value
     sta addr
@@ -100,6 +101,7 @@ MaskDone:
 //////////////////////////////////////////////////////////////////////////////
 // multiply byte at a memory address with byte in at another mem addr
 // and place result in a third (16 bit) memory address
+// full name is mul8u_mem8u_mem8u
 // params:
 //   addr1: addr of first 8bit operand for multiplication
 //   addr2: addr of second 8bit operand for multiplication
@@ -116,6 +118,7 @@ MaskDone:
 //////////////////////////////////////////////////////////////////////////////
 // multiply byte at a memory address with an immediate value
 // and place result in a third (16 bit) memory address
+// full name is nv_mul8u_mem8u_immed8u
 // params:
 //   addr1: addr of first 8bit operand for multiplication
 //   num: the immediate 8 bit value
@@ -137,9 +140,10 @@ MaskDone:
 //////////////////////////////////////////////////////////////////////////////
 // multiply accum with the 8 bit value at memory address
 // and place result in a word at a memory address
+// full name is nv_mul8u_mem8u_a8u
 // params:
-//   accum: addr of first 8bit operand for multiplication
-//   addr2: addr of second 8bit operand for multiplication
+//   addr2: addr of another 8bit operand for multiplication
+//   accum: addr of 8bit operand for multiplication
 //   result: address of a 16bit word in memory for the result
 // Accum: changes
 // X Reg: unchanged
@@ -265,7 +269,8 @@ ResultReady:
 
 //////////////////////////////////////////////////////////////////////////////
 // multiply accum with the 8 bit value at memory address
-// and place result in a word at a memory address
+// and place result in a word at a memory address.
+// full name is nv_mul8u_immed8u_a8u
 // params:
 //   accum: addr of first 8bit operand for multiplication
 //   num: immediate 8 bit value which is second operand for mult
@@ -394,7 +399,8 @@ ResultReady:
 
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to perform twos compliment on accum
+// inline macro to perform twos compliment on accum.
+// full name is nv_twos_comp8u_a8u
 // note: that twos compliment on $80 (-128, the min neg value)
 //       is $80 (itself, since +128 is unrepresentable in 8bits).  
 //       The consumer of this macro should check for that case
@@ -412,7 +418,8 @@ ResultReady:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to do an in place twos compliment on the 8 bit value 
-// at a memory addr
+// at a memory addr.
+// full name is nv_twos_comp8u_mem8u
 // macro params: 
 //   addr: the memory address to a byte that holds the value to perform
 //         the twos compliment on.  After the macro executes this
@@ -434,8 +441,9 @@ ResultReady:
 
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to do subtraction between two 8bit values, both 
+// inline macro to do subtraction between two signed 8bit values, both 
 // in memory.
+// full name is nv_sbc8s_mem8s_mem8s
 // result_addr = addr1 - addr2
 // Params: 
 //   addr1: address of op1 for subtraction
@@ -444,7 +452,7 @@ ResultReady:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_sbc8(addr1, addr2, result_addr)
+.macro nv_sbc8s(addr1, addr2, result_addr)
 {
     sec
     lda addr1

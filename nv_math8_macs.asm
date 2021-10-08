@@ -478,6 +478,7 @@ ResultReady:
 // inline macro to do subtraction between two 8bit values, one in memory 
 // and the other is an immediate number
 // result_addr = addr1 - num
+// full name is nv_sbc8x_mem8x_immed8x
 // Params: 
 //   addr1: address of op1 for subtraction
 //   num: the immediate number to use as op2 for subtraction

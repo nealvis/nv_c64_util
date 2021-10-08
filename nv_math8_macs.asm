@@ -388,7 +388,7 @@ HaveRotateNum:
 
 LoopTop:
     beq ResultReady
-    nv_adc16_immed(result, num, result)
+    nv_adc16x_mem_immed(result, num, result)
     dey
 jmp LoopTop
 

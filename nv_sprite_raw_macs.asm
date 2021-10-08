@@ -535,11 +535,11 @@ BiggerAX:
 FindDistY:
     nv_bge16(temp_y_a, temp_y_b, BiggerAY)
 BiggerBY:
-    nv_adc16(temp_x_dist, temp_y_b, rel_dist_addr)
+    nv_adc16x(temp_x_dist, temp_y_b, rel_dist_addr)
     nv_sbc16(rel_dist_addr, temp_y_a, rel_dist_addr)
     jmp DebugPrint
 BiggerAY:
-    nv_adc16(temp_x_dist, temp_y_a, rel_dist_addr)
+    nv_adc16x(temp_x_dist, temp_y_a, rel_dist_addr)
     nv_sbc16(rel_dist_addr, temp_y_b, rel_dist_addr)
 
 DebugPrint:
@@ -605,11 +605,11 @@ BiggerAX:
 FindDistY:
     nv_bge16(temp_y_a, temp_y_b, BiggerAY)
 BiggerBY:
-    nv_adc16(temp_x_dist, temp_y_b, rel_dist_addr)
+    nv_adc16x(temp_x_dist, temp_y_b, rel_dist_addr)
     nv_sbc16(rel_dist_addr, temp_y_a, rel_dist_addr)
     jmp DebugPrint
 BiggerAY:
-    nv_adc16(temp_x_dist, temp_y_a, rel_dist_addr)
+    nv_adc16x(temp_x_dist, temp_y_a, rel_dist_addr)
     nv_sbc16(rel_dist_addr, temp_y_b, rel_dist_addr)
 
 DebugPrint:

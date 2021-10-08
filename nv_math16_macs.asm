@@ -24,13 +24,25 @@
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to add two 16 bit values and store the result in another
-// 16bit value.  carry bit will be set if carry occured
+// 16bit value.  Carry and overflow bits set appropriately
+// full name: nv_adc16x_mem16x_mem16x
 // params:
 //   addr1 is the address of the low byte of op1
 //   addr2 is the address of the low byte of op2
 //   result_addr is the address to store the result.
-// Note X and Y Registers are unchanged
-.macro nv_adc16(addr1, addr2, result_addr)
+// Accum changes
+// X Reg unchanged
+// Y Reg unchanged
+// Status flags:
+//   Carry set if carry from the MSB addition occured, ie if unsigned result
+//             would exceed 16 bit unsigned max (65535).
+//   Carry clear if no carry from MSB occured, ie if the unsigned result
+//             does fit in a 16 bit unsigned int (0 - 65535) 
+//   Overflow set: if signed result outside bound of 
+//                 16 bit signed int (-32768 and +32767)
+//   Overflow clear if signed result falls within the bound of
+//                 16 bit signed int 
+.macro nv_adc16x(addr1, addr2, result_addr)
 {
     lda addr1
     clc
@@ -143,14 +155,26 @@ SkipAdd:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to add one 16 bit values in memory to an immediate value
 // and store the result in another 16bit value.  
-// carry bit will be set if carry occured
+// result_addr = addr1 + num
+// full name: nv_adc16x_mem16x_immed16x
 // params:
 //   addr1 is the address of the LSB of 16 bit value in memory
 //   num is the 16 bit immeidate number to add
 //   result_addr is the address of the LSB of the 16 bit memory location 
 //               to store the result.
-// Note: X and Y Regs are unchanged
-.macro nv_adc16_immed(addr1, num, result_addr)
+// Accum changes
+// X Reg unchanged
+// Y Reg unchanged
+// Status flags:
+//   Carry set if carry from the MSB addition occured, ie if unsigned result
+//             would exceed 16 bit unsigned max (65535).
+//   Carry clear if no carry from MSB occured, ie if the unsigned result
+//             does fit in a 16 bit unsigned int (0 - 65535) 
+//   Overflow set: if signed result outside bound of 
+//                 16 bit signed int (-32768 and +32767)
+//   Overflow clear if signed result falls within the bound of
+//                 16 bit signed int 
+.macro nv_adc16x_mem_immed(addr1, num, result_addr)
 {
     lda addr1
     clc
@@ -236,7 +260,7 @@ SkipAdd:
     beq MultByZero
     nv_store16_immed(scratch_word, $0000)
 LoopTop:
-    nv_adc16(addr1, scratch_word, scratch_word)
+    nv_adc16x(addr1, scratch_word, scratch_word)
     .if ((proc_flags & NV_PROCSTAT_OVERFLOW) !=0)
     {   // user cares about overflow so check the carry flag
         bcc NoCarry
@@ -319,7 +343,7 @@ Done:
     beq MultByZero
     nv_store16_immed(scratch_word, $0000)
 LoopTop:
-    nv_adc16(addr1, scratch_word, scratch_word)
+    nv_adc16x(addr1, scratch_word, scratch_word)
     .if ((proc_flags & NV_PROCSTAT_OVERFLOW) !=0)
     {   // user cares about overflow so check the carry flag
         bcc NoCarry
@@ -437,7 +461,7 @@ Loop:
 .macro nv_twos_comp_16(addr16, result_addr16)
 {
     negate16(addr16, result_addr16)
-    nv_adc16_immed(result_addr16, 1, result_addr16)
+    nv_adc16x_mem_immed(result_addr16, 1, result_addr16)
 }
 //
 //////////////////////////////////////////////////////////////////////////////

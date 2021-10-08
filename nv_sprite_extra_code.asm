@@ -901,7 +901,7 @@ SaveBlock:
     nv_sprite_extra_word_to_mem(NV_SPRITE_X_OFFSET, center_x_addr)
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_LEFT_OFFSET, HitboxLeft)
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_RIGHT_OFFSET, HitboxRight)
-    nv_sbc8s(HitboxRight, HitboxLeft, HitboxWidth)
+    nv_sbc8x(HitboxRight, HitboxLeft, HitboxWidth)
     lsr HitboxWidth                 // hitbox width divided by 2
     nv_adc16_8(center_x_addr, HitboxWidth, center_x_addr)
 
@@ -913,7 +913,7 @@ SaveBlock:
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_TOP_OFFSET, HitboxTop)
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_BOTTOM_OFFSET, HitboxBottom)
 
-    nv_sbc8s(HitboxBottom, HitboxTop, HitboxHeight)
+    nv_sbc8x(HitboxBottom, HitboxTop, HitboxHeight)
     lsr HitboxHeight            // hitbox height divided by 2
     nv_adc16_8(center_y_addr, HitboxHeight, center_y_addr)
 

@@ -485,7 +485,19 @@ ResultReady:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_sbc8_mem_immed(addr1, num, result_addr)
+// status flags: 
+//   Carry will be clear when result, assuming unsigned args, is less than 0
+//         Can think of it as: If interpreting all args as unsigned and 
+//         num > num then carry will be clear because borrow will be needed
+//   Carry will set when result between 0 and 255 (interpreting args unsigned)
+//         Can think of it as: if interpreting all args as unsigned then carry
+//         will be set when addr1 >= num because no borrow is needed.
+//   Overflow clear when result is within -128 and +127
+//            ex: $02 - $01 = $01   // 2-1=1, V clear: $03 in range
+//   Overflow set when the result is outside twos comp range of -128 and 127 
+//            ex: $80 - $01 = $80   // -128-1=-129, V set outside range 
+
+.macro nv_sbc8x_mem_immed(addr1, num, result_addr)
 {
     sec
     lda addr1

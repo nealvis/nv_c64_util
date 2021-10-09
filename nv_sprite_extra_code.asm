@@ -453,7 +453,7 @@ SaveBlock:
 
     nv_sprite_extra_word_to_mem(NV_SPRITE_X_OFFSET, cur_x)
 
-    nv_adc16_8signed(cur_x, velocity, potential_new_x)
+    nv_adc16x_mem16x_mem8s(cur_x, velocity, potential_new_x)
 
     // potential_new_x has the new x if not bouncing or wrapping
     nv_ble16(potential_new_x, max_x, UsePotentialX)
@@ -510,7 +510,7 @@ max_x: .word 0
 
     nv_sprite_extra_word_to_mem(NV_SPRITE_X_OFFSET, cur_x)
 
-    nv_adc16_8signed(cur_x, velocity, potential_new_x)
+    nv_adc16x_mem16x_mem8s(cur_x, velocity, potential_new_x)
 
     // potential_new_x has the new x if not off left edge
 

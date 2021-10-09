@@ -825,9 +825,9 @@ Done:
 //
 .macro nv_sprite_move_negative_x(info)
 {
-    nv_adc16_8signed((nv_sprite_x_addr(info)), 
-                     (nv_sprite_vel_x_addr(info)), 
-                     (nv_sprite_scratch1_word_lsb_addr(info)))
+    nv_adc16x_mem16x_mem8s((nv_sprite_x_addr(info)), 
+                           (nv_sprite_vel_x_addr(info)), 
+                           (nv_sprite_scratch1_word_lsb_addr(info)))
 
     // scratch1 now has potential new X location
     nv_bgt16(nv_sprite_scratch1_word_lsb_addr(info), nv_sprite_left_min_lsb_addr(info), NewLocInScratch1)

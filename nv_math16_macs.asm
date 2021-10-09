@@ -59,9 +59,10 @@
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to add a signed 8 bit value in memory to a 16 bit value 
 // in memory and store the result in another 16bit value.  
-// carry bit will be set if carry occured
+// full name: nv_adc16x_mem16x_mem8s
 // params:
-//   addr16 is the address of the low byte of 16 bit operand
+//   addr16 is the address of the low byte of 16 bit operand.
+//          whether signed or unsigned the result will be the same
 //   addr8 is the address of the signed 8 bit operand.  As an 8 bit
 //         signed number, if the sign bit is 1 then it will be 
 //         extended to create a 16bit value that will be added to the
@@ -70,8 +71,23 @@
 //         For example,  if the 8 bit value at addr8 is $FF (-1)  then
 //         instead of adding $00FF to the 16 bit number we'll be adding 
 //         $FFFF which is -1 so that the result will be as expected.   
-//   result_addr is the address to store the result.
-.macro nv_adc16_8signed(addr16, addr8, result_addr)
+//   result16_addr is the address to store the 16bit result.
+// Accum changes
+// X Reg changes
+// Y Reg unchanged
+// Status flags:
+//   Carry set if carry from the MSB addition occured, ie if unsigned result
+//             after sign extending addr8 would exceed 16 bit unsigned 
+//             max (65535).
+//   Carry clear if no carry from MSB occured, ie if the unsigned result
+//             after sign extending addr8 does fit in a 16 bit 
+//             unsigned int (0 - 65535) 
+//   Overflow set: if signed result outside bound of 
+//                 16 bit signed int (-32768 and +32767)
+//   Overflow clear if signed result falls within the bound of
+//                 16 bit signed int 
+// old name: nv_adc16_8signed
+.macro nv_adc16x_mem16x_mem8s(addr16, addr8, result16_addr)
 {
     ldx #0
     lda addr8
@@ -81,10 +97,10 @@ Op2Positive:
     stx scratch_byte
     clc
     adc addr16
-    sta result_addr
+    sta result16_addr
     lda addr16+1
     adc scratch_byte
-    sta result_addr+1
+    sta result16_addr+1
 }
 //
 //////////////////////////////////////////////////////////////////////////////

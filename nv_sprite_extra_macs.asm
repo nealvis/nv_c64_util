@@ -783,7 +783,8 @@ DoneY:
 .macro nv_sprite_move_positive_x(info)
 {
     // add x offset + x velocity and put in scratch1
-    nv_adc16_8((nv_sprite_x_addr(info)), 
+    // already know x vel is positive only so unsigned add is fine.
+    nv_adc16x_mem16x_mem8u((nv_sprite_x_addr(info)), 
                (nv_sprite_vel_x_addr(info)), 
                (nv_sprite_scratch1_word_addr(info)))
 
@@ -1038,14 +1039,14 @@ Done:
 
     /////////// put sprite's rectangle to rect1, use the hitbox not full sprite
     nv_xfer16_mem_mem(nv_sprite_x_addr(info), r1_left)
-    nv_adc16_8(r1_left, nv_sprite_hitbox_right_addr(info), r1_right)
-    nv_adc16_8(r1_left, nv_sprite_hitbox_left_addr(info), r1_left)
+    nv_adc16x_mem16x_mem8u(r1_left, nv_sprite_hitbox_right_addr(info), r1_right)
+    nv_adc16x_mem16x_mem8u(r1_left, nv_sprite_hitbox_left_addr(info), r1_left)
     lda nv_sprite_y_addr(info)     // 8 bit value so manually load MSB with $00
     sta r1_top
     lda #$00
     sta r1_top+1
-    nv_adc16_8(r1_top, nv_sprite_hitbox_bottom_addr(info), r1_bottom)
-    nv_adc16_8(r1_top, nv_sprite_hitbox_top_addr(info), r1_top)
+    nv_adc16x_mem16x_mem8u(r1_top, nv_sprite_hitbox_bottom_addr(info), r1_bottom)
+    nv_adc16x_mem16x_mem8u(r1_top, nv_sprite_hitbox_top_addr(info), r1_top)
 
     // now check for overlap with rect1 and rect2
     nv_check_rect_overlap16(nv_sprite_scratch_rect_addr(info), rect_addr)

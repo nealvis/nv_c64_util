@@ -257,7 +257,7 @@ HaveRotateNum:
 
 LoopTop:
     beq ResultReady
-    nv_adc16_8unsigned(result, addr1, result)
+    nv_adc16x_mem16x_mem8u(result, addr1, result)
     dey
 jmp LoopTop
 

@@ -48,7 +48,7 @@ RowLoop:
 DoneAddingRows:
 
     // now add the column
-    nv_adc16_8unsigned(screen_poke_start, nv_b8, screen_poke_start)
+    nv_adc16x_mem16x_mem8u(screen_poke_start, nv_b8, screen_poke_start)
 
     // now screen_poke_start contains addr of the first screen
     // char to poke

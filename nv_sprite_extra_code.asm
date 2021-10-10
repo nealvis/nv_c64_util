@@ -167,7 +167,7 @@ SaveBlock:
     nv_sprite_extra_word_to_mem(NV_SPRITE_DATA_PTR_OFFSET, scratch_word)
     
     //scratch_word now has the data ptr in it
-    nv_lsr16(scratch_word, 6)       // dividing by 64 (more or less)
+    nv_lsr16u_mem16u_immed8u(scratch_word, 6)       // dividing by 64 (more or less)
                                     // the low byte of scratch_word now has
                                     // the sprite data block number
                                     // the posible remaining 2 high bits
@@ -903,7 +903,7 @@ SaveBlock:
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_RIGHT_OFFSET, HitboxRight)
     nv_sbc8x(HitboxRight, HitboxLeft, HitboxWidth)
     lsr HitboxWidth                 // hitbox width divided by 2
-    nv_adc16_8(center_x_addr, HitboxWidth, center_x_addr)
+    nv_adc16x_mem16x_mem8u(center_x_addr, HitboxWidth, center_x_addr)
 
     // get the sprite y center location
     nv_sprite_extra_byte_to_a(NV_SPRITE_Y_OFFSET)
@@ -915,7 +915,7 @@ SaveBlock:
 
     nv_sbc8x(HitboxBottom, HitboxTop, HitboxHeight)
     lsr HitboxHeight            // hitbox height divided by 2
-    nv_adc16_8(center_y_addr, HitboxHeight, center_y_addr)
+    nv_adc16x_mem16x_mem8u(center_y_addr, HitboxHeight, center_y_addr)
 
     nv_sprite_standard_restore(SaveBlock)
     rts
@@ -972,9 +972,9 @@ SaveBlock:
     // and put in r1_left, r1_right
     nv_sprite_extra_word_to_mem(NV_SPRITE_X_OFFSET, r1_left)
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_RIGHT_OFFSET, hitbox_right)
-    nv_adc16_8(r1_left, hitbox_right, r1_right)
+    nv_adc16x_mem16x_mem8u(r1_left, hitbox_right, r1_right)
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_LEFT_OFFSET, hitbox_left)
-    nv_adc16_8(r1_left, hitbox_left, r1_left)
+    nv_adc16x_mem16x_mem8u(r1_left, hitbox_left, r1_left)
 
     // get the sprite top and bottom hitbox coords as screen pixel coords
     // and put in r1_top, r1_bottom
@@ -984,8 +984,8 @@ SaveBlock:
     sta r1_top+1
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_TOP_OFFSET, hitbox_top)
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_BOTTOM_OFFSET, hitbox_bottom)
-    nv_adc16_8(r1_top, hitbox_bottom, r1_bottom)
-    nv_adc16_8(r1_top, hitbox_top, r1_top)
+    nv_adc16x_mem16x_mem8u(r1_top, hitbox_bottom, r1_bottom)
+    nv_adc16x_mem16x_mem8u(r1_top, hitbox_top, r1_top)
 
     // now check for overlap with sprite_rect and the rect for this macro
     nv_check_rect_overlap16(sprite_rect, rect_addr)

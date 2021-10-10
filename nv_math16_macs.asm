@@ -108,34 +108,49 @@ Op2Positive:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to add an unsigned 8 bit value in memory to a 16 bit value 
 // This is just shorthand for nv_adc16_8_unsigned
-.macro nv_adc16_8(addr16, addr8, result_addr)
-{
-    nv_adc16_8unsigned(addr16, addr8, result_addr)
-}
+//.macro nv_adc16_8(addr16, addr8, result_addr)
+//{
+//    nv_adc16x_mem16x_mem8u(addr16, addr8, result_addr)
+//}
 //
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to add an unsigned 8 bit value in memory to a 16 bit value 
-// in memory and store the result in another 16 bit value.  
-// carry bit will be set if carry occured
+// (signed or unsigned) in memory and store 16bit result in memory. 
+// full name: nv_adc16x_mem16x_mem8u
 // params:
 //   addr16 is the address of the LSB of 16 bit operand
-//   addr8 is the address of the unsigned 8 bit operand.  Since this is
+//   addr8 is the address of the unsigned 8 bit operand (0-255).  Since its
 //         unsigned, when the value is $FF, the result won't be to
 //         adding a negative 1 but will be adding 255 to the 16 bit value.    
-//   result_addr is the address to store the result.
-.macro nv_adc16_8unsigned(addr16, addr8, result_addr)
+//   result16_addr is the address to store the result.
+// Accum changes
+// X Reg unchanged
+// Y Reg unchanged
+// Status flags:
+//   Carry set if carry from the MSB addition occured, ie if unsigned result
+//             after sign extending addr8 would exceed 16 bit unsigned 
+//             max (65535).
+//   Carry clear if no carry from MSB addition occured, ie if unsigned result
+//             does fit in a 16 bit unsigned int (0 - 65535) 
+//   Overflow set: if signed result outside bounds of 
+//                 16 bit signed int (-32768 and +32767)
+//   Overflow clear if signed result falls within the bound of
+//                 16 bit signed int (-32768 and +32767)
+
+// old name nv_adc16_8unsigned
+.macro nv_adc16x_mem16x_mem8u(addr16, addr8, result16_addr)
 {
     lda addr16
     clc
     adc addr8
-    sta result_addr
+    sta result16_addr
     lda addr16+1
 bcc SkipAddition
     adc #0
 SkipAddition:
-    sta result_addr+1
+    sta result16_addr+1
 }
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -396,21 +411,34 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // rotate bits right in a 16 bit location in memory
-// addr is the address of the lo byte and addr+1 is the MSB
-// num is the nubmer of rotations to do.
+// addr = addr >> num
+// full name: nv_lsr16u_mem16u_immed8u
+// params: 
+//   addr is the address of the lo byte and addr+1 is the MSB
+//   num is the nubmer of rotations to do.
 // zeros will be rotated in to the high bits
 // the carry flag will be set if the last rotation rotated off
 // a one from the low bit.  
 // Use this to divide by 2 or any power of two.
-.macro nv_lsr16(addr, num)
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: changes
+// status flags: flags change but not reliably set
+.macro nv_lsr16u_mem16u_immed8u(addr, num)
 {
+    .if (num > $FF)
+    {
+        .error "ERROR - nv_lsr16u_mem16u_immed8u: num8 too large"
+    }
     ldy #num
+    beq Done
 Loop:
     clc
     lsr addr+1
     ror addr
     dey
     bne Loop
+Done:
 }
 //
 //////////////////////////////////////////////////////////////////////////////

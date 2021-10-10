@@ -86,7 +86,6 @@
 //                 16 bit signed int (-32768 and +32767)
 //   Overflow clear if signed result falls within the bound of
 //                 16 bit signed int 
-// old name: nv_adc16_8signed
 .macro nv_adc16x_mem16x_mem8s(addr16, addr8, result16_addr)
 {
     ldx #0
@@ -102,16 +101,6 @@ Op2Positive:
     adc scratch_byte
     sta result16_addr+1
 }
-//
-//////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////////
-// inline macro to add an unsigned 8 bit value in memory to a 16 bit value 
-// This is just shorthand for nv_adc16_8_unsigned
-//.macro nv_adc16_8(addr16, addr8, result_addr)
-//{
-//    nv_adc16x_mem16x_mem8u(addr16, addr8, result_addr)
-//}
 //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -138,8 +127,6 @@ Op2Positive:
 //                 16 bit signed int (-32768 and +32767)
 //   Overflow clear if signed result falls within the bound of
 //                 16 bit signed int (-32768 and +32767)
-
-// old name nv_adc16_8unsigned
 .macro nv_adc16x_mem16x_mem8u(addr16, addr8, result16_addr)
 {
     lda addr16
@@ -156,28 +143,40 @@ SkipAddition:
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to add the accum to a 16 bit word in memory
-// and store the result to a 16 bit word in memory
-// carry bit will be set if carry occured
+// inline macro to add the accum (as an unsigned byte) to a 16 bit 
+// word in memory and store the result to a 16 bit word in memory.
+// result16_addr = addr16 + accum
+// full name: nv_adc16x_mem16x_a8u
 // params:
-//   addr16 is the address of the LSB of 16 bit operand
+//   addr16: is the address of the LSB of 16 bit operand
 //   accum: contains the value to add to addr16  Since this is an
 //         unsigned operation, when the value is $FF, the result won't be to
 //         adding a negative 1 but will be adding 255 to the 16 bit value.    
-//   result_addr is the address to store the result.
+//   result16_addr is the address to store the result.
 // accum: changes
 // x reg: unchanged
 // y reg: unchanged
-.macro nv_adc16_a_unsigned(addr16, result_addr)
+// Status flags:
+//   Carry set if carry from the MSB addition occured, ie if unsigned result
+//             after sign extending addr8 would exceed 16 bit unsigned 
+//             max (65535).
+//   Carry clear if no carry from MSB addition occured, ie if unsigned result
+//             does fit in a 16 bit unsigned int (0 - 65535) 
+//   Overflow set: if signed result outside bounds of 
+//                 16 bit signed int (-32768 and +32767)
+//   Overflow clear if signed result falls within the bound of
+//                 16 bit signed int (-32768 and +32767)
+// old name: nv_adc16_a_unsigned
+.macro nv_adc16x_mem16x_a8u(addr16, result16_addr)
 {
     clc
     adc addr16          // add LSB of addr16 with accum
-    sta result_addr     // above addition is LSB of result
+    sta result16_addr   // above addition is LSB of result
     lda addr16+1        // load MSB of addr16 to update 
     bcc SkipAdd         // carry is clear, we are done MSB is unchanged
     adc #0              // add 0, carry will be set if appropriate
 SkipAdd:
-    sta result_addr+1
+    sta result16_addr+1
 }
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -219,38 +218,42 @@ SkipAdd:
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to multiply one 16 bit value by an 8 bit immediate value
+// inline macro to multiply one unsigned 16 bit value by an 8 bit immed value
 // and store the result in another 16bit value.  
-// carry bit will be set if carry occured
+// result16_addr = addr1 * num8
+// full name: nv_mul16u_mem16u_immed8u
 // params:
 //   addr1 is the address of the LSB of 16 bit value in memory
 //   num is the immeidate 8 bit number to multiply addr1 by 
-//   result_addr is the address of the LSB of the 16 bit memory location 
+//   result16_addr is the address of the LSB of the 16 bit memory location 
 //               to store the result.
+//   proc_flags is a bit mask specifying which processor status 
+//              flags will be set.  see nv_mul16_x for more info.
 // Accum: changes
 // X Reg: changes
 // Y Reg: unchanged.
-.macro nv_mul16_immed8(addr1, num8, result_addr, proc_flags)
+.macro nv_mul16u_mem16u_immed8u(addr1, num8, result16_addr, proc_flags)
 {
     .if (num8 > 255)
     {
         .error "ERROR - nv_mul16_immed8: num8 too large"
     }
     ldx #num8
-    nv_mul16_x(addr1, result_addr, proc_flags)
+    nv_mul16u_mem16u_x8u(addr1, result16_addr, proc_flags)
 }
 //
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to multiply one 16 bit value by an 8 bit value in x reg
-// and store the result in another 16bit value.  This is an unsigned
-// multiplication.  For example if an operand is $FF its multiplying
-// by 255 not by -1
+// inline macro to multiply one unsigned16 bit value by an 8 bit unsigned
+// value in x reg and store result in a 16bit word in memory.  
+// This is an unsigned  multiplication.  For example if an operand 
+// is $FF its multiplying by 255 not by -1
+// full name: nv_mul16u_mem16u_x8u
 // Can optionally set overflow and/or zero processor status flags
 // macro params:
 //   addr1 is the address of the LSB of 16 bit value in memory
-//   result_addr is the address of the LSB of the 16 bit memory location 
+//   result16_addr is the address of the LSB of the 16 bit memory location 
 //               to store the result.
 //   proc_flags  set the bits in this 8 bit value to be 
 //               one or more (ORed together) of the NV_PROCSTAT_XXX consts
@@ -266,14 +269,15 @@ SkipAdd:
 //                                        rest is lost
 //                  NV_PROCSTAT_ZERO:     pass value with this bit set if you 
 //                                        want the zero flag set in the case 
-//                                        were multiplication result in zero.
+//                                        were multiplication result is zero.
 // params:
 //   x reg should be set to the 8 bit number to multiply by prior to 
 //         this macro
 // Accum: changes
 // X Reg: changes
 // Y Reg: unchanged
-.macro nv_mul16_x(addr1, result_addr, proc_flags)
+// old name: nv_mul16_x
+.macro nv_mul16u_mem16u_x8u(addr1, result16_addr, proc_flags)
 {
     .if ((proc_flags & NV_PROCSTAT_OVERFLOW) != 0)
     {   // clear overflow flag 
@@ -304,11 +308,11 @@ LoopTop:
     dex
     bne LoopTop
  
-    nv_xfer16_mem_mem(scratch_word, result_addr)
+    nv_xfer16_mem_mem(scratch_word, result16_addr)
     jmp Done
 
 MultByZero:
-    nv_store16_immed(result_addr, $0000)
+    nv_store16_immed(result16_addr, $0000)
     .if ((proc_flags & NV_PROCSTAT_ZERO) != 0)
     {
         pla                   // pull the flags from stack
@@ -330,6 +334,7 @@ Done:
 // and store the result in another 16bit value.  This is an unsigned
 // multiplication.  For example if an operand is $FF its multiplying
 // by 255 not by -1
+// full name: nv_mul16u_mem16u_y8u
 // Can optionally set overflow and/or zero processor status flags
 // macro params:
 //   addr1 is the address of the LSB of 16 bit value in memory
@@ -349,14 +354,15 @@ Done:
 //                                        rest is lost
 //                  NV_PROCSTAT_ZERO:     pass value with this bit set if you 
 //                                        want the zero flag set in the case 
-//                                        were multiplication result in zero.
+//                                        were multiplication result is zero.
 // params:
 //   x reg should be set to the 8 bit number to multiply by prior to 
 //         this macro
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: changes
-.macro nv_mul16_y(addr1, result_addr, proc_flags)
+// old name: nv_mul16_y
+.macro nv_mul16u_mem16u_y8u(addr1, result_addr, proc_flags)
 {
     .if ((proc_flags & NV_PROCSTAT_OVERFLOW) != 0)
     {   // clear overflow flag 
@@ -417,8 +423,9 @@ Done:
 //   addr is the address of the lo byte and addr+1 is the MSB
 //   num is the nubmer of rotations to do.
 // zeros will be rotated in to the high bits
-// the carry flag will be set if the last rotation rotated off
-// a one from the low bit.  
+// status flags:
+// Carry flag will be set if the last rotation rotated off a 1 from low bit
+// Carry flag will be clear if the last rotation rotated off a 0 from low bit
 // Use this to divide by 2 or any power of two.
 // Accum: unchanged
 // X Reg: unchanged
@@ -430,10 +437,10 @@ Done:
     {
         .error "ERROR - nv_lsr16u_mem16u_immed8u: num8 too large"
     }
+    clc
     ldy #num
     beq Done
 Loop:
-    clc
     lsr addr+1
     ror addr
     dey
@@ -444,41 +451,57 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// rotate bits left in a 16 bit location in memory
-// addr is the address of the lo byte and addr+1 is the MSB
-// num is an immediate value that is the nubmer of rotations to do.
+// Rotate bits left in a 16 bit location in memory.
+// full name: nv_asl16u_mem16u_immed8u
+// params:
+//   addr is the address of the LSB and addr+1 is the MSB of the 
+//        16 bit unsigned word to rotate
+//   num is an immediate value that is the nubmer of rotations to do.
 // zeros will be rotated in to the low bits
-// the carry flag will be set if the last rotation rotated off
-// a one from the low bit.  
 // Use this to multiply by 2 or any power of two.
-.macro nv_asl16_immed(addr, num)
+// Accum: unchanged
+// X Reg: unchanged
+// Y Reg: changes see nv_asl16u_mem16u_y8u
+// old name: nv_asl16_immed
+.macro nv_asl16u_mem16u_immed8u(addr, num)
 {
+    .if (num > $FF)
+    {
+        .error "ERROR - nv_asl16u_mem16u_immed8u: num8 too large"
+    }
     ldy #num
-    nv_asl16_y(addr)
+    nv_asl16u_mem16u_y8u(addr)
 }
 //
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// rotate bits left in a 16 bit location in memory
+// Rotate bits left in a 16 bit word in memory.
+// Full name: nv_asl16u_mem16u_y8u
 // params:
-//   addr: is the address of the lo byte and addr+1 is the MSB
+//   addr: is the address of the LSB and addr+1 is the MSB of the
+//         word on which to perform the rotation.
 //   y reg: must be loaded with the nubmer of rotations to do.
-// zeros will be rotated in to the low bits
-// the carry flag will be set if the last rotation rotated off
-// a one from the low bit.  
+// Zeros will be rotated in to the low bits of 
 // Use this to multiply by 2 or any power of two.
+// Status Flags:
+//   Carry flag set if last rotate from bit high bit of addr's MSB was a 1
+//   Carry flag clear if last rotate from bit high bit of addr's MSB was a 0
 // Accum: unchanged
 // Y reg: changes, will be zero after macro executes
 // X reg: unchanged
-.macro nv_asl16_y(addr)
+// old name nv_asl16_y
+.macro nv_asl16u_mem16u_y8u(addr)
 {
-    clc
+    cpy #0 
+    clc       // must clear after the cpy above because cpy changes carry
+    beq Done
 Loop:
     asl addr
     rol addr+1
     dey
     bne Loop
+Done:
 }
 //
 //////////////////////////////////////////////////////////////////////////////

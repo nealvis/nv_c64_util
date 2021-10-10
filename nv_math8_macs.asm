@@ -250,7 +250,7 @@ HaveRotateNum:
 
     // shift left to multiply by the largest power of two
     // that we can which is in the y reg. 
-    nv_asl16_y(result)
+    nv_asl16u_mem16u_y8u(result)
 
     // move number of additions to the x reg
     tay
@@ -381,7 +381,7 @@ HaveRotateNum:
 
     // shift left to multiply by the largest power of two
     // that we can which is in the y reg. 
-    nv_asl16_y(result)
+    nv_asl16u_mem16u_y8u(result)
 
     // move number of additions to the x reg
     tay

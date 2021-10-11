@@ -534,17 +534,30 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// inline mcaro to 
-// subtract contents at addr2 from those at addr1
-.macro nv_sbc16(addr1, addr2, result_addr)
+// inline mcaro to subtract contents at addr2 from those at addr1
+// result16_adder = addr1 - addr2
+// full name: nv_sbc16x_mem16x_mem16x
+// Status flags:
+//   Carry set if unsigned result is greater than zero, or more generally
+//             it does fit in the unsigned 16bit int range (0 - 65535)
+//   Carry clear if no carry from MSB occured, ie if the unsigned result
+//             is less than zero or more generally does not
+//             fit in a 16 bit unsigned int (0 - 65535) 
+//   Overflow set: if signed result outside bound of 
+//                 16 bit signed int (-32768 and +32767)
+//   Overflow clear if signed result falls within the bound of
+//                 16 bit signed int 
+//   Neg set if result has sign/high bit set
+//   Neg clear if result has sign/high bit clear
+.macro nv_sbc16(addr1, addr2, result16_addr)
 {
     sec
     lda addr1
     sbc addr2
-    sta result_addr
+    sta result16_addr
     lda addr1+1
     sbc addr2+1
-    sta result_addr+1
+    sta result16_addr+1
 }
 //
 //////////////////////////////////////////////////////////////////////////////

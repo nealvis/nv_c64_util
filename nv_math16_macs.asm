@@ -596,12 +596,19 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to add two 16 bit BCD values and store the result in another
-// 16bit BCD value.  carry bit will be set if carry occured
+// 16bit BCD value.  Carry bit will be set if carry occured.
+// full name: nv_bcd_adc16u_mem16u_mem16u
 // params:
 //   addr1 is the address of the LSB of op1
 //   addr2 is the address of the LSB of op2
 //   result_addr is the address to store the result.
 // Note: clears decimal mode after the addition is done 
+// Processor Status flags: 
+//   Carry flag will be set if carry from MSB addition (decimal addition)
+//           causee carry.  ie if MSB addition was $99 + $01, carry is set
+//   Carry flag will be clear if carry from MSB addition (decimal addition)
+//           did not cause carry.
+//   No other flags are reliably set.
 // Accum: changes
 // X Reg: No change
 // Y Reg: No Change
@@ -624,17 +631,27 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to add one 16 bit value in memory to an immediate value
 // and store the result in another 16 bit value in memory.  
-// carry bit will be set if carry occured
+// result_addr = addr1 + num
+// full name: nv_bcd_adc16u_mem16u_immed16u
 // params:
-//   addr1 is the address of the LSB of 16 bit value in memory
-//   num: is the immeidate number to add.  it must be a valid BCD 
-//        number which is hex values with no letters in any digit.
+//   addr1 is the address of the LSB of 16 bit value in memory that
+//         must be a valid BCD number.
+//   num: is the immeidate 16bit number to add.  It must be a valid BCD 
+//        number which is hex values with no letters in it.
 //   result_addr is the address of the LSB of the 16 bit memory location 
-//               to store the result.
+//               to store the BCD result.
+// Note: clears decimal mode after the addition is done 
+// Processor Status flags: 
+//   Carry flag will be set if carry from MSB addition (decimal addition)
+//           causee carry.  ie if MSB addition was $99 + $01, carry is set
+//   Carry flag will be clear if carry from MSB addition (decimal addition)
+//           did not cause carry.
+//   No other flags are reliably set.
 // Accum: changes
 // X Reg: No change
 // Y Reg: No Change
-.macro nv_bcd_adc16_immed(addr1, num, result_addr)
+// old name: nv_bcd_adc16_immed
+.macro nv_bcd_adc16_mem_immed(addr1, num, result_addr)
 {
     sed
     lda addr1
@@ -650,10 +667,19 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// inline mcaro to subtract 16 bit values.  
-// All operands and result are BCD
-// subtract contents at addr2 from those at addr1 and store result in 
-// result_addr
+// inline mcaro to subtract 16 bit BCD values.  All ops and result are BCD
+// result_addr = addr1 = addr2
+// full name: nv_bcd_sbc16u_mem16u_mem16u
+// params:
+//   addr1: Operand for subtraction.  Must be valid BCD
+//   addr2: Operand for subtraction.  Must be valid BCD
+//   result_addr: address of word to recieve the result of subtraction.
+// Processor Status flags: 
+//   Carry flag will be set if no borrow was required from MSB subtraction
+//           ie if MSB subtraction was $04 - $01, carry is set
+//   Carry flag will be clear if borrow was required from MSB subtraction
+//           (decimal subtraction.)  ie $01 - $04 carry is clear
+//   No other flags are reliably set.
 // Accum: changes
 // X Reg: No change
 // Y Reg: No Change
@@ -675,11 +701,13 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline mcaro to subtract 16 bit immediate value from 16 bit 
 // value in memory and store result into 16 bit result addr
+// result_addr = addr1 - num
+// full name: nv_bcd_sbc16u_mem16u_immed16u
 // All operands and result are BCD
 // Accum: changes
 // X Reg: No change
 // Y Reg: No Change
-.macro nv_bcd_sbc16_immed(addr1, num, result_addr)
+.macro nv_bcd_sbc16_mem_immed(addr1, num, result_addr)
 {
     sed                         // set decimal (BCD) mode
     sec                         // set carry for subtraction

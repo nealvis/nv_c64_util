@@ -668,7 +668,7 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline mcaro to subtract 16 bit BCD values.  All ops and result are BCD
-// result_addr = addr1 = addr2
+// result_addr = addr1 - addr2
 // full name: nv_bcd_sbc16u_mem16u_mem16u
 // params:
 //   addr1: Operand for subtraction.  Must be valid BCD
@@ -699,11 +699,20 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// inline mcaro to subtract 16 bit immediate value from 16 bit 
-// value in memory and store result into 16 bit result addr
+// inline mcaro to subtract 16 bit immed value from BCD value in memory.
+// All ops and result are BCD
 // result_addr = addr1 - num
 // full name: nv_bcd_sbc16u_mem16u_immed16u
-// All operands and result are BCD
+// params:
+//   addr1: Operand for subtraction.  Must be valid BCD
+//   num: immediate value for subtraction.  Must be valid BCD
+//   result_addr: address of word to recieve the result of subtraction.
+// Processor Status flags: 
+//   Carry flag will be set if no borrow was required from MSB subtraction
+//           ie if MSB subtraction was $04 - $01, carry is set
+//   Carry flag will be clear if borrow was required from MSB subtraction
+//           (decimal subtraction.)  ie $01 - $04 carry is clear
+//   No other flags are reliably set.
 // Accum: changes
 // X Reg: No change
 // Y Reg: No Change

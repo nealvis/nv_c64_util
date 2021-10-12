@@ -259,10 +259,11 @@ SkipAdd:
 //               one or more (ORed together) of the NV_PROCSTAT_XXX consts
 //               The following bits can be checked, and if they 
 //               are then the corresponding flag will be set if appropriate
-//                  NV_PROCSTAT_OVERFLOW: pass value with this bit set if 
-//                                        you want overflow flag to be set
-//                                        in the case that the result overflows
-//                                        16 bits.  If overflow in status register
+//                  NV_PROCSTAT_CARRY: pass value with this bit set if 
+//                                        you want carry flag to be set
+//                                        in the case that the result is too large
+//                                        to fit in an unsigned 16 bit value.  
+//                                        If carry in status register
 //                                        is set after this executes that means 
 //                                        the reslt only has the low 16 bits
 //                                        of the multiplication result and the
@@ -279,14 +280,16 @@ SkipAdd:
 // old name: nv_mul16_x
 .macro nv_mul16u_mem16u_x8u(addr1, result16_addr, proc_flags)
 {
-    .if ((proc_flags & NV_PROCSTAT_OVERFLOW) != 0)
-    {   // clear overflow flag 
-        clv 
-    }
+    //.if ((proc_flags & NV_PROCSTAT_OVERFLOW) != 0)
+    //{   // clear overflow flag 
+    //    clv 
+    //}
     .if (proc_flags != NV_PROCSTAT_NONE)
     {   // if we care about any flag then push the flags on stack
         // later we can them off and set appropriately.   
-        php  // push on the stack the proc status flags
+        //php  // push on the stack the proc status flags
+        lda #0
+        sta scratch_byte
     }
 
     cpx #$00
@@ -296,13 +299,16 @@ SkipAdd:
     nv_store16_immed(scratch_word, $0000)
 LoopTop:
     nv_adc16x(addr1, scratch_word, scratch_word)
-    .if ((proc_flags & NV_PROCSTAT_OVERFLOW) !=0)
+    .if ((proc_flags & NV_PROCSTAT_CARRY) !=0)
     {   // user cares about overflow so check the carry flag
         bcc NoCarry
         // if there was a carry then we had an overflow
-        pla                         // pull proc status from stack to accum
-        ora #NV_PROCSTAT_OVERFLOW   // set overflow flag
-        pha                         // push updated proc status to stack
+        //pla                         // pull proc status from stack to accum
+        //ora #NV_PROCSTAT_OVERFLOW   // set overflow flag
+        //pha                         // push updated proc status to stack
+        lda scratch_byte
+        ora #NV_PROCSTAT_CARRY
+        sta scratch_byte
     NoCarry:
     }
     dex
@@ -315,15 +321,30 @@ MultByZero:
     nv_store16_immed(result16_addr, $0000)
     .if ((proc_flags & NV_PROCSTAT_ZERO) != 0)
     {
-        pla                   // pull the flags from stack
-        ora #NV_PROCSTAT_ZERO // set zero flag
-        pha                   // push updated flags back to stack
+        //pla                   // pull the flags from stack
+        //ora #NV_PROCSTAT_ZERO // set zero flag
+        //pha                   // push updated flags back to stack
+        lda scratch_byte
+        ora #NV_PROCSTAT_ZERO
+        sta scratch_byte
     }
 Done:
     .if (proc_flags != NV_PROCSTAT_NONE)
-    {   // if we care about any flag then push the flags on stack
-        // later we can them off and set appropriately.   
-        plp  // pull new flags from the stack
+    {   // if we care about any flag update flags to set any flag set above
+        // which is stored in scratch_byte. 
+        .if ((proc_flags & NV_PROCSTAT_CARRY) != 0)
+        {
+            clc  // clear carry flag
+        }
+        .if ((proc_flags & NV_PROCSTAT_ZERO) != 0)
+        {
+            lda #1 // clear zero flag
+        }
+        php                 // push processor status register to stack
+        pla                 // pull processor status from stack to accum
+        ora scratch_byte    // set any flags saved above
+        pha                 // push updated flags to the stack
+        plp                 // pull updated flags from stack to status reg
     }
 }
 //
@@ -338,16 +359,17 @@ Done:
 // Can optionally set overflow and/or zero processor status flags
 // macro params:
 //   addr1 is the address of the LSB of 16 bit value in memory
-//   result_addr is the address of the LSB of the 16 bit memory location 
+//   result16_addr is the address of the LSB of the 16 bit memory location 
 //               to store the result.
 //   proc_flags  set the bits in this 8 bit value to be 
 //               one or more (ORed together) of the NV_PROCSTAT_XXX consts
 //               The following bits can be checked, and if they 
 //               are then the corresponding flag will be set if appropriate
-//                  NV_PROCSTAT_OVERFLOW: pass value with this bit set if 
-//                                        you want overflow flag to be set
-//                                        in the case that the result overflows
-//                                        16 bits.  If overflow in status register
+//                  NV_PROCSTAT_CARRY: pass value with this bit set if 
+//                                        you want carry flag to be set
+//                                        in the case that the result is too large
+//                                        to fit in an unsigned 16 bit value.  
+//                                        If carry in status register
 //                                        is set after this executes that means 
 //                                        the reslt only has the low 16 bits
 //                                        of the multiplication result and the
@@ -356,22 +378,24 @@ Done:
 //                                        want the zero flag set in the case 
 //                                        were multiplication result is zero.
 // params:
-//   x reg should be set to the 8 bit number to multiply by prior to 
+//   y reg should be set to the 8 bit number to multiply by prior to 
 //         this macro
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: changes
 // old name: nv_mul16_y
-.macro nv_mul16u_mem16u_y8u(addr1, result_addr, proc_flags)
+.macro nv_mul16u_mem16u_y8u(addr1, result16_addr, proc_flags)
 {
-    .if ((proc_flags & NV_PROCSTAT_OVERFLOW) != 0)
-    {   // clear overflow flag 
-        clv 
-    }
+    //.if ((proc_flags & NV_PROCSTAT_OVERFLOW) != 0)
+    //{   // clear overflow flag 
+    //    clv 
+    //}
     .if (proc_flags != NV_PROCSTAT_NONE)
     {   // if we care about any flag then push the flags on stack
         // later we can them off and set appropriately.   
-        php  // push on the stack the proc status flags
+        //php  // push on the stack the proc status flags
+        lda #0
+        sta scratch_byte
     }
 
     cpy #$00
@@ -381,35 +405,54 @@ Done:
     nv_store16_immed(scratch_word, $0000)
 LoopTop:
     nv_adc16x(addr1, scratch_word, scratch_word)
-    .if ((proc_flags & NV_PROCSTAT_OVERFLOW) !=0)
+    .if ((proc_flags & NV_PROCSTAT_CARRY) !=0)
     {   // user cares about overflow so check the carry flag
         bcc NoCarry
         // if there was a carry then we had an overflow
-        pla                         // pull proc status from stack to accum
-        ora #NV_PROCSTAT_OVERFLOW   // set overflow flag
-        pha                         // push updated proc status to stack
+        //pla                         // pull proc status from stack to accum
+        //ora #NV_PROCSTAT_OVERFLOW   // set overflow flag
+        //pha                         // push updated proc status to stack
+        lda scratch_byte
+        ora #NV_PROCSTAT_CARRY
+        sta scratch_byte
     NoCarry:
     }
     dey
     bne LoopTop
  
-    nv_xfer16_mem_mem(scratch_word, result_addr)
+    nv_xfer16_mem_mem(scratch_word, result16_addr)
     jmp Done
 
 MultByZero:
-    nv_store16_immed(result_addr, $0000)
+    nv_store16_immed(result16_addr, $0000)
     .if ((proc_flags & NV_PROCSTAT_ZERO) != 0)
     {
-        pla                   // pull the flags from stack
-        ora #NV_PROCSTAT_ZERO // set zero flag
-        pha                   // push updated flags back to stack
+        //pla                   // pull the flags from stack
+        //ora #NV_PROCSTAT_ZERO // set zero flag
+        //pha                   // push updated flags back to stack
+        lda scratch_byte
+        ora #NV_PROCSTAT_ZERO
+        sta scratch_byte
     }
 Done:
     .if (proc_flags != NV_PROCSTAT_NONE)
-    {   // if we care about any flag then push the flags on stack
-        // later we can them off and set appropriately.   
-        plp  // pull new flags from the stack
+    {   // if we care about any flag update flags to set any flag set above
+        // which is stored in scratch_byte. 
+        .if ((proc_flags & NV_PROCSTAT_CARRY) != 0)
+        {
+            clc    // clear carry flag
+        }
+        .if ((proc_flags & NV_PROCSTAT_ZERO) != 0)
+        {
+            lda #1 // clear zero flag
+        }
+        php                 // push processor status register to stack
+        pla                 // pull processor status from stack to accum
+        ora scratch_byte    // set any flags saved above
+        pha                 // push updated flags to the stack
+        plp                 // pull updated flags from stack to status reg
     }
+
 }
 //
 //////////////////////////////////////////////////////////////////////////////

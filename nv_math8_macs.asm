@@ -106,13 +106,15 @@ MaskDone:
 //   addr1: addr of first 8bit operand for multiplication
 //   addr2: addr of second 8bit operand for multiplication
 //   result: address of a 16bit word in memory for the result
+//   proc_flags  set the bits in this 8 bit value to be 
+//               one or more (ORed together) of the NV_PROCSTAT_XXX consts
 // Accum: changes
 // X Reg: changes
 // Y Reg: changes
-.macro nv_mul8_mem_mem(addr1, addr2, result)
+.macro nv_mul8_mem_mem(addr1, addr2, result, proc_flags)
 {
     lda addr2
-    nv_mul8_mem_a(addr1, result)
+    nv_mul8_mem_a(addr1, result, proc_flags)
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -123,10 +125,12 @@ MaskDone:
 //   addr1: addr of first 8bit operand for multiplication
 //   num: the immediate 8 bit value
 //   result: address of a 16bit word in memory for the result
+//   proc_flags  set the bits in this 8 bit value to be 
+//               one or more (ORed together) of the NV_PROCSTAT_XXX consts
 // Accum: changes
 // X Reg: changes
 // Y Reg: changes
-.macro nv_mul8_mem_immed(addr1, num, result)
+.macro nv_mul8_mem_immed(addr1, num, result, proc_flags)
 {
     .if (num > $00FF)
     {
@@ -134,7 +138,7 @@ MaskDone:
     }
 
     lda #num
-    nv_mul8_mem_a(addr1, result)
+    nv_mul8_mem_a(addr1, result, proc_flags)
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -142,34 +146,52 @@ MaskDone:
 // and place result in a word at a memory address
 // full name is nv_mul8u_mem8u_a8u
 // params:
-//   addr2: addr of another 8bit operand for multiplication
-//   accum: addr of 8bit operand for multiplication
-//   result: address of a 16bit word in memory for the result
+//   addr1: addr of an 8bit unsigned operand for multiplication
+//   accum: the other 8bit unsigned operand for multiplication
+//   result16: address of a 16bit word in memory for the result
+//   proc_flags  set the bits in this 8 bit value to be 
+//               one or more (ORed together) of the NV_PROCSTAT_XXX consts
+//               The following bits can be set, and if they 
+//               are then the corresponding flag will be set if appropriate
+//                  NV_PROCSTAT_ZERO:     pass value with this bit set if you 
+//                                        want the zero flag set in the case 
+//                                        were multiplication result is zero.
+//               note that carry can't occur since max 8 bit operands produce
+//                    a product that fits in 16 bits so the carry flag will
+//                    not be reliably set.  
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: changes
-.macro nv_mul8_mem_a(addr1, result)
+.macro nv_mul8_mem_a(addr1, result16, proc_flags)
 {
     ldy #0 
-    sty result
-    sty result+1
+    sty result16
+    sty result16+1
+    .if (proc_flags != NV_PROCSTAT_NONE)
+    {   // if we care about any flag then clear out the scratch_byte
+        // which at the end of the macro will have bits set for 
+        // anyflags that need to be set.   
+        // note that we are assuming y reg is zero because it was set above
+        sty scratch_byte
+    }
+
 
     cmp #$00
     bne AccumNotZero
     // accum is zero if here
-    jmp ResultReady
+    jmp ZeroResult
     
 AccumNotZero:
     ldy #$00
     cpy addr1
     bne Addr1NotZero
     // addr2 holds a zero if here
-    jmp ResultReady
+    jmp ZeroResult
 
 Addr1NotZero:
     // start with addr1 
     ldy addr1
-    sty result
+    sty result16
 
     // figure out which power of two fits into the value in accum
     // the accum needs to still have the initial value from before the 
@@ -250,18 +272,40 @@ HaveRotateNum:
 
     // shift left to multiply by the largest power of two
     // that we can which is in the y reg. 
-    nv_asl16u_mem16u_y8u(result)
+    nv_asl16u_mem16u_y8u(result16)
 
     // move number of additions to the x reg
     tay
 
 LoopTop:
     beq ResultReady
-    nv_adc16x_mem16x_mem8u(result, addr1, result)
+    nv_adc16x_mem16x_mem8u(result16, addr1, result16)
     dey
 jmp LoopTop
 
-ResultReady:    
+ZeroResult:
+    .if ((proc_flags & NV_PROCSTAT_ZERO) != 0)
+    {   // had zero result and want to set this flag in status reg
+        // set it in the scratch byte
+        lda scratch_byte 
+        ora #NV_PROCSTAT_ZERO
+        sta scratch_byte
+    }
+
+ResultReady:
+    .if (proc_flags != NV_PROCSTAT_NONE)
+    {   // if we care about any flag update flags to set any flag set above
+        // which is stored in scratch_byte. 
+        .if ((proc_flags & NV_PROCSTAT_ZERO) != 0)
+        {
+            lda #1 // clear zero flag
+        }
+        php                 // push processor status register to stack
+        pla                 // pull processor status from stack to accum
+        ora scratch_byte    // set any flags saved above
+        pha                 // push updated flags to the stack
+        plp                 // pull updated flags from stack to status reg
+    }
 }
 
 //
@@ -276,26 +320,43 @@ ResultReady:
 //   accum: addr of first 8bit operand for multiplication
 //   num: immediate 8 bit value which is second operand for mult
 //   result: address of a 16bit word in memory for the result
+//   proc_flags  set the bits in this 8 bit value to be 
+//               one or more (ORed together) of the NV_PROCSTAT_XXX consts
+//               The following bits can be set, and if they 
+//               are then the corresponding flag will be set if appropriate
+//                  NV_PROCSTAT_ZERO:     pass value with this bit set if you 
+//                                        want the zero flag set in the case 
+//                                        were multiplication result is zero.
+//               note that carry can't occur since max 8 bit operands produce
+//                    a product that fits in 16 bits so the carry flag will
+//                    not be reliably set.  
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: changes
-.macro nv_mul8_immed_a(num, result)
+.macro nv_mul8_immed_a(num, result, proc_flags)
 {
     ldy #0 
     sty result
     sty result+1
+    .if (proc_flags != NV_PROCSTAT_NONE)
+    {   // if we care about any flag then clear out the scratch_byte
+        // which at the end of the macro will have bits set for 
+        // anyflags that need to be set.   
+        // note that we are assuming y reg is zero because it was set above
+        sty scratch_byte
+    }
 
     cmp #$00
     bne AccumNotZero
     // accum is zero if here
-    jmp ResultReady
+    jmp ZeroResult
     
 AccumNotZero:
     ldy #$00
     cpy #num
     bne Addr1NotZero
-    // addr2 holds a zero if here
-    jmp ResultReady
+    // num was zero if here
+    jmp ZeroResult
 
 Addr1NotZero:
     // start with num 
@@ -391,8 +452,31 @@ LoopTop:
     nv_adc16x_mem_immed(result, num, result)
     dey
 jmp LoopTop
+ZeroResult:
+    .if ((proc_flags & NV_PROCSTAT_ZERO) != 0)
+    {   // had zero result and want to set this flag in status reg
+        // set it in the scratch byte
+        lda scratch_byte 
+        ora #NV_PROCSTAT_ZERO
+        sta scratch_byte
+    }
 
-ResultReady:    
+
+ResultReady:
+    .if (proc_flags != NV_PROCSTAT_NONE)
+    {   // if we care about any flag update flags to set any flag set above
+        // which is stored in scratch_byte. 
+        .if ((proc_flags & NV_PROCSTAT_ZERO) != 0)
+        {
+            lda #1 // clear zero flag
+        }
+        php                 // push processor status register to stack
+        pla                 // pull processor status from stack to accum
+        ora scratch_byte    // set any flags saved above
+        pha                 // push updated flags to the stack
+        plp                 // pull updated flags from stack to status reg
+    }
+
 }
 
 //

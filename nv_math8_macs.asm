@@ -86,7 +86,7 @@ MaskDone:
 // full name is nv_store8x_mem8x_immed8x
 //   addr: the address in which to store the immediate value
 //   immed_value: is the value to store ($00 - $FF)
-.macro nv_store8x_immed(addr, immed_value)
+.macro nv_store8x_mem8x_immed8x(addr, immed_value)
 {
     .if (immed_value > $00FF)
     {
@@ -95,7 +95,11 @@ MaskDone:
     lda #immed_value
     sta addr
 }
-
+// short name
+.macro nv_store8x_immed(addr, immed_value)
+{
+    nv_store8x_mem8x_immed8x(addr, immed_value)
+}
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -111,10 +115,15 @@ MaskDone:
 // Accum: changes
 // X Reg: changes
 // Y Reg: changes
-.macro nv_mul8_mem_mem(addr1, addr2, result, proc_flags)
+.macro mul8u_mem8u_mem8u(addr1, addr2, result, proc_flags)
 {
     lda addr2
     nv_mul8_mem_a(addr1, result, proc_flags)
+}
+// short name
+.macro nv_mul8_mem_mem(addr1, addr2, result, proc_flags)
+{
+    mul8u_mem8u_mem8u(addr1, addr2, result, proc_flags) 
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -130,7 +139,7 @@ MaskDone:
 // Accum: changes
 // X Reg: changes
 // Y Reg: changes
-.macro nv_mul8_mem_immed(addr1, num, result, proc_flags)
+.macro nv_mul8u_mem8u_immed8u(addr1, num, result, proc_flags)
 {
     .if (num > $00FF)
     {
@@ -139,6 +148,11 @@ MaskDone:
 
     lda #num
     nv_mul8_mem_a(addr1, result, proc_flags)
+}
+// short name
+.macro nv_mul8_mem_immed(addr1, num, result, proc_flags)
+{
+    nv_mul8u_mem8u_immed8u(addr1, num, result, proc_flags)
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -162,7 +176,7 @@ MaskDone:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: changes
-.macro nv_mul8_mem_a(addr1, result16, proc_flags)
+.macro nv_mul8u_mem8u_a8u(addr1, result16, proc_flags)
 {
     ldy #0 
     sty result16
@@ -307,6 +321,11 @@ ResultReady:
         plp                 // pull updated flags from stack to status reg
     }
 }
+// short name
+.macro nv_mul8_mem_a(addr1, result16, proc_flags)
+{
+    nv_mul8u_mem8u_a8u(addr1, result16, proc_flags)
+}
 
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -333,7 +352,7 @@ ResultReady:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: changes
-.macro nv_mul8_immed_a(num, result, proc_flags)
+.macro nv_mul8u_immed8u_a8u(num, result, proc_flags)
 {
     ldy #0 
     sty result
@@ -476,7 +495,11 @@ ResultReady:
         pha                 // push updated flags to the stack
         plp                 // pull updated flags from stack to status reg
     }
-
+}
+// short name
+.macro nv_mul8_immed_a(num, result, proc_flags)
+{
+    nv_mul8u_immed8u_a8u(num, result, proc_flags)
 }
 
 //
@@ -492,11 +515,16 @@ ResultReady:
 // accum: changed to hold the twos compliment of what it held when called
 // x reg: unchanged
 // y reg: unchanged
-.macro nv_twos_comp8x_a()
+.macro nv_twos_comp8x_a8x()
 {
     eor #$FF
     clc
     adc #$01
+}
+// short name
+.macro nv_twos_comp8x_a()
+{
+    nv_twos_comp8x_a8x()
 }
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -514,12 +542,17 @@ ResultReady:
 // Accum: changes
 // x reg: unchanged
 // y reg: unchanged
-.macro nv_twos_comp8x_mem(addr)
+.macro nv_twos_comp8x_mem8x(addr)
 {
     lda addr
     eor #$FF
     sta addr
     inc addr
+}
+// short name
+.macro nv_twos_comp8x_mem(addr)
+{
+    nv_twos_comp8x_mem8x(addr)
 }
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -548,12 +581,17 @@ ResultReady:
 //            ex: $02 - $01 = $01   // 2-1=1, V clear: $03 in range
 //   Overflow set when the result is outside twos comp range of -128 and 127 
 //            ex: $80 - $01 = $80   // -128-1=-129, V set outside range 
-.macro nv_sbc8x(addr1, addr2, result_addr)
+.macro nv_sbc8x_mem8x_mem8x(addr1, addr2, result_addr)
 {
     sec
     lda addr1
     sbc addr2
     sta result_addr  // sta doesn't modify status register
+}
+// short name
+.macro nv_sbc8x(addr1, addr2, result_addr)
+{
+    nv_sbc8x_mem8x_mem8x(addr1, addr2, result_addr)
 }
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -581,13 +619,17 @@ ResultReady:
 //            ex: $02 - $01 = $01   // 2-1=1, V clear: $03 in range
 //   Overflow set when the result is outside twos comp range of -128 and 127 
 //            ex: $80 - $01 = $80   // -128-1=-129, V set outside range 
-
-.macro nv_sbc8x_mem_immed(addr1, num, result_addr)
+.macro nv_sbc8x_mem8x_immed8x(addr1, num, result_addr)
 {
     sec
     lda addr1
     sbc #num
     sta result_addr  // sta doesn't modify status register
+}
+// short name
+.macro nv_sbc8x_mem_immed(addr1, num, result_addr)
+{
+    nv_sbc8x_mem8x_immed8x(addr1, num, result_addr)
 }
 //
 //////////////////////////////////////////////////////////////////////////////

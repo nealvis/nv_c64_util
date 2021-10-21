@@ -83,22 +83,24 @@ MaskDone:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to store an immediate 8 bit value in a byte in memory
 // macro parameters.
-// full name is nv_store8x_mem8x_immed8x
+// full name is nv_xfer8x_immed8x_mem8x
 //   addr: the address in which to store the immediate value
 //   immed_value: is the value to store ($00 - $FF)
-.macro nv_store8x_mem8x_immed8x(addr, immed_value)
+// old name: nv_store8x_mem8x_immed8x
+// old short name nv_store8x_immed
+.macro nv_xfer8x_immed8x_mem8x(immed_src, addr_dest)
 {
-    .if (immed_value > $00FF)
+    .if (immed_src > $00FF)
     {
-        .error("Error - nv_store8x_immed: immed_value, was larger than 8 bits")
+        .error("Error - nv_xfer8x_immed8x_mem8x: immed_src > 255")
     }
-    lda #immed_value
-    sta addr
+    lda #immed_src
+    sta addr_dest
 }
 // short name
-.macro nv_store8x_immed(addr, immed_value)
+.macro nv_xfer8x_immed_mem(immed_src, addr_dest)
 {
-    nv_store8x_mem8x_immed8x(addr, immed_value)
+    nv_xfer8x_immed8x_mem8x(immed_src, addr_dest)
 }
 
 

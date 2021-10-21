@@ -70,7 +70,7 @@
 
     // initialize closest sprite to $FF which is an invalid sprite
     // if its still this at the end, then no collision with sprite_num
-    nv_store8x_immed(closest_sprite, $FF)
+    nv_xfer8x_immed_mem($FF, closest_sprite)
 
     lda collision_bit
     nv_debug_print_labeled_byte_mem_coll(10, 0, collision_bit_label1, 17, 
@@ -111,8 +111,7 @@ WasSprite0:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8x_immed(closest_sprite, 0)
-    
+    nv_xfer8x_immed_mem($00, closest_sprite)
 
 CheckSprite1:
     // carry is set here
@@ -132,7 +131,7 @@ WasSprite1:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8x_immed(closest_sprite, 1)
+    nv_xfer8x_immed_mem(1, closest_sprite)
 
 CheckSprite2:
     ror collision_bit        // rotate bit for sprite 2 bit to carry
@@ -152,8 +151,7 @@ WasSprite2:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8x_immed(closest_sprite, 2)
-
+    nv_xfer8x_immed_mem(2, closest_sprite)
 
 CheckSprite3:
     ror collision_bit        // rotate bit for sprite 3 bit to carry
@@ -173,7 +171,7 @@ WasSprite3:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8x_immed(closest_sprite, 3)
+    nv_xfer8x_immed_mem(3, closest_sprite)
 
 CheckSprite4:
     ror collision_bit        // rotate bit for sprite 4 bit to carry
@@ -193,8 +191,7 @@ WasSprite4:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8x_immed(closest_sprite, 4)
-
+    nv_xfer8x_immed_mem(4, closest_sprite)
 
 CheckSprite5:
     ror collision_bit        // rotate bit for sprite 5 bit to carry
@@ -215,8 +212,7 @@ WasSprite5:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8x_immed(closest_sprite, 5)
-
+    nv_xfer8x_immed_mem(5, closest_sprite)
 
 CheckSprite6:
     ror collision_bit        // rotate bit for sprite 6 bit to carry
@@ -236,8 +232,7 @@ WasSprite6:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8x_immed(closest_sprite, 6)
-
+    nv_xfer8x_immed_mem(6, closest_sprite)
 
 CheckSprite7:
     ror collision_bit        // rotate bit for sprite 7 bit to carry
@@ -256,7 +251,7 @@ WasSprite7:
     nv_xfer16_mem_mem(temp_rel_dist, closest_rel_dist)
 
     // save the new closest sprite
-    nv_store8x_immed(closest_sprite, 7)
+    nv_xfer8x_immed_mem(7, closest_sprite)
 
 DoneChecking:
 

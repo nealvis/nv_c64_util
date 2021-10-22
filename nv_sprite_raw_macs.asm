@@ -188,7 +188,7 @@
 .macro nv_sprite_raw_disable_from_reg()
 {
     // change sprite number to negated sprite mask
-    nv_mask_from_bit_num_a(true)
+    nv_create_bitmask8x_a(true)
 
     // negated mask now in accum
     and NV_SPRITE_ENABLE_REG_ADDR
@@ -206,7 +206,7 @@
 .macro nv_sprite_raw_enable_from_reg()
 {
     // change sprite number to negated sprite mask
-    nv_mask_from_bit_num_a(false)
+    nv_create_bitmask8x_a(false)
 
     // negated mask now in accum
     ora NV_SPRITE_ENABLE_REG_ADDR
@@ -451,7 +451,7 @@ StayClear:
     sta sprite_x_addr+1         // if it needs to be set, do that below
 
     tya                                     // sprite number in Accum
-    nv_mask_from_bit_num_a(false)           // bitmask for sprite num in Accum
+    nv_create_bitmask8x_a(false)            // bitmask for sprite num in Accum
     bit NV_SPRITE_ALL_X_HIGH_BIT_REG_ADDR   // check sprite's high bit
     beq StayClear                           // if hi bit 0 then done
     inc sprite_x_addr+1                     // if hi bit 1 then set it in mem

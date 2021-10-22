@@ -59,6 +59,7 @@ MaskDone:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to create a bit mask for a bit number between 0 and 7.
+// full name: nv_create_bitmask8x_a8x
 // Macro params
 //   negate: is boolean that specifies if the bit mask should be
 //           negated.  Normally the mask for bit number 3 would be
@@ -66,7 +67,8 @@ MaskDone:
 //   accum: must have the bit number for which the mask will be created 
 //          upon start and will contain the bitmask upon finish
 // The bitmask created will overwrite the bit number in accumulator
-.macro nv_mask_from_bit_num_a(negate)
+// old name: nv_mask_from_bit_num_a
+.macro nv_create_bitmask8x_a8x(negate)
 {
     tax
     lda #$01
@@ -83,7 +85,10 @@ MaskDone:
     {
         eor #$FF
     }
-
+}
+.macro nv_create_bitmask8x_a(negate)
+{
+    nv_create_bitmask8x_a8x(negate)
 }
 
 //////////////////////////////////////////////////////////////////////////////

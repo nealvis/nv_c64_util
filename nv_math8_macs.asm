@@ -24,6 +24,7 @@
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to create a bit mask for a bit number between 0 and 7.
+// full name: nv_create_bitmask8x_mem8x_a8x
 // if bit_num_addr contains 0 then the accum will be set to $01
 // if bit_num_addr contains 1 then the accum will be set to $02
 //   macro parameters:
@@ -33,7 +34,8 @@
 //             negated.  Normally the mask for bit number 3 would be
 //             $08 but if negate is true then the mask will be $F7 
 // The bitmask created will be left in accumulator
-.macro nv_mask_from_bit_num_mem(bit_num_addr, negate)
+// old name: nv_mask_from_bit_num_mem
+.macro nv_create_bitmask8x_mem8x_a8x(bit_num_addr, negate)
 {
     lda #$01
     ldx bit_num_addr
@@ -49,6 +51,10 @@ MaskDone:
     {
         eor #$FF
     }
+}
+.macro nv_create_bitmask8x_mem_a(bit_num_addr, negate)
+{
+    nv_create_bitmask8x_mem8x_a8x(bit_num_addr, negate)
 }
 
 //////////////////////////////////////////////////////////////////////////////

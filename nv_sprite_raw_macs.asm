@@ -160,7 +160,7 @@
 //                 number of the sprite to enable.  It must be 0-7 only.
 .macro nv_sprite_raw_enable_from_mem(spt_num_addr)
 {
-    nv_mask_from_bit_num_mem(spt_num_addr, false)
+    nv_create_bitmask8x_mem_a(spt_num_addr, false)
     // mask is now in Accum
     ora NV_SPRITE_ENABLE_REG_ADDR
     sta NV_SPRITE_ENABLE_REG_ADDR
@@ -174,7 +174,7 @@
 //                 sprite number (0-7) that will be disabled
 .macro nv_sprite_raw_disable_from_mem(spt_num_addr)
 {
-    nv_mask_from_bit_num_mem(spt_num_addr, true)
+    nv_create_bitmask8x_mem_a(spt_num_addr, true)
     // negated mask now in accum
     and NV_SPRITE_ENABLE_REG_ADDR
     sta NV_SPRITE_ENABLE_REG_ADDR

@@ -75,8 +75,8 @@ nv_key_prev_pressed: .byte NV_KEY_NO_KEY
 
 // table of chars to report for col0 keys:  
 nv_key_col0_table: 
-.byte NOKEY, NOKEY,   NOKEY,     NOKEY, NOKEY, NOKEY, NOKEY, NOKEY
-//    <del>, <return>,<cur L/R>, F7,    F1,    F3,    F5,    <cur UD>
+.byte NOKEY, NOKEY,   NOKEY,     NV_KEY_F7, NV_KEY_F1, NV_KEY_F3, NV_KEY_F5, NOKEY
+//    <del>, <return>,<cur L/R>, F7,        F1,        F3,        F5,        <cur UD>
 
 // table of chars to report for col1 keys:  
 nv_key_col1_table: 
@@ -105,7 +105,7 @@ nv_key_col5_table:
 
 // table of chars to report for col6 keys:
 nv_key_col6_table: 
-.byte $1C, $2A, $3B, NOKEY,      NOKEY,   $3D, $1E,        $2F
+.byte $1C, $2A, $3B, NOKEY,      NOKEY,   $3D, $1E,        NV_KEY_SLASH
 //    <lb>, *,   ;,  <CLR HOME>, <RShift>, =,  <up arrow>, /
 
 // table of chars to report for col7 keys:

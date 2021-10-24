@@ -50,10 +50,16 @@
 .const NV_KEY_8 = $38
 .const NV_KEY_9 = $39
 
+.const NV_KEY_F1 = $85
+.const NV_KEY_F3 = $86
+.const NV_KEY_F5 = $87
+.const NV_KEY_F7 = $88
+
 .const NV_KEY_PLUS = $2B
 .const NV_KEY_MINUS = $2D
 .const NV_KEY_COMMA = $2C
 .const NV_KEY_PERIOD = $2E
-.const NV_KEY_SPACE = $20   
+.const NV_KEY_SPACE = $20 
+.const NV_KEY_SLASH = $2F  
 .const NV_KEY_NO_KEY = $40  // Special value for no key
 .const NOKEY = NV_KEY_NO_KEY

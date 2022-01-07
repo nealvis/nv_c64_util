@@ -774,6 +774,36 @@ Done:
 //
 //////////////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////////////
+// inline mcaro to subtract 16 bit immed value from value in memory.
+// result_addr = addr1 - num
+// full name: nv_sbc16u_mem16u_immed16u
+// params:
+//   addr1: Operand for subtraction. 
+//   num: immediate value for subtraction. 
+//   result_addr: address of word to recieve the result of subtraction.
+// Processor Status flags: 
+//   Carry flag will be set if no borrow was required from MSB subtraction
+//           ie if MSB subtraction was $04 - $01, carry is set
+//   Carry flag will be clear if borrow was required from MSB subtraction
+//           (decimal subtraction.)  ie $01 - $04 carry is clear
+//   No other flags are reliably set.
+// Accum: changes
+// X Reg: No change
+// Y Reg: No Change
+.macro nv_sbc16_mem_immed(addr1, num, result_addr)
+{
+    sec                         // set carry for subtraction
+    lda addr1
+    sbc #(num & $00FF)          // subtract LSBs
+    sta result_addr             // store LSB of result
+    lda addr1+1
+    sbc #((num >> 8) & $00FF)   // subtract MSBs
+    sta result_addr+1           // store MSB of result
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
 
 //////////////////////////////////////////////////////////////////////////////
 // macro routine to test if one rectangle overlaps another

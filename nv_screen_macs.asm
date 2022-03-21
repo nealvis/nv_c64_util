@@ -175,6 +175,63 @@
     nv_screen_print_str(temp_hex_str) 
 }
 
+//////////////////////////////////////////////////////////////////////////
+// inline macro to print a hex number that is in high nibble in 
+// the accumulator
+//   include_dollar: pass true to print a '$' before the number
+// Accum: changes
+// Y Reg: changes
+// X Reg: chagnes
+.macro nv_screen_print_hex_hi_nibble_a(include_dollar)
+{
+    .var offset = 0
+    .if (include_dollar)
+    {
+        .eval offset++
+        ldy #$24            // dollar sign
+        sty temp_hex_str
+    }
+    tay
+    ror 
+    ror 
+    ror 
+    ror  
+    and #$0f
+    tax
+    lda hex_digit_lookup, x
+    sta temp_hex_str+offset
+    lda #0
+    sta temp_hex_str + 1 + offset
+    nv_screen_print_str(temp_hex_str) 
+}
+
+//////////////////////////////////////////////////////////////////////////
+// inline macro to print a hex number that is in the low nibble in the
+// accumulator
+//   include_dollar: pass true to print a '$' before the number
+// Accum: changes
+// Y Reg: changes
+// X Reg: chagnes
+.macro nv_screen_print_hex_lo_nibble_a(include_dollar)
+{
+    .var offset = 0
+    .if (include_dollar)
+    {
+        .eval offset++
+        ldy #$24            // dollar sign
+        sty temp_hex_str
+    }
+
+    and #$0f
+    tax
+    lda hex_digit_lookup, x
+    sta temp_hex_str+offset
+    lda #0
+    sta temp_hex_str + 1 + offset
+    nv_screen_print_str(temp_hex_str) 
+}
+
+
 //////////////////////////////////////////////////////////////////////////////
 .macro nv_screen_print_hex_byte_mem(addr, include_dollar)
 {
@@ -198,6 +255,43 @@
     nv_screen_print_hex_byte_a(false)
     lda word_low_byte_addr
     nv_screen_print_hex_byte_a(false)
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to print the word value at the address given
+// word_low_byte_addr: is the address of the low byte of the word
+//    that will be interpreted as a 12.4 fixed point number and printed
+// include_dollar: should be true to print a $ before the number or
+//    false not to. 
+.macro nv_screen_print_hex_fp124_mem(word_low_byte_addr, include_dollar)
+{
+    .if (include_dollar)
+    {
+        lda #$24                // the $ sign
+        sta temp_hex_str
+        lda #0
+        sta temp_hex_str+1
+        nv_screen_print_str(temp_hex_str)
+    }
+    // print the high 8 bits
+    lda word_low_byte_addr+1
+    nv_screen_print_hex_byte_a(false)
+
+    // print high nible of lower 8 bits
+    lda word_low_byte_addr
+    nv_screen_print_hex_hi_nibble_a(false)
+
+    // print decimal point
+    lda #$2E
+    sta temp_hex_str
+    lda #0
+    sta temp_hex_str+1
+    nv_screen_print_str(temp_hex_str)
+
+    // print low nible of lower 8 bits
+    lda word_low_byte_addr
+    nv_screen_print_hex_lo_nibble_a(false)
 }
 
 

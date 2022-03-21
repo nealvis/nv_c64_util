@@ -1,9 +1,9 @@
 //////////////////////////////////////////////////////////////////////////////
-// nv_math16_macs.asm
-// Copyright(c) 2021 Neal Smith.
+// nv_math124_macs.asm
+// Copyright(c) 2022 Neal Smith.
 // License: MIT. See LICENSE file in root directory.
 //////////////////////////////////////////////////////////////////////////////
-// Contains macros for 16 bit math operations
+// Contains macros for fixed point 12.4 bit math operations
 // importing this will not cause code or data to be allocated in the program
 // unless nv_c64_util_data hasn't already been imported in which case it 
 // will be.
@@ -21,11 +21,12 @@
 
 #import "nv_branch16_macs.asm"
 #import "nv_processor_status_macs.asm"
+#import "nv_math16_macs.asm"
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to add two 16 bit values and store the result in another
-// 16bit value.  Carry and overflow bits set appropriately
-// full name: nv_adc16x_mem16x_mem16x
+// inline macro to add two fp124 bit values and store the result in another
+// fp124 bit value.  Carry and overflow bits set appropriately
+// full name: nv_adc124x_mem16x_mem16x
 // params:
 //   addr1 is the address of the low byte of op1
 //   addr2 is the address of the low byte of op2
@@ -42,20 +43,35 @@
 //                 16 bit signed int (-32768 and +32767)
 //   Overflow clear if signed result falls within the bound of
 //                 16 bit signed int 
-.macro nv_adc16x(addr1, addr2, result_addr)
+.macro nv_adc124x(addr1, addr2, result_addr)
 {
-    lda addr1
-    clc
-    adc addr2
-    sta result_addr
-    lda addr1+1
-    adc addr2+1
-    sta result_addr+1
+    nv_adc16x(addr1, addr2, result_addr)
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to add round an unsigned fp124 bit value and store the 
+// result in an unsigned 16 bit int value.  
+// full name: nv_rnd124u_mem16u
+// params:
+//   addr1: is the address of the low byte of unsigned FP124 number to round
+//   result_addr: is the address of an unsigned 16 bit word in which to 
+//     store the result.
+// Accum changes
+// X Reg unchanged
+// Y Reg unchanged
+// Status flags:
+.macro nv_rnd124u_mem16u(addr1, result_addr)
+{
+    nv_adc16x_mem_immed(addr1, $0008, result_addr)
+    nv_lsr16u_mem16u_immed8u(result_addr, 4)
 }
 //
 //////////////////////////////////////////////////////////////////////////////
 
 
+/*
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to add a signed 8 bit value in memory to a 16 bit value 
 // in memory and store the result in another 16bit value.  
@@ -464,7 +480,7 @@ Done:
 // full name: nv_lsr16u_mem16u_immed8u
 // params: 
 //   addr is the address of the lo byte and addr+1 is the MSB
-//   num is the number of rotations to do.
+//   num is the nubmer of rotations to do.
 // zeros will be rotated in to the high bits
 // status flags:
 // Carry flag will be set if the last rotation rotated off a 1 from low bit
@@ -960,3 +976,5 @@ AccumLoaded:
 }
 //
 //////////////////////////////////////////////////////////////////////////////
+
+*/

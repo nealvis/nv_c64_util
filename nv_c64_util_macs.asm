@@ -30,6 +30,7 @@
 #import "nv_joystick_macs.asm"
 #import "nv_math8_macs.asm"
 #import "nv_math16_macs.asm"
+#import "nv_math124_macs.asm"
 #import "nv_pointer_macs.asm"
 #import "nv_screen_macs.asm"
 #import "nv_sprite_extra_macs.asm"

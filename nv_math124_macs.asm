@@ -51,8 +51,12 @@
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to add round an unsigned fp124 bit value and store the 
-// result in an unsigned 16 bit int value.  
+// inline macro to round an unsigned fp124 bit value and store the 
+// result in an unsigned 16 bit int value.  The result will either be the
+// truncated input value (ex $123.4 -> $0123)  or the next higher number
+// (ex $234.8 -> $0235) depending on if the decimal part is >= half. 
+// if the input value's whole number part is $FFF and it rounds up then the
+// result will be $0000 and the carry flag will be set
 // full name: nv_rnd124u_mem16u
 // params:
 //   addr1: is the address of the low byte of unsigned FP124 number to round
@@ -60,12 +64,54 @@
 //     store the result.
 // Accum changes
 // X Reg unchanged
-// Y Reg unchanged
+// Y Reg changed
 // Status flags:
+//      Carry flag set if input value is $FFF.8 or greater, in which case the 
+//          result will be set to $0000, the carry flag will be clear for lower
+//          input values
+//      Negative flag is not reliably set but result will always be positive
+//      Overflow flag is not reliably set
+//      Zero flag is not reliably set
 .macro nv_rnd124u_mem16u(addr1, result_addr)
 {
+    // add 0.5 to the number
     nv_adc16x_mem_immed(addr1, $0008, result_addr)
+
+    php  // save the carry flag from the addition
+
+    // shift right to remove decimal digits
     nv_lsr16u_mem16u_immed8u(result_addr, 4)
+ 
+    plp  // restore the carry flag from addition
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to round an signed fp124 bit value and store the 
+// result in an signed 16 bit int value. The result will either be the
+// truncated input value (ex $123.4 -> $0123)  or the next greater magnitude
+// number in positive or negative direction  (ex $234.8 -> $0235) 
+// depending on if the decimal part is >= half. 
+// if the input value's whole number part is $FFF and it rounds up then the
+// result will be $0000 and the carry flag will be set
+// full name: nv_rnd124s_mem16s
+// params:
+//   addr1: is the address of the low byte of unsigned FP124 number to round
+//   result_addr: is the address of an signed 16 bit word in which to 
+//     store the result.
+// Accum changes
+// X Reg unchanged
+// Y Reg unchanged
+// Status flags:
+.macro nv_rnd124x_mem16x(addr1, result_addr)
+{
+    // add 0.5 to the number
+    //nv_adc16x_mem_immed(addr1, $0008, result_addr)
+
+    // shift right to remove decimal digits
+    //nv_lsr16u_mem16u_immed8u(result_addr, 4)
 }
 //
 //////////////////////////////////////////////////////////////////////////////

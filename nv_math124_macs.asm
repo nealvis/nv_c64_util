@@ -104,14 +104,50 @@
 // Accum changes
 // X Reg unchanged
 // Y Reg unchanged
-// Status flags:
-.macro nv_rnd124x_mem16x(addr1, result_addr)
+// Status flags: will not be reliably set.  will never cause overflow or carry
+//               because will always fit in the 16 bit signed result
+.macro nv_rnd124s_mem16s(addr1, result_addr)
 {
-    // add 0.5 to the number
-    //nv_adc16x_mem_immed(addr1, $0008, result_addr)
+    // set N flag for high bit of operand
+    bit addr1+1
+    bpl ItsPositive
 
-    // shift right to remove decimal digits
-    //nv_lsr16u_mem16u_immed8u(result_addr, 4)
+ItsNegative:
+    // bit test $0008 addr1 to see if decimal is .5 or higher magnatude
+    // if clear then rotate right and sign extend
+    // if set then subtract $0010 then rotate right and sign extend
+    nv_xfer16_mem_mem(addr1, result_addr)
+
+    lda #08
+    bit addr1
+    beq IsClear
+IsSet:
+    // subtract $0010
+    nv_sbc16_mem_immed(result_addr, $0010, result_addr)
+
+IsClear:
+    // rotate right 4 bits and sign extend
+    nv_lsr16u_mem16u_immed8u(result_addr, 4)
+    lda result_addr+1
+    ora #$F0
+    sta result_addr+1
+    clc      // clear carry flag until figureout when it should be set
+    jmp Done
+
+ItsPositive: 
+    // copy the value to round to the result
+    nv_xfer16_mem_mem(addr1, result_addr)
+
+    // shift right to make room for overflow
+    nv_lsr16u_mem16u_immed8u(result_addr, 1)
+
+    // add 0.5 (decimal) to the number its shifted right one already so 
+    // there are only 3 positions right of decimal now
+    nv_adc16x_mem_immed(result_addr, $0004, result_addr)
+
+    // shift off the rest of the decimal parts
+    nv_lsr16u_mem16u_immed8u(result_addr, 3)
+Done:
 }
 //
 //////////////////////////////////////////////////////////////////////////////

@@ -7,6 +7,24 @@
 // importing this will not cause code or data to be allocated in the program
 // unless nv_c64_util_data hasn't already been imported in which case it 
 // will be.
+// Signed FP124 numbers will be stored as follows within a 16 bit word:
+//   Bit 15: sign bit, 1 is negative 0 is possitive
+//   Bits 14-4: The whole number number portion (left of decimal)
+//   Bits 3-0: The decimal part of the number (right of the decimal)
+//   Examples:
+//     $0048 = $004.8 (decmial is 4.5)
+//     $8048 = -$004.8 (decimal is -4.5) note not twos compliment
+//   Min Value: $FFF.F (decimal -2047.9375)
+//   Max Value: $7FF.F (decimal +2047.9375)
+// 
+// Unsigned FP124 numbers will be stored as follows within a 16 bit word:
+//   Bits 15-4: The whole number number portion (left of decimal)
+//   Bits 3-0: The decimal part of the number (right of the decimal)
+//   Examples:
+//     $0048 = $004.8 (decmial is 4.5)
+//     $8048 = $804.8 (decimal is 2052.5) note not twos compliment
+//   Min Value: $000.0 (decimal 0)
+//   Max Value: $FFF.F (decimal +4095.9375)
 
 
 #importonce
@@ -24,35 +42,53 @@
 #import "nv_math16_macs.asm"
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to add two fp124 bit values and store the result in another
-// fp124 bit value.  Carry and overflow bits set appropriately
+// inline macro to add two fp124u bit values and store the result in another
+// fp124u bit value.  Carry and overflow bits set appropriately
 // full name: nv_adc124x_mem16x_mem16x
 // params:
-//   addr1 is the address of the low byte of op1
-//   addr2 is the address of the low byte of op2
-//   result_addr is the address to store the result.
+//   addr1 is the address of the low byte of op1 (FP124u format)
+//   addr2 is the address of the low byte of op2 (FP124u format)
+//   result_addr is the address to store the result. (FP124u format)
 // Accum changes
 // X Reg unchanged
 // Y Reg unchanged
 // Status flags:
 //   Carry set if carry from the MSB addition occured, ie if unsigned result
-//             would exceed 16 bit unsigned max (65535).
+//             would exceed the max FP124 value of $FFF.F
 //   Carry clear if no carry from MSB occured, ie if the unsigned result
-//             does fit in a 16 bit unsigned int (0 - 65535) 
-//   Overflow set: if signed result outside bound of 
-//                 16 bit signed int (-32768 and +32767)
-//   Overflow clear if signed result falls within the bound of
-//                 16 bit signed int 
-.macro nv_adc124x(addr1, addr2, result_addr)
+//             does fit in an FP124 (0 - $FFF.F) 
+.macro nv_adc124u(addr1, addr2, result_addr)
 {
     nv_adc16x(addr1, addr2, result_addr)
 }
 //
 //////////////////////////////////////////////////////////////////////////////
 
+
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to round an unsigned fp124 bit value and store the 
-// result in an unsigned 16 bit int value.  The result will either be the
+// inline macro to round an unsigned fp124 bit value in place 
+// Flags: 
+//   Carry flag will be set if addr1 contains $FFF.8 or above which will 
+//      result in rounding up to a value out of range
+.macro nv_rnd124u(addr1)
+{
+    // add 0.5 (decimal) to the number.  There is now only one fraction digit
+    // because shifted the rest off already
+    nv_adc16x_mem_immed(addr1, $0008, addr1)
+
+    lda addr1   // no change to carry flag
+    and #$F0    // no change to carry flag
+    sta addr1   // no change to carry flag
+
+    // carry flag still set from the addition above
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to convert and round an unsigned fp124 bit value and store  
+// the result in an unsigned 16 bit int value.  The result will either be the
 // truncated input value (ex $123.4 -> $0123)  or the next higher number
 // (ex $234.8 -> $0235) depending on if the decimal part is >= half. 
 // if the input value's whole number part is $FFF and it rounds up then the
@@ -66,23 +102,24 @@
 // X Reg unchanged
 // Y Reg changed
 // Status flags:
-//      Carry flag set if input value is $FFF.8 or greater, in which case the 
-//          result will be set to $0000, the carry flag will be clear for lower
-//          input values
+//      Carry flag not reliably set
 //      Negative flag is not reliably set but result will always be positive
 //      Overflow flag is not reliably set
 //      Zero flag is not reliably set
-.macro nv_rnd124u_mem16u(addr1, result_addr)
+.macro nv_conv124u_mem16u(addr1, result_addr)
 {
-    // add 0.5 to the number
-    nv_adc16x_mem_immed(addr1, $0008, result_addr)
+    // move operand into result
+    nv_xfer16_mem_mem(addr1, result_addr)
 
-    php  // save the carry flag from the addition
+    // shift result right to remove all but the most significant fraction digit
+    nv_lsr16u_mem16u_immed8u(result_addr, 3)
 
-    // shift right to remove decimal digits
-    nv_lsr16u_mem16u_immed8u(result_addr, 4)
- 
-    plp  // restore the carry flag from addition
+    // add 0.5 (decimal) to the number.  There is now only one fraction digit
+    // because shifted the rest off already
+    nv_adc16x_mem_immed(result_addr, $0001, result_addr)
+
+    // shift right to remove final fraction digit
+    nv_lsr16u_mem16u_immed8u(result_addr, 1)
 }
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -106,47 +143,35 @@
 // Y Reg unchanged
 // Status flags: will not be reliably set.  will never cause overflow or carry
 //               because will always fit in the 16 bit signed result
-.macro nv_rnd124s_mem16s(addr1, result_addr)
+.macro nv_conv124s_mem16s(addr1, result_addr)
 {
     // set N flag for high bit of operand
     bit addr1+1
     bpl ItsPositive
 
 ItsNegative:
-    // bit test $0008 addr1 to see if decimal is .5 or higher magnatude
-    // if clear then rotate right and sign extend
-    // if set then subtract $0010 then rotate right and sign extend
+    // copy operand to result
     nv_xfer16_mem_mem(addr1, result_addr)
 
-    lda #08
-    bit addr1
-    beq IsClear
-IsSet:
-    // subtract $0010
-    nv_sbc16_mem_immed(result_addr, $0010, result_addr)
-
-IsClear:
-    // rotate right 4 bits and sign extend
-    nv_lsr16u_mem16u_immed8u(result_addr, 4)
-    lda result_addr+1
-    ora #$F0
+    // clear negative flag in result
+    lda #$7F
+    and result_addr+1
     sta result_addr+1
-    clc      // clear carry flag until figureout when it should be set
+
+    // now do the unsigned conversion
+    nv_conv124u_mem16u(result_addr, result_addr)
+
+    // since the original number was negative the result will be negative
+    // do a 2s comp to make result negative
+    nv_twos_comp_16(result_addr, result_addr)
+
     jmp Done
 
 ItsPositive: 
-    // copy the value to round to the result
-    nv_xfer16_mem_mem(addr1, result_addr)
+    // signed conversion for a positive value is same as unsigned 
+    nv_conv124u_mem16u(addr1, result_addr)
 
-    // shift right to make room for overflow
-    nv_lsr16u_mem16u_immed8u(result_addr, 1)
 
-    // add 0.5 (decimal) to the number its shifted right one already so 
-    // there are only 3 positions right of decimal now
-    nv_adc16x_mem_immed(result_addr, $0004, result_addr)
-
-    // shift off the rest of the decimal parts
-    nv_lsr16u_mem16u_immed8u(result_addr, 3)
 Done:
 }
 //

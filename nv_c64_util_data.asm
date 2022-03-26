@@ -35,6 +35,12 @@ scratch_byte: .byte 0
 
 scratch_word: .word 0
 
+// scratch operands to use for fp124 macros.
+scratch_op16_a: .word 0
+scratch_op16_b: .word 0
+
+
+
 // some pseudo registers to be used throughout nv_c64_util
 nv_a16: .word 0
 nv_b16: .word 0

@@ -57,6 +57,11 @@
 //             would exceed the max FP124 value of $FFF.F
 //   Carry clear if no carry from MSB occured, ie if the unsigned result
 //             does fit in an FP124 (0 - $FFF.F) 
+//   Overflow: Is probably not logical to use for unsigned math, but
+//             Set if both operands have same high bit value and result
+//             has a different high bit value
+//             For example: $7FF.F + $001.0 = $800.F    V=1
+//                          $800.0 + $800.0 = $000.0    V=1, C=1
 .macro nv_adc124u(addr1, addr2, result_addr)
 {
     nv_adc16x(addr1, addr2, result_addr)
@@ -64,6 +69,93 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to add two fp124u bit values and store the result in another
+// fp124u bit value.  Carry and overflow bits set appropriately
+// full name: nv_adc124x_mem16x_mem16x
+// params:
+//   addr1 is the address of the low byte of op1 (FP124u format)
+//   addr2 is the address of the low byte of op2 (FP124u format)
+//   result_addr is the address to store the result. (FP124u format)
+// Accum changes
+// X Reg unchanged
+// Y Reg unchanged
+// Status flags:
+//   Carry not reliably set
+//   Overflow: Set if both operands have same high bit value and result
+//             has a different high bit value
+//             For example: $7FF.F + $001.0 = $800.F    V=1
+//                          $800.0 + $800.0 = $000.0    V=1
+//             Note that when overflow is set, the result isnt very useful
+.macro nv_adc124s(addr1, addr2, result_addr)
+{
+    nv_xfer16_mem_mem(addr1, scratch_op16_a)
+    nv_xfer16_mem_mem(addr2, scratch_op16_b)
+
+    // use Y reg to count number of negative operands
+    ldy #0
+
+    lda scratch_op16_a+1 
+    bpl Addr1Positive
+
+Addr1Negative:
+    and #$7F 
+    sta scratch_op16_a+1
+    nv_twos_comp_16(scratch_op16_a, scratch_op16_a)
+    iny // add one negative operand counter
+    
+Addr1Positive:
+    lda scratch_op16_b+1 
+    bpl Addr2Positive
+
+Addr2Negative:
+    and #$7F 
+    sta scratch_op16_b+1
+    nv_twos_comp_16(scratch_op16_b, scratch_op16_b)
+    iny // add one negative operand counter
+    
+Addr2Positive:
+
+    // Add the two together result 
+    nv_adc16x(scratch_op16_a, scratch_op16_b, result_addr)
+    // y still contains the number of negative operands
+    clv // clear the overflow bit, we'll set it below if needed
+    lda result_addr+1
+    bpl ResultPositive
+
+ResultNegative:
+    // result is negative, need to change from twos compliment to our
+    // FP 124 format by turning it positive then setting the high bit
+    nv_twos_comp_16(result_addr, result_addr)
+    lda #$80
+    ora result_addr+1
+    sta result_addr+1
+    cpy #0  // check if there were no negative operands
+    bne Done
+    // set overflow here
+    php
+    pla
+    ora #$40
+    pha
+    plp
+    jmp Done
+
+ResultPositive:
+    cpy #2  // check if there were two negative operands
+    bne Done
+    // set overflow here
+    php
+    pla
+    ora #$40
+    pha
+    plp
+    
+
+Done:
+}
+//
+//////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to round an unsigned fp124 bit value in place 

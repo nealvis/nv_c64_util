@@ -552,6 +552,9 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to negate a 16 bit number at addr specified
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
 .macro negate16(addr16, result_addr16)
 {
     lda addr16
@@ -568,6 +571,9 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to do twos compliment on a 16 but number in memory
 // and place result in specified memory location.
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
 .macro nv_twos_comp_16(addr16, result_addr16)
 {
     negate16(addr16, result_addr16)

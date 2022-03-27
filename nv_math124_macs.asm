@@ -165,6 +165,10 @@ Done:
 // whole number.
 // Note this does not convert to 16 bit value, just a rounded FP124
 // Flags: 
+//   Overflow flag will be set if input would round beyond FP124u range
+//            which is input that is $FFF.8 or above.
+//            When overflow flag is set the result will be set to the max
+//            FP124 unsigned whole number.
 //   Carry flag will be set if addr1 contains $FFF.8 or above which will 
 //      result in rounding up to a value out of range
 .macro nv_rnd124u(addr1)
@@ -178,7 +182,16 @@ Done:
     and #$F0    // no change to carry flag
     sta addr1   // no change to carry flag
 
+    clv         // clear overflow flag, will be set below if needed
+
     // carry flag still set from the addition above
+    bcc Done
+    // if here then carry flag set and we had an overflow
+    // set result to max whole FP124u number and set overflow flag
+    nv_store16_immed(addr1, $FFF0)
+    nv_flags_set_overflow()
+
+Done:
 }
 //
 //////////////////////////////////////////////////////////////////////////////

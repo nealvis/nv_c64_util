@@ -133,46 +133,107 @@ ResultNegative:
     sta result_addr+1
     cpy #0  // check if there were no negative operands
     bne Done
+
     // set overflow here
-    php
-    pla
-    ora #$40
-    pha
-    plp
+    nv_flags_set_overflow()
     jmp Done
 
 ResultPositive:
     cpy #2  // check if there were two negative operands
     bne Done
     // set overflow here
-    php
-    pla
-    ora #$40
-    pha
-    plp
-    
+    nv_flags_set_overflow()    
 
 Done:
 }
 //
 //////////////////////////////////////////////////////////////////////////////
 
+.macro nv_flags_set_overflow()
+{
+    // set overflow here
+    php         // push processor flags to stack
+    pla         // pull stack to accum (accum now has flags)
+    ora #$40    // set the overflow bit in accum
+    pha         // push updated flags from accum to stack
+    plp         // pull updated flags from stack to status register
+
+}
+
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to round an unsigned fp124 bit value in place 
+// inline macro to round an unsigned fp124 bit value in place to the closest
+// whole number.
+// Note this does not convert to 16 bit value, just a rounded FP124
 // Flags: 
 //   Carry flag will be set if addr1 contains $FFF.8 or above which will 
 //      result in rounding up to a value out of range
 .macro nv_rnd124u(addr1)
 {
-    // add 0.5 (decimal) to the number.  There is now only one fraction digit
-    // because shifted the rest off already
+    // add 0.5 (decimal) to the number to force the whole number to left
+    // of decimal point to be the rounded whole number
     nv_adc16x_mem_immed(addr1, $0008, addr1)
 
+    // clear all the fractional digits
     lda addr1   // no change to carry flag
     and #$F0    // no change to carry flag
     sta addr1   // no change to carry flag
 
     // carry flag still set from the addition above
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to round a signed fp124 bit value in place to the closest
+// whole number.
+// Note: If would round beyond max magnitude value then set to max whole
+//       number and the overflow flag will be set in processor status reg.
+// Note: Does not convert to 16 bit value, just a rounded FP124
+// Accum: changes
+// X reg: ??
+// Y reg: ??
+// Flags: 
+//   Carry flag: ??
+//   Overflow flag: will be set if result would round beyond max
+.macro nv_rnd124s(addr)
+{
+    // load the high byte of the parameter to round
+    lda addr+1
+    pha                 // store this high byte on stack for later
+    bpl PositiveInput
+NegativeInput:
+    and #$7F    // clear sign bit
+    sta addr+1  // store cleared sign bit
+
+PositiveInput:
+    // add 0.5 (decimal) to the number to force the whole number to left
+    // of decimal point to be the rounded whole number
+    nv_adc16x_mem_immed(addr, $0008, addr)
+
+    // clear all the fractional digits
+    lda addr   
+    and #$F0   
+    sta addr   
+
+    clv                  // clear overflow flag, will set later if needed
+
+    lda addr+1           // load rounded value (no sign yet) MSB to Accum
+    bpl ResultHiBitClear // if the hi bit is clear then no overflow
+
+ResultHiBitSet:         // if here then addition overflowed into the sign bit.
+    // set result to max
+    nv_store16_immed(addr, $7FF0)
+    nv_flags_set_overflow()
+
+ResultHiBitClear:  // resulting value has hi bit clear, no overflow 
+    pla            // pull the original high byte from stack to accum
+    bpl Done       // if it was positive to start with then done
+
+    // was negative to start with so set negative flag
+    lda addr+1  // load rounded value MSB to Accum
+    ora #$80    // set the sign bit for negative
+    sta addr+1  // store it back to MSB of the result
+Done:
 }
 //
 //////////////////////////////////////////////////////////////////////////////

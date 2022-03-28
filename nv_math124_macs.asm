@@ -415,6 +415,7 @@ DoesNotFit:
 ItFits:
     nv_xfer16_mem_mem(src_16u, dest_124u)
     nv_asl16u_mem16u_immed8u(dest_124u, 4)
+    clv
 Done:
 }
 //

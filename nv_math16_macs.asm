@@ -615,6 +615,9 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 // inlne macro to store 16 bit immediate value into the word with LSB 
 // at lsb_addr
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
 .macro nv_store16_immed(lsb_addr, value)
 {
     lda #(value & $00FF)

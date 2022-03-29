@@ -252,7 +252,6 @@ Done:
 // X reg: ??
 // Y reg: ??
 // Flags: 
-//   Carry flag: ??
 //   Overflow flag: will be set if result would round beyond max
 .macro nv_rnd124s(addr)
 {

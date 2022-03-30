@@ -23,6 +23,7 @@
 // code or data just by importing them, but will make the macros
 // available to use
 #import "nv_processor_status_macs.asm"
+#import "nv_branch124_macs.asm"
 #import "nv_branch16_macs.asm"
 #import "nv_branch8_macs.asm"
 #import "nv_color_macs.asm"

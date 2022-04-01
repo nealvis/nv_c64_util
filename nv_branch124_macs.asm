@@ -116,7 +116,7 @@
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_beq124_immed_far(addr1, num, label)
+.macro nv_beq124u_immed_far(addr1, num, label)
 {
     nv_beq16_immed_far(addr1, num, label)
 }

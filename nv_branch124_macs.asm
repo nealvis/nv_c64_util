@@ -15,7 +15,7 @@
 #importif !NV_C64_UTIL_DATA "nv_c64_util_default_data.asm"
 
 #import "nv_branch16_macs.asm"
-
+#import "nv_math124_macs.asm"
 
 //////////////////////////////////////////////////////////////////////////////
 // compare the contents of two 12.4 unsigned fixed pt values and 
@@ -33,6 +33,91 @@
 .macro nv_cmp124u(addr1, addr2)
 {
     nv_cmp16(addr1, addr2)
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// compare the contents of two 12.4 unsigned fixed pt values and 
+// set flags accordingly.
+// full name is nv_cmp124u_mem16u_mem16u
+// params are:
+//   addr1: 16 bit address of op1 which is a 12.4 unsigned fixed pt value
+//   addr2: 16 bit address of op2 which is a 12.4 unsigned fixed pt value
+// Carry Flag	Set if addr1 >= addr2
+// Zero Flag	Set if addr1 == addr2
+// Negative Flag is not set reliably
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_cmp124s(addr1, addr2)
+{
+    // compare high bytes of each
+    lda addr1+1
+    eor addr2+1
+    bmi DiffSigns
+SameSigns:
+    // same signs so just do unsigned 16 bit compare
+    lda addr1+1
+    bpl BothPositive
+BothNegative:
+    //nv_ops124s(addr1)
+    //nv_ops124s(addr2)
+    //nv_cmp16(addr1, addr2)
+    //php    // save status reg
+    //nv_ops124s(addr1)
+    //nv_ops124s(addr2)
+    //plp    // restore status reg
+
+    // reverse the operands to comp when both negative
+    nv_cmp16(addr2, addr1)
+    jmp Done
+
+BothPositive:
+    nv_cmp16(addr1, addr2)
+    jmp Done
+
+DiffSigns:
+    // first check if we are comparing pos zero and neg zero
+    // which is a special case.
+    lda addr1+1  
+    and #$7F
+    bne NotPosAndNegZero
+    lda addr2+1  
+    and #$7F
+    bne NotPosAndNegZero
+    lda addr1
+    and #$FF
+    bne NotPosAndNegZero
+    lda addr2
+    and #$FF
+    bne NotPosAndNegZero
+
+WasPosAndNegZero:
+    // had pos and neg zeros, Accum has zero in it now
+    cmp #$00    // do a cmp with zero to set flags right
+    jmp Done    // we are done
+
+NotPosAndNegZero:
+    // if we get here then addr1 and addr2 had different signs 
+    // and they weren't -0 and +0 so the negative number is less
+    // than the positive number
+
+    lda addr1+1
+    bmi NegativeAddr1
+
+PositiveAddr1:
+    // addr1 is >= addr2 so set carry
+    sec
+    bcs ClearZeroAndDone  // unconditional branch (because carry set above)
+
+NegativeAddr1:
+    // addr1 is NOT >= addr2 so clear carry
+    clc
+
+ClearZeroAndDone:
+    // clear zero flag, they aren't equal
+    lda #$01  // just load a nonzero number to clear zero flag
+
+Done:
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -68,6 +153,24 @@
 .macro nv_beq124u(addr1, addr2, label)
 {
     nv_beq16(addr1, addr2, label)
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if two signed fixed pt 12.4 values in memory have the same 
+// contents
+// branch if addr1 == addr2  
+//   note that $8000 == $0000
+// full name is nv_beq124s_mem124s_mem124s
+//   addr1: is the address of LSB of one fp124s word (addr1+1 is MSB)
+//   addr2: is the address of LSB of the other fp124s word (addr2+1 is MSB)
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_beq124s(addr1, addr2, label)
+{
+    nv_cmp124s(addr1, addr2)
+    beq label
 }
 
 //////////////////////////////////////////////////////////////////////////////

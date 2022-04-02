@@ -322,6 +322,21 @@ Done:
     nv_bne16(addr1, addr2, label)
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// branch if two fp124 signed values in memory have the different contents
+// branch if addr1 != addr2
+// full name is nv_bne124s_mem124s_mem124s
+//   addr1: is the address of LSB of one fp124s word (addr1+1 is MSB)
+//   addr2: is the address of LSB of the other fp124s word (addr2+1 is MSB)
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bne124s(addr1, addr2, label)
+{
+    nv_cmp124s(addr1, addr2)
+    bne label
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if two fp124u values in memory have the different contents.
@@ -382,13 +397,32 @@ Done:
 // full name is nv_blt124u_mem124u_mem124u
 //   addr1: is the address of LSB of one fp124u word (addr1+1 is MSB)
 //   addr2: is the address of LSB of the other fp124u word (addr2+1 is MSB)
-//   label: the label to branch to if word1 < word2
+//   label: the label to branch to 
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
 .macro nv_blt124u(addr1, addr2, label)
 {
     nv_blt16(addr1, addr2, label)
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of an fp124s value at one memory
+// location is less than the contents of another fp124s value in another
+// location.
+// branch if addr1 < addr2
+// full name is nv_blt124s_mem124s_mem124s
+//   addr1: is the address of LSB of one fp124s word (addr1+1 is MSB)
+//   addr2: is the address of LSB of the other fp124s word (addr2+1 is MSB)
+//   label: the label to branch to if condition is true
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_blt124s(addr1, addr2, label)
+{
+    nv_cmp124s(addr1, addr2)
+    bcc label
 }
 
 
@@ -454,13 +488,36 @@ Done:
 // full name is nv_ble124u_mem124u_mem124u
 //   addr1: is the address of LSB of one fp124u word (addr1+1 is MSB)
 //   addr2: is the address of LSB of the other fp124u word (addr2+1 is MSB)
-//   label: the label to branch to if word1 < word2
+//   label: the label to branch to if condition is true
 // Accum: changes
 // X Reg: remains unchanged
 // Y Reg: remains unchanged
 .macro nv_ble124u(addr1, addr2, label)
 {
     nv_ble16(addr1, addr2, label)
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of an fp124s value at one memory
+// location is less than or equal to another fp124s value at another 
+// memory location.
+// branch if addr1 <= addr2
+// full name is nv_ble124s_mem124s_mem124s
+//   addr1: is the address of LSB of one fp124s word (addr1+1 is MSB)
+//   addr2: is the address of LSB of the other fp124s word (addr2+1 is MSB)
+//   label: the label to branch to if condition is true
+// Accum: changes
+// X Reg: remains unchanged
+// Y Reg: remains unchanged
+.macro nv_ble124s(addr1, addr2, label)
+{
+    nv_cmp124s(addr1, addr2)
+    // Carry Flag	Set if addr1 >= addr2
+    // Zero Flag	Set if addr1 == addr2
+
+    bcc label
+    beq label
 }
 
 
@@ -518,19 +575,43 @@ Done:
 
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to branch if the contents of a word at one memory location  
-// are greater than the contents in another memory location.
+// inline macro to branch if the fp124u value at one memory location  
+// are greater than the fp124u value in another memory location.
 // branch if addr1 > addr2
 // full name is nv_bgt124u_mem124u_mem124u
 //   addr1: the address of the LSB of one fp124u value
 //   addr2: the address of the LSB of the other fp124u value 
-//   label: the label to branch to if addr1 > addr2
+//   label: the label to branch to if condition is true
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
 .macro nv_bgt124u(addr1, addr2, label)
 {
     nv_bgt16(addr1, addr2, label)
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the fp124s value at one memory location  
+// are greater than the fp124s value in another memory location.
+// branch if addr1 > addr2
+// full name is nv_bgt124s_mem124s_mem124s
+//   addr1: the address of the LSB of one fp124s value
+//   addr2: the address of the LSB of the other fp124s value 
+//   label: the label to branch to if condition true
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bgt124s(addr1, addr2, label)
+{
+    nv_cmp124s(addr1, addr2)
+    // Carry Flag	Set if addr1 >= addr2
+    // Zero Flag	Set if addr1 == addr2
+
+    beq Done    // equal so not greater than, we're done
+    bcs label   // >= but we already tested for == so must be greater than
+Done:
+
 }
 
 
@@ -588,8 +669,8 @@ Done:
 
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to branch if the contents of one fp124u value one memory 
-// location are greater than or equal to the contents of another fp124u value
+// inline macro to branch if the contents of one fp124u value in memory 
+// is greater than or equal to the contents of another fp124u value
 // in another memory location.
 // branch if addr1 >= addr2
 // full name is nv_bge124u_mem124u_mem124u
@@ -603,6 +684,29 @@ Done:
 {
     nv_bge16(addr1, addr2, label)
 }
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of one fp124s value in memory 
+// is greater than or equal to the contents of another fp124u value
+// in another memory location.
+// branch if addr1 >= addr2
+// full name is nv_bge124s_mem124s_mem124s
+//   addr1: the address of the LSB of one fp124s value 
+//   addr2: the address of the LSB of the other fp124s value 
+//   label: the label to branch to if condition is true
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bge124s(addr1, addr2, label)
+{
+    nv_cmp124s(addr1, addr2)
+    // Carry Flag	Set if addr1 >= addr2
+
+    bcs label
+
+}
+
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of one fp124u value at one memory 

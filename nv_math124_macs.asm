@@ -68,7 +68,7 @@
 // Accum changes
 // X Reg unchanged
 // Y Reg unchanged
-// Status flags are not affected
+// Status flags are not reliably affected
 .macro nv_ops124s(addr)
 {
     lda #$80

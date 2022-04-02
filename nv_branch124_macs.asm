@@ -59,14 +59,6 @@ SameSigns:
     lda addr1+1
     bpl BothPositive
 BothNegative:
-    //nv_ops124s(addr1)
-    //nv_ops124s(addr2)
-    //nv_cmp16(addr1, addr2)
-    //php    // save status reg
-    //nv_ops124s(addr1)
-    //nv_ops124s(addr2)
-    //plp    // restore status reg
-
     // reverse the operands to comp when both negative
     nv_cmp16(addr2, addr1)
     jmp Done

@@ -36,9 +36,9 @@
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// compare the contents of two 12.4 unsigned fixed pt values and 
+// compare the contents of two 12.4 signed fixed pt values and 
 // set flags accordingly.
-// full name is nv_cmp124u_mem16u_mem16u
+// full name is nv_cmp124u_mem124u_mem124u
 // params are:
 //   addr1: 16 bit address of op1 which is a 12.4 unsigned fixed pt value
 //   addr2: 16 bit address of op2 which is a 12.4 unsigned fixed pt value
@@ -112,6 +112,93 @@ ClearZeroAndDone:
 Done:
 }
 
+
+//////////////////////////////////////////////////////////////////////////////
+// compare the contents of one 12.4 signed fixed point value in memory 
+// with another fP124s immediate value. Set flags accordingly.
+// full name is nv_cmp124u_mem124s_immed124s
+// params are:
+//   addr1: 16 bit address of op1 which is a 12.4 unsigned fixed pt value
+//   addr2: 16 bit address of op2 which is a 12.4 unsigned fixed pt value
+// Carry Flag	Set if addr1 >= addr2
+// Zero Flag	Set if addr1 == addr2
+// Negative Flag is not set reliably
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_cmp124s_immed(addr1, num)
+{
+    .if ((num & $8000) != 0)
+    {   // num is negative
+        lda addr1+1
+        bpl PosNeg
+        
+        NegNeg:      // addr1 Neg, num Neg
+        // first compare the MSBs
+        lda #((num >> 8) & $00FF)  
+        cmp addr1+1
+        bne Done
+
+        // MSBs are equal so need to compare LSBs
+        lda #(num & $00FF)  
+        cmp addr1
+        jmp Done
+
+        PosNeg:      // addr1 Pos, num Neg
+        .if (num == $8000)
+        {   // negative zero in num, so its really pos zero and positive addr1
+            nv_cmp16_immed(addr1, $0000)
+            jmp Done
+        }
+        else
+        {
+            // addr1 is >= num so set carry
+            sec
+            // Fall through to ClearZeroAndDone
+            //bcs ClearZeroAndDone  // unconditional branch (because carry set above)
+        }
+    }
+    else
+    {   // num is positive
+        lda addr1+1
+        bmi NegPos 
+
+        PosPos:     // addr1 Pos  num Pos
+        nv_cmp16_immed(addr1, num)
+        jmp Done
+        
+        NegPos:     // addr1 Neg, num Pos
+        lda addr1+1
+        and $7F
+        bne Addr1NotNegZero
+        lda addr1
+        and $FF
+        bne Addr1NotNegZero
+        Addr1IsNegZero:
+        .if (num == $0000)
+        {   // Addr1 is -0 and num is pos zero so 
+            // compare the 0 in accum with 0 to set the flags
+            // and we're done
+            cmp #$00
+            jmp Done
+        }
+        // if we get here then addr1 is -0 but num is not +0
+        // so fall through 
+
+        Addr1NotNegZero:
+        // addr1 is NOT >= num so clear carry
+        clc
+        // fall through to ClearZeroAndDone 
+    }
+
+ClearZeroAndDone:
+    // clear zero flag, they aren't equal
+    lda #$01  // just load a nonzero number to clear zero flag
+
+Done:
+}
+
+
 //////////////////////////////////////////////////////////////////////////////
 // compare the contents of two unsigned fixed point 12.4 values and set 
 // flags accordingly.
@@ -147,6 +234,7 @@ Done:
     nv_beq16(addr1, addr2, label)
 }
 
+
 //////////////////////////////////////////////////////////////////////////////
 // branch if two signed fixed pt 12.4 values in memory have the same 
 // contents
@@ -165,6 +253,7 @@ Done:
     beq label
 }
 
+
 //////////////////////////////////////////////////////////////////////////////
 // branch if two unsigned fixed pt 12.4 values in memory have the same 
 // branch if addr1 == addr2
@@ -180,6 +269,7 @@ Done:
 {
     nv_beq16_far(addr1, addr2, label)
 }
+
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one fp124u value in memory has the same content  
@@ -216,6 +306,7 @@ Done:
     nv_beq16_immed_far(addr1, num, label)
 }
 
+
 //////////////////////////////////////////////////////////////////////////////
 // branch if two fp124 unsigned values in memory have the different contents
 // branch if addr1 != addr2
@@ -247,6 +338,7 @@ Done:
 {
     nv_bne16_far(addr1, addr2, label)
 }
+
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one fp124u value in memory has different 

@@ -255,7 +255,7 @@ Done:
 
 
 //////////////////////////////////////////////////////////////////////////////
-// branch if two unsigned fixed pt 12.4 values in memory have the same 
+// branch if two unsigned fixed pt 12.4 values in memory have the same value
 // branch if addr1 == addr2
 // full name is nv_beq124u_mem124u_mem124u_far
 // The branch label's address can be farther than +127/-128 bytes away
@@ -270,6 +270,24 @@ Done:
     nv_beq16_far(addr1, addr2, label)
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// branch if two signed fixed pt 12.4 values in memory have the same value
+// branch if addr1 == addr2
+// full name is nv_beq124s_mem124s_mem124s_far
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one fp124s word (addr1+1 is MSB)
+//   addr2: is the address of LSB of the other fp124s word (addr2+1 is MSB)
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_beq124s_far(addr1, addr2, label)
+{
+    nv_cmp124s(addr1, addr2)
+    bne Done
+    jmp label
+Done:
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one fp124u value in memory has the same content  
@@ -354,6 +372,25 @@ Done:
     nv_bne16_far(addr1, addr2, label)
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// branch if two fp124s values in memory have the different contents.
+// branch if addr1 != addr2
+// full name is nv_bne124s_mem124s_mem124s_far
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one fp124s word (addr1+1 is MSB)
+//   addr2: is the address of LSB of the other fp124s word (addr2+1 is MSB)
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bne124s_far(addr1, addr2, label)
+{
+    nv_cmp124s(addr1, addr2)
+    beq Done
+    jmp label
+Done:
+
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one fp124u value in memory has different 
@@ -442,6 +479,28 @@ Done:
 .macro nv_blt124u_far(addr1, addr2, label)
 {
     nv_blt16_far(addr1, addr2, label)
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to jump to a label if the contents of an fp124s value in  
+// one memory location is less than the value of another fp124s value in
+// another memory location.
+// branch if addr1 < addr2
+// full name is nv_blt124s_mem124s_mem124s_far
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one fp124s word (addr1+1 is MSB)
+//   addr2: is the address of LSB of the other fp124s word (addr2+1 is MSB)
+//   label: the label to branch to if comparison is true
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_blt124s_far(addr1, addr2, label)
+{
+    nv_cmp124s(addr1, addr2)
+    bcs Done
+    jmp label
+Done:
 }
 
 
@@ -541,6 +600,27 @@ Done:
 
 
 //////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of an fp124s value at one memory 
+// location is less than or equal to another fp124s value in another memory 
+// location.
+// branch if addr1 <= addr2
+// full name is nv_ble124s_mem124s_mem124s_far
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one fp124s word (addr1+1 is MSB)
+//   addr2: is the address of LSB of the other fp124s word (addr2+1 is MSB)
+//   label: the label to branch to if word1 < word2
+// Accum: changes
+// X Reg: remains unchanged
+// Y Reg: remains unchanged
+.macro nv_ble124s_far(addr1, addr2, label)
+{
+    nv_bgt124s(addr1, addr2, Done)
+    jmp label
+Done:
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one fp124u value in memory is less than or 
 // equal to an immediate fp124u value.
 // branch if addr1 <= num
@@ -630,6 +710,26 @@ Done:
 .macro nv_bgt124u_far(addr1, addr2, label)
 {
     nv_bgt16_far(addr1, addr2, label)
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of an fp124s value at one memory 
+// location are greater than the fp124s value in another memory location.
+// branch if addr1 > addr2
+// full name is nv_bgt124s_mem124s_mem124s_far
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: the address of the LSB of one fp124s value
+//   addr2: the address of the LSB of the other fp124s value 
+//   label: the label to branch to if addr1 > addr2
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bgt124s_far(addr1, addr2, label)
+{
+    nv_ble124s(addr1, addr2, Done)
+    jmp label
+Done:
 }
 
 
@@ -724,6 +824,29 @@ Done:
 .macro nv_bge124u_far(addr1, addr2, label)
 {
     nv_bge16_far(addr1, addr2, label)
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if the contents of one fp124s value at one memory 
+// location are greater than or equal to the contents of and fp124s value
+// in another memory location.
+// branch if addr1 >= addr2
+// full name is nv_bge124s_mem124s_mem124s_far
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: the address of the LSB of one fp124s value 
+//   addr2: the address of the LSB of the other fp124s value 
+//   label: the label to branch to if addr1 >= addr2
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bge124s_far(addr1, addr2, label)
+{
+    nv_cmp124s(addr1, addr2)
+    // Carry Flag	Set if addr1 >= addr2
+    bcc Done
+    jmp label
+Done:
 }
 
 

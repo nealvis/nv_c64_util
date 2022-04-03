@@ -305,6 +305,7 @@ Done:
     nv_beq16_immed(addr1, num, label)
 }
 
+
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one fp124s value in memory has the same content  
 // as an immediate fp124s bit value.
@@ -339,6 +340,28 @@ Done:
 .macro nv_beq124u_immed_far(addr1, num, label)
 {
     nv_beq16_immed_far(addr1, num, label)
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if one fp124s value in memory has the same content  
+// as an immediate fp124 bit value.
+// branch if addr1 == num
+// full name is nv_beq124s_mem124s_immed124s_far
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one fp124s value (addr1+1 is MSB)
+//   num: is the immediate fp124s bit value to compare with the contents 
+//        of addr1
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_beq124s_immed_far(addr1, num, label)
+{
+    nv_cmp124s_immed(addr1, num)
+    bne Done
+    jmp label
+Done:
 }
 
 
@@ -446,7 +469,7 @@ Done:
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if one fp124u value in memory has different 
-// contents than an immediate 16 bit value.
+// contents than an immediate fp124s value.
 // branch if addr1 != num
 // full name is nv_bne124u_mem124u_immed124u_far
 // The branch label's address can be farther than +127/-128 bytes away
@@ -459,6 +482,27 @@ Done:
 .macro nv_bne124u_immed_far(addr1, num, label)
 {
     nv_bne16_immed_far(addr1, num, label)
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if one fp124s value in memory has different 
+// contents than an immediate fp124s value.
+// branch if addr1 != num
+// full name is nv_bne124s_mem124s_immed124s_far
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one fp124s word (addr1+1 is MSB)
+//   num: is the immediate fp124s word to compare with the contents of addr1
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bne124s_immed_far(addr1, num, label)
+{
+    nv_cmp124s_immed(addr1, num)
+    beq Done
+    jmp label
+Done:
 }
 
 
@@ -589,6 +633,27 @@ Done:
 .macro nv_blt124u_immed_far(addr1, num, label)
 {
     nv_blt16_immed_far(addr1, num, label)
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if one fp124s value in memory is less than 
+// an immediate fp124svalue
+// branch if addr1 < num
+// full name is nv_blt124s_mem124s_immed124s_far
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one fp124s value (addr1+1 is MSB)
+//   num: is the immediate fp124s bit value to compare with the contents of addr1
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_blt124s_immed_far(addr1, num, label)
+{
+    nv_cmp124s_immed(addr1, num)
+    bcs Done
+    jmp label
+Done:    
 }
 
 
@@ -731,6 +796,26 @@ Done:
 
 
 //////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if one fp124s value in memory is less than or 
+// equal to an immediate fp124s value.
+// branch if addr1 <= num
+// full name is nv_ble124s_mem124s_immed124s_far
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one fp124u value (addr1+1 is MSB)
+//   num: is the immediate fp124s bit value to compare with the contents of addr1
+//   label: is the label to branch to
+// Accum: changes
+// X Reg: remains unchanged
+// Y Reg: remains unchanged
+.macro nv_ble124s_immed_far(addr1, num, label)
+{
+    nv_bgt124s_immed(addr1, num, Done)
+    jmp label
+Done:
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the fp124u value at one memory location  
 // are greater than the fp124u value in another memory location.
 // branch if addr1 > addr2
@@ -868,6 +953,26 @@ Done:
 
 
 //////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if one fp124s value in memory is greater than
+// an immediate fp124s bit value.
+// branch if addr1 > num
+// full name is nv_bgt124s_mem124s_immed124s_far
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one fp124s value (addr1+1 is MSB)
+//   num: is the immediate fp124s value to compare with the contents of addr1
+//   label: is the label to branch to
+//   Accum: changes
+//   X Reg: no change
+//   Y Reg: no change
+.macro nv_bgt124s_immed_far(addr1, num, label)
+{
+    nv_ble124s_immed(addr1, num, Done)
+    jmp label
+Done:
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of one fp124u value in memory 
 // is greater than or equal to the contents of another fp124u value
 // in another memory location.
@@ -987,10 +1092,29 @@ Done:
 // full name is nv_bge124u_mem124u_immed124u_far
 // The branch label's address can be farther than +127/-128 bytes away
 //   addr1: is the address of LSB of one fp124u value (addr1+1 is MSB)
-//   num: is the immediate fp124 bit value to compare with the addr1
+//   num: is the immediate fp124u bit value to compare with the addr1
 //   label: is the label to branch to
 .macro nv_bge124u_immed_far(addr1, num, label)
 {
     nv_bge16_immed_far(addr1, num, label)
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to branch if one fp124s value in memory is greater or equal
+// to an immediate fp124s value.
+// branch if addr1 >= num
+// full name is nv_bge124s_mem124s_immed124s_far
+// The branch label's address can be farther than +127/-128 bytes away
+//   addr1: is the address of LSB of one fp124s value (addr1+1 is MSB)
+//   num: is the immediate fp124s bit value to compare with the addr1
+//   label: is the label to branch to
+.macro nv_bge124s_immed_far(addr1, num, label)
+{
+    nv_cmp124s_immed(addr1, num)
+    // Carry Flag	Set if addr1 >= num
+    bcc Done
+    jmp label
+Done:
 }
 

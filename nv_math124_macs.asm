@@ -421,6 +421,61 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
+// inline macro to create one fp124u value in memory location specified
+// Accum: changes
+// X Reg:
+// Y Reg:  
+.macro nv_create124u(left_of_pt, right_of_pt, addr)
+{
+    .if (left_of_pt > $0FFF)
+    {
+        .error "nv_create124u left of pt to big."
+    }
+    .if (right_of_pt > $0F)
+    {
+        .error "nv_create124u right of pt to big."
+    }
+
+    // Hi byte of the fp124u
+    lda #((left_of_pt << 4) >> 8)
+    sta addr+1
+
+    // lo byte of fp124u
+    lda #(right_of_pt | ((left_of_pt & $000F) << 4))
+    sta addr
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to create one fp124u value in memory location specified
+// Accum: changes
+// X Reg:
+// Y Reg:  
+.macro nv_create124s(sign, left_of_pt, right_of_pt, addr)
+{
+    .if (sign != 0 && sign != 1)
+    {
+        .error "nv_create124s invalid sign"
+    }
+    .if (left_of_pt > $07FF)
+    {
+        .error "nv_create124s left of pt to big."
+    }
+    .if (right_of_pt > $0F)
+    {
+        .error "nv_create124s right of pt to big."
+    }
+
+    // Hi byte of the fp124s
+    lda #(((left_of_pt << 4) >> 8) | (sign << 7))
+    sta addr+1
+
+    // lo byte of fp124s
+    lda #(right_of_pt | ((left_of_pt & $000F) << 4))
+    sta addr
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
 // inline macro to set overflow flag in status register
 // Accum: changes
 // X Reg: unchanged

@@ -18,6 +18,7 @@
 // if data hasn't been imported yet, import it into default location
 #importif !NV_C64_UTIL_DATA "nv_c64_util_default_data.asm"
 
+#import "nv_math16_macs.asm"
 
 // Basic routine to print text
 .const NV_SCREEN_PRINT_STRING_BASIC_ADDR = $AB1E    
@@ -292,6 +293,204 @@
     // print low nible of lower 8 bits
     lda word_low_byte_addr
     nv_screen_print_hex_lo_nibble_a(false)
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to print the word value at the address given
+// fp124s_low_byte_addr: is the address of the low byte of the word
+//    that will be interpreted as a signed 12.4 fixed point num and printed
+.macro nv_screen_print_dec_fp124s_mem(fp124s_low_byte_addr)
+{
+    lda fp124s_low_byte_addr+1
+    bpl IsPositive
+IsNegative:
+        lda #$2D                // the - sign
+        sta temp_hex_str
+        lda #0
+        sta temp_hex_str+1
+        nv_screen_print_str(temp_hex_str)
+
+IsPositive:
+    // setup scratch word with the value left of point
+    lda fp124s_low_byte_addr + 1
+    and #$7F
+    sta scratch_word+1
+    lda fp124s_low_byte_addr
+    sta scratch_word
+    nv_lsr16u_mem16u_immed8u(scratch_word, 4)
+
+    ldy #0
+ThousandsTop:
+    nv_blt16_immed(scratch_word, 1000, DoneThousands)
+    // count 1000s in y reg
+    iny
+    nv_sbc16_mem_immed(scratch_word, 1000, scratch_word)
+    jmp ThousandsTop
+
+DoneThousands:
+    // Y reg has number of thousands in it
+    lda hex_digit_lookup, y
+    sta temp_hex_str
+
+    ldy #0
+HundredsTop:
+    nv_blt16_immed(scratch_word, 100, DoneHundreds)
+    // count 100s in y reg
+    iny
+    nv_sbc16_mem_immed(scratch_word, 100, scratch_word)
+    jmp HundredsTop
+DoneHundreds:
+
+    // y reg has number of hundreds in it
+    lda hex_digit_lookup, y
+    sta temp_hex_str + 1
+
+    ldy #0
+TensTop:
+    nv_blt16_immed(scratch_word, 10, DoneTens)
+    // count 10s in y reg
+    iny
+    nv_sbc16_mem_immed(scratch_word, 10, scratch_word)
+    jmp TensTop
+DoneTens:
+
+    // y reg has number of tens in it
+    lda hex_digit_lookup, y
+    sta temp_hex_str + 2
+
+    ldy #0
+OnesTop:
+    nv_blt16_immed(scratch_word, 1, DoneOnes)
+    // count 1s in y reg
+    iny
+    nv_sbc16_mem_immed(scratch_word, 1, scratch_word)
+    jmp OnesTop
+DoneOnes:
+
+    // y reg has number of ones in it
+    lda hex_digit_lookup, y
+    sta temp_hex_str + 3
+
+    // terminate the string and print it.
+    lda #0
+    sta temp_hex_str + 4
+    nv_screen_print_str(temp_hex_str)
+
+    // print decimal point
+    lda #$2E
+    sta temp_hex_str
+    lda #0
+    sta temp_hex_str+1
+    nv_screen_print_str(temp_hex_str)
+
+    nv_store16_immed(scratch_word, 0)
+    lda fp124s_low_byte_addr
+    and #$0F
+    tay
+TopRight:
+    cpy #0
+    beq DoneRight
+    nv_bcd_adc16_mem_immed(scratch_word, $0625, scratch_word)
+    dey
+    jmp TopRight
+DoneRight:    
+    // now scratch_word has the BCD for the right of decimal
+    nv_screen_print_bcd_word_mem(scratch_word)
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to print the word value at the address given
+// fp124u_low_byte_addr: is the address of the low byte of the word
+//    that will be interpreted as an unsigned 12.4 fixed point num and printed
+.macro nv_screen_print_dec_fp124u_mem(fp124u_low_byte_addr)
+{
+
+IsPositive:
+    // setup scratch word with the value left of point
+    lda fp124u_low_byte_addr + 1
+    sta scratch_word+1
+    lda fp124u_low_byte_addr
+    sta scratch_word
+    nv_lsr16u_mem16u_immed8u(scratch_word, 4)
+
+    ldy #0
+ThousandsTop:
+    nv_blt16_immed(scratch_word, 1000, DoneThousands)
+    // count 1000s in y reg
+    iny
+    nv_sbc16_mem_immed(scratch_word, 1000, scratch_word)
+    jmp ThousandsTop
+
+DoneThousands:
+    // Y reg has number of thousands in it
+    lda hex_digit_lookup, y
+    sta temp_hex_str
+
+    ldy #0
+HundredsTop:
+    nv_blt16_immed(scratch_word, 100, DoneHundreds)
+    // count 100s in y reg
+    iny
+    nv_sbc16_mem_immed(scratch_word, 100, scratch_word)
+    jmp HundredsTop
+DoneHundreds:
+
+    // y reg has number of hundreds in it
+    lda hex_digit_lookup, y
+    sta temp_hex_str + 1
+
+    ldy #0
+TensTop:
+    nv_blt16_immed(scratch_word, 10, DoneTens)
+    // count 10s in y reg
+    iny
+    nv_sbc16_mem_immed(scratch_word, 10, scratch_word)
+    jmp TensTop
+DoneTens:
+
+    // y reg has number of tens in it
+    lda hex_digit_lookup, y
+    sta temp_hex_str + 2
+
+    ldy #0
+OnesTop:
+    nv_blt16_immed(scratch_word, 1, DoneOnes)
+    // count 1s in y reg
+    iny
+    nv_sbc16_mem_immed(scratch_word, 1, scratch_word)
+    jmp OnesTop
+DoneOnes:
+
+    // y reg has number of ones in it
+    lda hex_digit_lookup, y
+    sta temp_hex_str + 3
+
+    // terminate the string and print it.
+    lda #0
+    sta temp_hex_str + 4
+    nv_screen_print_str(temp_hex_str)
+
+    // print decimal point
+    lda #$2E
+    sta temp_hex_str
+    lda #0
+    sta temp_hex_str+1
+    nv_screen_print_str(temp_hex_str)
+
+    nv_store16_immed(scratch_word, 0)
+    lda fp124u_low_byte_addr
+    and #$0F
+    tay
+TopRight:
+    cpy #0
+    beq DoneRight
+    nv_bcd_adc16_mem_immed(scratch_word, $0625, scratch_word)
+    dey
+    jmp TopRight
+DoneRight:    
+    // now scratch_word has the BCD for the right of decimal
+    nv_screen_print_bcd_word_mem(scratch_word)
 }
 
 

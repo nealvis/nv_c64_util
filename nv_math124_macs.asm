@@ -474,6 +474,41 @@ Done:
     sta addr
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to find the closest fp124s value for a given float
+// and put that value in the memory location given 
+.macro nv_closest124s_immedflt(num, addr)
+{
+    .var sign = 0
+    .if (num < 0)
+    {
+        .eval sign = 1
+    }
+
+    .var left = round(abs(num) * 16) >> 4
+    .var right = round(abs(num) * 16) & $000F
+    
+    nv_create124s(sign, left, right, addr)
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to find the closest fp124u value for a given float
+// and put that value in the memory location given 
+.macro nv_closest124u_immedflt(num, addr)
+{
+    .if (num < 0)
+    {
+        .error "closest124u_immedflt negative number passed"
+    }
+    .var left = round(num * 16) >> 4
+    .var right = round(num * 16) & $000F
+    
+    nv_create124u(left, right, addr)
+}
+//
+//////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to set overflow flag in status register

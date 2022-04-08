@@ -38,6 +38,7 @@
 #import "nv_sprite_macs.asm"
 #import "nv_sprite_raw_macs.asm"
 #import "nv_sprite_raw_collisions_macs.asm"
+#import "nv_string_macs.asm"
 #import "nv_keyboard_macs.asm"
 #import "nv_rand_macs.asm"
 #import "nv_state_saver_macs.asm"

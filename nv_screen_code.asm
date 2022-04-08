@@ -202,6 +202,44 @@ StillNoDollar:
     save_d8: .byte 0
 }
 
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to print the word value at the address given
+//   fp124s_low_byte_addr: is the address of the low byte of the word
+//                         that will be interpreted as a signed 12.4 fixed 
+//                         point num and printed
+//   str_addr: is the address of the string to build up with decimal
+//             digits to print. It must be big enough to hold all the
+//             digits on both sides of decimal, plus a sign, plus a decimal 
+//             plus a null. (11 bytes for fp124s)
+.macro nv_screen_print_dec_fp124s_sr(fp124s_low_byte_addr, str_addr)
+{
+    // start with empty string
+    lda #$00
+    sta str_addr
+
+    // setup the string pointer for the string subroutines
+    lda #<str_addr
+    sta nv_str1_ptr
+    lda #>str_addr
+    sta nv_str1_ptr+1
+
+    // copy the fp124s value specified to the one that the to string
+    // routine uses when converting to string 
+    nv_xfer124_mem_mem(fp124s_low_byte_addr, nv_fp124s_for_to_str)
+
+    // the parameters already setup, now call subroutine that converts to str
+    jsr NvStrFP124sToStr
+ 
+    // str_addr should contain the string, so print it
+    nv_screen_print_str(str_addr)
+
+    rts
+}
+
+
+
+
 //////////////////////////////////////////////////////////////////////////////
 // Instantiations of macros from above go below here
 //////////////////////////////////////////////////////////////////////////////
@@ -302,3 +340,14 @@ NvScreenPokeCoordList:
 // per comments for the macro.
 nv_screen_poke_coord_list_mem_block: 
     .byte 0, 0, 0, 0, 0, 0, 0   // x, y, color, char, Y index, zero lsb, msb
+
+
+//////////////////////////////////////////////////////////////////////////////
+// subroutine to print a fp124s value in decimal format
+//   nv_fp124s_to_print: must contain the fp124s value to be printed 
+NvScreenPrintDecFP124s:
+  nv_screen_print_dec_fp124s_sr(nv_fp124s_to_print, nv_fp124x_str)
+
+nv_fp124s_to_print: .word $0000
+nv_fp124x_str: .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+#import "nv_string_code.asm"

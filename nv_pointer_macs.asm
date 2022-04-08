@@ -63,6 +63,139 @@
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
+// inline macro to load accum with the byte pointed to by a specified pointer
+// macro params:
+//   ptr_addr: is the address that contains the pointer to data
+//   save_block: is the address to a two byte block of memory that can
+//               be used to save some zero page values that are used
+//               for indirection.  they will be restored after the 
+//               store operation is done.
+//   Accum: changes, will holds the byte loaded from mem ptr 
+//   X Reg: unchanged
+//   Y Reg: changes
+.macro nv_load_a_from_mem_ptr(ptr_addr, save_block)
+{
+    // zero page pointer to use whenever a zero page pointer is needed
+    // usually used to store and load to and from the sprite extra pointer
+    .const ZERO_PAGE_LO = $FB
+    .const ZERO_PAGE_HI = $FC
+
+    // save our zero page pointer
+    ldy ZERO_PAGE_LO
+    sty save_block
+    ldy ZERO_PAGE_HI
+    sty save_block+1
+
+    // load zero page ptr with our pointer
+    ldy ptr_addr
+    sty ZERO_PAGE_LO
+    ldy ptr_addr+1
+    sty ZERO_PAGE_HI
+
+    // store accum to the address in our pointer
+    ldy #$00              // load Y reg 0 to use ptr address with no offset
+    lda (ZERO_PAGE_LO),y  // indirect indexed load accum to pointed to addr
+
+    // restore our zero page pointer
+    ldy save_block
+    sty ZERO_PAGE_LO
+    ldy save_block+1
+    sty ZERO_PAGE_HI
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to load accum with the byte pointed to by a specified pointer
+// plus the y register.  so if pointer value is $1000 and Y contains 3
+// the byte loaded will be from $1003
+// macro params:
+//   ptr_addr: is the address that contains the pointer to data
+//   save_block: is the address to a two byte block of memory that can
+//               be used to save some zero page values that are used
+//               for indirection.  they will be restored after the 
+//               store operation is done.
+//   Accum: changes, will holds the byte loaded from mem ptr 
+//   X Reg: changes
+//   Y Reg: unchanged
+.macro nv_load_a_from_mem_ptr_plus_y(ptr_addr, save_block)
+{
+    // zero page pointer to use whenever a zero page pointer is needed
+    // usually used to store and load to and from the sprite extra pointer
+    .const ZERO_PAGE_LO = $FB
+    .const ZERO_PAGE_HI = $FC
+
+    // save our zero page pointer
+    ldx ZERO_PAGE_LO
+    stx save_block
+    ldx ZERO_PAGE_HI
+    stx save_block+1
+
+    // load zero page ptr with our pointer
+    ldx ptr_addr
+    stx ZERO_PAGE_LO
+    ldx ptr_addr+1
+    stx ZERO_PAGE_HI
+
+    // store accum to the address in our pointer
+    lda (ZERO_PAGE_LO),y  // indirect indexed load accum to pointed to addr
+
+    // restore our zero page pointer
+    ldx save_block
+    stx ZERO_PAGE_LO
+    ldx save_block+1
+    stx ZERO_PAGE_HI
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to store accum to the byte pointed to by a specified pointer
+// plus the y register.  If pointer value is $1000 and Y contains 3
+// the byte will be stored to memory address $1003
+// macro params:
+//   ptr_addr: is the address that contains the pointer to data
+//   save_block: is the address to a two byte block of memory that can
+//               be used to save some zero page values that are used
+//               for indirection.  they will be restored after the 
+//               store operation is done.
+//   Accum: unchanged, should be set to the byte to store already 
+//   X Reg: changes
+//   Y Reg: unchanged
+.macro nv_store_a_to_mem_ptr_plus_y(ptr_addr, save_block)
+{
+    // zero page pointer to use whenever a zero page pointer is needed
+    // usually used to store and load to and from the sprite extra pointer
+    .const ZERO_PAGE_LO = $FB
+    .const ZERO_PAGE_HI = $FC
+
+    // save our zero page pointer
+    ldx ZERO_PAGE_LO
+    stx save_block
+    ldx ZERO_PAGE_HI
+    stx save_block+1
+
+    // load zero page ptr with our pointer
+    ldx ptr_addr
+    stx ZERO_PAGE_LO
+    ldx ptr_addr+1
+    stx ZERO_PAGE_HI
+
+    // store accum to the address in our pointer
+    sta (ZERO_PAGE_LO),y  // indirect indexed load accum to pointed to addr
+
+    // restore our zero page pointer
+    ldx save_block
+    stx ZERO_PAGE_LO
+    ldx save_block+1
+    stx ZERO_PAGE_HI
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
 // inline macro to store the byte in y register to the address
 // pointed to by a specified pointer
 // macro params:

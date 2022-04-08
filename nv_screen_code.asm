@@ -204,15 +204,17 @@ StillNoDollar:
 
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to print the word value at the address given
-//   fp124s_low_byte_addr: is the address of the low byte of the word
-//                         that will be interpreted as a signed 12.4 fixed 
-//                         point num and printed
+// inline macro to print the fp124 value at the address given.
+// it will be interpreted as signed or unsigned based on carry flag
+//   carry flag: set   -> signed fp124
+//               clear -> unsigned fp124 
+//   fp124x_addr: is the address of the LSB of the fp124
+//                to print
 //   str_addr: is the address of the string to build up with decimal
 //             digits to print. It must be big enough to hold all the
 //             digits on both sides of decimal, plus a sign, plus a decimal 
 //             plus a null. (11 bytes for fp124s)
-.macro nv_screen_print_dec_fp124s_sr(fp124s_low_byte_addr, str_addr)
+.macro nv_screen_print_dec_fp124x_sr(fp124x_addr, str_addr)
 {
     // start with empty string
     lda #$00
@@ -226,10 +228,12 @@ StillNoDollar:
 
     // copy the fp124s value specified to the one that the to string
     // routine uses when converting to string 
-    nv_xfer124_mem_mem(fp124s_low_byte_addr, nv_fp124s_for_to_str)
+    nv_xfer124_mem_mem(fp124x_addr, nv_fp124_for_to_str)
 
     // the parameters already setup, now call subroutine that converts to str
-    jsr NvStrFP124sToStr
+    // Note: the carry flag must stay as it was at the top of the macro
+    //       all the way to here
+    jsr NvStrFP124xToStr
  
     // str_addr should contain the string, so print it
     nv_screen_print_str(str_addr)
@@ -343,11 +347,23 @@ nv_screen_poke_coord_list_mem_block:
 
 
 //////////////////////////////////////////////////////////////////////////////
-// subroutine to print a fp124s value in decimal format
-//   nv_fp124s_to_print: must contain the fp124s value to be printed 
+// subroutines to print a fp124s and fp124u values in decimal format.
+// Before calling:
+//   nv_fp124_to_print: must contain the fp124 value to be printed. 
+//                      this can be either signed or unsigned
+//   cursor: should be positioned on the screen
+// Note: caller doesn't need to do anything with nv_fp124_str.  that
+//       is just a temp variable used internally .
 NvScreenPrintDecFP124s:
-  nv_screen_print_dec_fp124s_sr(nv_fp124s_to_print, nv_fp124x_str)
-
-nv_fp124s_to_print: .word $0000
-nv_fp124x_str: .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    sec                 // set carry flag indicating a signed fp124
+    bcs DoPrint         // branch to do printing
+NvScreenPrintDecFP124u:
+    clc                 // clear carry indicating an unsigned fp124
+                        // fall through to do printing
+DoPrint:    
+    nv_screen_print_dec_fp124x_sr(nv_fp124_to_print, nv_fp124_str)
+    // rts is in macro above
+    
+nv_fp124_to_print: .word $0000
+nv_fp124_str: .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 #import "nv_string_code.asm"

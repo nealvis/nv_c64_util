@@ -25,16 +25,19 @@ nv_str_save_block: .word $00
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to fill a string with the decimal representation of the
-// specified fp124s value.
-//   fp124s_low_byte_addr: is the address of the low byte of the word
-//                         that will be interpreted as a signed 12.4 fixed 
-//                         point num and printed
+// specified fp124 value.  Carry flag determines if its interpreted as
+// signed or unsigned.
+//   carry flag: set   -> signed fp124
+//               clear -> unsigned fp124
+//   fp124_addr: is the address of the LSB of the fp124 value
+//               that will be interpreted as a signed or usigned and
+//               converted to string.
 //   str_ptr: is the pointer to the address of the first char of string
 //             to build up.  It must point to area in memory big enough 
 //             to hold all the
 //             digits on both sides of decimal, plus a sign, plus a decimal 
 //             plus a null. (11 bytes for fp124s)
-.macro nv_str_fp124s_to_str_sr(fp124s_low_byte_addr, str_ptr)
+.macro nv_str_fp124x_to_str_sr(fp124_addr, str_ptr)
 {
     // start with empty string
     lda #$00
@@ -44,18 +47,25 @@ nv_str_save_block: .word $00
     // set the nv_str1_ptr to the same address as passed pointer
     nv_xfer16_mem_mem(str_ptr, nv_str1_ptr) 
 
-    lda fp124s_low_byte_addr+1
-    bpl IsPositive
+    lda fp124_addr+1
+
+    // if carry is clear then its an unsigned fp124
+    bcc DoneWithSign            // unsigned number so skip sign stuff
+    bpl DoneWithSign            // signed but positive number sign is 0
+
+    // if get here its a signed number and its negative
 IsNegative:
+    // start the string by concatenating a minus sign
     lda #$2D                // the - sign
     jsr NvStrCatChar_a      // call sr to concatenate char in Accum to str
-
-IsPositive:
-    // setup scratch word with the value left of point
-    lda fp124s_low_byte_addr + 1
-    and #$7F                        // mask off the sign bit
+ 
+    // setup scratch word with the value left of decimal point
+    lda fp124_addr + 1
+    and #$7F                // its neg signed so mask off the sign bit
+DoneWithSign:               
+    // accum now has MSB of the fp124x with sign masked off if needed
     sta scratch_word+1
-    lda fp124s_low_byte_addr
+    lda fp124_addr
     sta scratch_word
     nv_lsr16u_mem16u_immed8u(scratch_word, 4)
 
@@ -120,7 +130,7 @@ DoneOnes:
     nv_store16_immed(scratch_word, 0)
 
     // setup Y register with the low 4 bits of the fp124
-    lda fp124s_low_byte_addr
+    lda fp124_addr
     and #$0F
     tay
 TopRight:
@@ -209,9 +219,12 @@ NvStrCatChar_a:
 
 ////////////////////////////////////////////////////////////////////////
 // Subroutine to call to fill a string with the decimal string 
-// representation of a fp124s value
+// representation of a fp124 value.  The fp124 value can be signed or
+// unsigned the carry flag will determine how its intepreted
 // Before calling:
-//   nv_fp124s_for_to_str: Set to the fp124s value to convert
+//   carry flag: set   -> signed fp124
+//               clear -> unsigned fp124
+//   nv_fp124_for_to_str: Set to the fp124 value to convert
 //   nv_str1_ptr: setup to point to the string.  If the string is
 //                at a label str_addr then the setup code could be:
 //                  lda #<str_addr
@@ -221,11 +234,11 @@ NvStrCatChar_a:
 // After calling: 
 //   The null terminated string will be in the string at the address 
 //   pointed to by nv_str1_ptr.
-NvStrFP124sToStr:
-  nv_str_fp124s_to_str_sr(nv_fp124s_for_to_str, nv_str1_ptr)
+NvStrFP124xToStr:
+  nv_str_fp124x_to_str_sr(nv_fp124_for_to_str, nv_str1_ptr)
   // rts is within macro above
 
-nv_fp124s_for_to_str: .word $0000
+nv_fp124_for_to_str: .word $0000
 
 
 //

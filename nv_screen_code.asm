@@ -235,6 +235,17 @@ StillNoDollar:
     //       all the way to here
     jsr NvStrFP124xToStr
  
+    // now trim the trailing 0s
+    lda #<str_addr
+    sta nv_str1_ptr
+    lda #>str_addr
+    sta nv_str1_ptr+1
+    lda #$30                // trim trailing zeros ($30 is '0')
+    jsr NvStrTrimEnd
+    lda #'.'                // trim trailing decimal points
+    jsr NvStrTrimEnd
+
+
     // str_addr should contain the string, so print it
     nv_screen_print_str(str_addr)
 

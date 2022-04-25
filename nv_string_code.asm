@@ -19,8 +19,9 @@
 #import "nv_math124_macs.asm"
 
 // pointer to use for all string subroutines
-nv_str1_ptr: .word $00
-nv_str_save_block: .word $00
+nv_str1_ptr: .word $0000
+nv_str2_ptr: .word $0000
+nv_str_save_block: .word $0000
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -244,3 +245,77 @@ nv_fp124_for_to_str: .word $0000
 //
 ////////////////////////////////////////////////////////////////////////
 
+
+//////////////////////////////////////////////////////////////////////////////
+//
+NvStrTrimEnd:
+{
+    nv_str_trim_end_char_a_sr(nv_str1_ptr, trim_end_save_block)
+    // rts is in macro above
+
+trim_end_save_block:
+    .word $0000
+
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////
+// Subroutine to call to concatenate the char in accumulator to the
+// null terminated string at the address pointed to by the specified 
+// pointer.
+// Before calling:
+//   nv_str1_ptr: setup to point to the str1.  If the string is
+//                at a label str_addr then the setup code could be:
+//                  lda #<str_addr
+//                  sta nv_str1_ptr
+//                  lda #>str_addr
+//                  sta nv_str1_ptr+1
+//   nv_str2_ptr: setup to point to the str2.  If the string is
+//                at a label str2_addr then the setup code could be:
+//                  lda #<str2_addr
+//                  sta nv_str2_ptr
+//                  lda #>str2_addr
+//                  sta nv_str2_ptr+1
+// After calling: The flags will be set as if cmp done
+//                Z flag set if strings are equal
+//                Carry flag set when str2 is less than or equal to str1
+//                Carry flag is clear when str2 is greater than str1
+NvStrCmp:
+{
+  nv_str_cmp_sr(nv_str1_ptr, nv_str2_ptr, nv_str_save_block)
+  // rts is in macro above.
+
+  nv_str_cmp_save_block: .word $0000
+}
+
+//
+////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////
+// Subroutine to call to copy one string to another. 
+// The source string must be null terminated and the destination
+// string will be null terminated upon return.
+// The destination string pointer must be large enough to accomodate
+// the source string including the terminating null
+// Before calling:
+//   nv_str1_ptr: setup to point to the source string.  If the src str is
+//                at a label str_addr then the setup code could be:
+//                  lda #<str_addr
+//                  sta nv_str1_ptr
+//                  lda #>str_addr
+//                  sta nv_str1_ptr+1
+//   nv_str2_ptr: setup to point to the destination string.  If the dest str
+//                is at a label str2_addr then the setup code could be:
+//                  lda #<str2_addr
+//                  sta nv_str2_ptr
+//                  lda #>str2_addr
+//                  sta nv_str2_ptr+1
+NvStrCpy:
+{
+    nv_str_cpy_sr(nv_str1_ptr, nv_str2_ptr, nv_str_cpy_save_block)
+    // note that rts is in above macro
+
+    nv_str_cpy_save_block: .word $0000
+}

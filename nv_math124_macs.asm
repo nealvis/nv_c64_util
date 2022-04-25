@@ -337,7 +337,7 @@ Done:
 
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to convert a signed fp124 bit value and store the 
+// inline macro to convert and round a signed fp124 bit value and store the 
 // result in an signed 16 bit int value. The result will either be the
 // truncated input value (ex $123.4 -> $0123)  or the next greater magnitude
 // number in positive or negative direction  (ex $234.8 -> $0235) 

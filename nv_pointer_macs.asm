@@ -18,6 +18,12 @@
 
 #import "nv_branch16_macs.asm"
 
+// zero page pointer to use whenever a zero page pointer is needed
+// but one is not specified
+.const NV_PTR_DEFAULT_ZERO_LO = $FB
+.const NV_PTR_DEFAULT_ZERO_HI = NV_PTR_DEFAULT_ZERO_LO + 1
+
+
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to store the byte in accumulator to the address
 // pointed to by a specified pointer
@@ -120,16 +126,16 @@
 //   Y Reg: unchanged
 .macro nv_load_a_from_mem_ptr_plus_y(ptr_addr, save_block)
 {
-    // zero page pointer to use whenever a zero page pointer is needed
-    // usually used to store and load to and from the sprite extra pointer
-    .const ZERO_PAGE_LO = $FB
-    .const ZERO_PAGE_HI = $FC
+    .const ZERO_PAGE_LO = NV_PTR_DEFAULT_ZERO_LO
+    .const ZERO_PAGE_HI = NV_PTR_DEFAULT_ZERO_HI
+
+    nv_save_zero_page_ptr(ZERO_PAGE_LO, save_block)
 
     // save our zero page pointer
-    ldx ZERO_PAGE_LO
-    stx save_block
-    ldx ZERO_PAGE_HI
-    stx save_block+1
+    //ldx ZERO_PAGE_LO
+    //stx save_block
+    //ldx ZERO_PAGE_HI
+    //stx save_block+1
 
     // load zero page ptr with our pointer
     ldx ptr_addr
@@ -141,10 +147,80 @@
     lda (ZERO_PAGE_LO),y  // indirect indexed load accum to pointed to addr
 
     // restore our zero page pointer
+    nv_restore_zero_page_ptr(ZERO_PAGE_LO, save_block)
+    //ldx save_block
+    //stx ZERO_PAGE_LO
+    //ldx save_block+1
+    //stx ZERO_PAGE_HI
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+//
+.macro nv_save_zero_page_ptr(zero_lo, save_block)
+{
+    .var ZERO_PAGE_LO = zero_lo
+    .var ZERO_PAGE_HI = zero_lo+1
+
+    .if (zero_lo == -1)
+    {
+        .eval ZERO_PAGE_LO = NV_PTR_DEFAULT_ZERO_LO
+        .eval ZERO_PAGE_HI = NV_PTR_DEFAULT_ZERO_HI
+    }
+
+    // save the zero page pointer to the save block
+    ldx ZERO_PAGE_LO
+    stx save_block
+    ldx ZERO_PAGE_HI
+    stx save_block+1
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+//
+.macro nv_restore_zero_page_ptr(zero_lo, save_block)
+{
+    .var ZERO_PAGE_LO = zero_lo
+    .var ZERO_PAGE_HI = zero_lo+1
+
+    .if (zero_lo == -1)
+    {
+        .eval ZERO_PAGE_LO = NV_PTR_DEFAULT_ZERO_LO
+        .eval ZERO_PAGE_HI = NV_PTR_DEFAULT_ZERO_HI
+    }
+
+    // restore our zero page pointer
     ldx save_block
     stx ZERO_PAGE_LO
     ldx save_block+1
     stx ZERO_PAGE_HI
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+//
+.macro nv_load_a_from_mem_ptr_plus_y_no_save(ptr_addr, zero_lo)
+{
+    .var ZERO_PAGE_LO = zero_lo
+    .var ZERO_PAGE_HI = zero_lo+1
+
+    .if (zero_lo == -1)
+    {
+        .eval ZERO_PAGE_LO = NV_PTR_DEFAULT_ZERO_LO
+        .eval ZERO_PAGE_HI = NV_PTR_DEFAULT_ZERO_HI
+    }
+
+    // load zero page ptr with our pointer
+    ldx ptr_addr
+    stx ZERO_PAGE_LO
+    ldx ptr_addr+1
+    stx ZERO_PAGE_HI
+
+    // store accum to the address in our pointer
+    lda (ZERO_PAGE_LO),y  // indirect indexed load accum to pointed to addr
 }
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -190,6 +266,42 @@
     stx ZERO_PAGE_LO
     ldx save_block+1
     stx ZERO_PAGE_HI
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to store accum to the byte pointed to by a specified pointer
+// plus the y register.  If pointer value is $1000 and Y contains 3
+// the byte will be stored to memory address $1003
+// macro params:
+//   ptr_addr: is the address that contains the pointer to data
+//   save_block: is the address to a two byte block of memory that can
+//               be used to save some zero page values that are used
+//               for indirection.  they will be restored after the 
+//               store operation is done.
+//   Accum: unchanged, should be set to the byte to store already 
+//   X Reg: changes
+//   Y Reg: unchanged
+.macro nv_store_a_to_mem_ptr_plus_y_no_save(ptr_addr, zero_lo)
+{
+    .var ZERO_PAGE_LO = zero_lo
+    .var ZERO_PAGE_HI = zero_lo+1
+
+    .if (zero_lo == -1)
+    {
+        .eval ZERO_PAGE_LO = NV_PTR_DEFAULT_ZERO_LO
+        .eval ZERO_PAGE_HI = NV_PTR_DEFAULT_ZERO_HI
+    }
+
+    // load zero page ptr with our pointer
+    ldx ptr_addr
+    stx ZERO_PAGE_LO
+    ldx ptr_addr+1
+    stx ZERO_PAGE_HI
+
+    // store accum to the address in our pointer
+    sta (ZERO_PAGE_LO),y  // indirect indexed load accum to pointed to addr
 }
 //
 //////////////////////////////////////////////////////////////////////////////

@@ -81,9 +81,10 @@ Done:
 .macro nv_str_cat_char_a_sr(str_ptr, save_block)
 {
     pha
+    nv_save_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
     ldy #0
 TopLoop:
-    nv_load_a_from_mem_ptr_plus_y(str_ptr, save_block)
+    nv_load_a_from_mem_ptr_plus_y_no_save(str_ptr, NV_PTR_DEFAULT_ZERO_LO)
     //lda addr, y
     cmp #$00
     beq BreakLoop
@@ -99,14 +100,15 @@ BreakLoop:
     // value that was on the accum
     pla             // move the original accum value from stack to accum
     pha             // push it back on because below we pull it off
-    nv_store_a_to_mem_ptr_plus_y(str_ptr, save_block)
+    nv_store_a_to_mem_ptr_plus_y_no_save(str_ptr, NV_PTR_DEFAULT_ZERO_LO)
 
     // now inc Y and add a new null terminator to the string.
     iny
     lda #$00
-    nv_store_a_to_mem_ptr_plus_y(str_ptr, save_block)
+    nv_store_a_to_mem_ptr_plus_y_no_save(str_ptr, NV_PTR_DEFAULT_ZERO_LO)
 
 Done:
+    nv_restore_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
     pla             // pull the original accum value from stack to accum
     rts
 }
@@ -134,10 +136,13 @@ Done:
 .macro nv_str_trim_end_char_a_sr(str_ptr, save_block)
 {
     sta TrimCharAddr    // save the char to trim
+
+    nv_save_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
+
     ldy #0              // start looking for end of string
 TopLoop:
     // get first char of string into Accum
-    nv_load_a_from_mem_ptr_plus_y(str_ptr, save_block)
+    nv_load_a_from_mem_ptr_plus_y_no_save(str_ptr, NV_PTR_DEFAULT_ZERO_LO)
     cmp #$00        // see if this byte is null
     beq BreakTopLoop   // if it is null then break out of the loop 
     iny             // not null so try next char in string
@@ -153,16 +158,17 @@ Loop2:
     beq Done        // first char in strgin is null so nothing to trim
 
     dey
-    nv_load_a_from_mem_ptr_plus_y(str_ptr, save_block)
+    nv_load_a_from_mem_ptr_plus_y_no_save(str_ptr, NV_PTR_DEFAULT_ZERO_LO)
     cmp TrimCharAddr        // compare char at end with specified char
     bne Done                // if its not equal then done trimming
 
     // if get here then need to trim this char and try the next
     lda #$00
-    nv_store_a_to_mem_ptr_plus_y(str_ptr, save_block)
+    nv_store_a_to_mem_ptr_plus_y_no_save(str_ptr, NV_PTR_DEFAULT_ZERO_LO)
     jmp Loop2
 
 Done:
+    nv_restore_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
     rts
 TrimCharAddr: .byte 0
 }
@@ -174,12 +180,13 @@ TrimCharAddr: .byte 0
 // macro to compare two strings 
 .macro nv_str_cmp_sr(str1_ptr, str2_ptr, save_block)
 {
+    nv_save_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
     ldy #$00
 TopLoop:
     // get first char of str1 into Accum
-    nv_load_a_from_mem_ptr_plus_y(str2_ptr, save_block)
+    nv_load_a_from_mem_ptr_plus_y_no_save(str2_ptr, NV_PTR_DEFAULT_ZERO_LO)
     sta temp_char
-    nv_load_a_from_mem_ptr_plus_y(str1_ptr, save_block)
+    nv_load_a_from_mem_ptr_plus_y_no_save(str1_ptr, NV_PTR_DEFAULT_ZERO_LO)
     cmp temp_char   // compare accum with temp_char str1[y] with str2[y]
     bne Done        // chars are not equal, flags are set, just return
 
@@ -195,6 +202,9 @@ CharsEqual:
     jmp TopLoop     // back to top of the loop for next char
 
 Done:
+    php             // save status flags from comparison above
+    nv_restore_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
+    plp             // restore status flags from comparison above
     rts
 
 temp_char: .byte $00
@@ -208,13 +218,14 @@ temp_char: .byte $00
 // macro to copy source string to a destination string 
 .macro nv_str_cpy(src_str_ptr, dest_str_ptr, save_block)
 {
+    nv_save_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
     ldy #$00
 TopLoop:
     // get a char of src string into Accum
-    nv_load_a_from_mem_ptr_plus_y(src_str_ptr, save_block)
+    nv_load_a_from_mem_ptr_plus_y_no_save(src_str_ptr, NV_PTR_DEFAULT_ZERO_LO)
 
     // store that char into the destination string
-    nv_store_a_to_mem_ptr_plus_y(dest_str_ptr, save_block)
+    nv_store_a_to_mem_ptr_plus_y_no_save(dest_str_ptr, NV_PTR_DEFAULT_ZERO_LO)
 
     cmp #$00    // check if we just copied the null
     beq Done    // if we did copy null then we are done.
@@ -233,6 +244,7 @@ DoneWithError:
     // TODO: do something to indicate an error here
 
 Done:
+    nv_restore_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
 }
 //
 //////////////////////////////////////////////////////////////////////////////

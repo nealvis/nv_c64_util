@@ -247,7 +247,18 @@ nv_fp124_for_to_str: .word $0000
 
 
 //////////////////////////////////////////////////////////////////////////////
-//
+// Trims all matching chars from the end of a string
+// Before calling:
+//  nv_str1_ptr: setup to point to the string that will be trimmed.
+//                If the string to trim is at a label str_addr then 
+//                the setup code could be:
+//                  lda #<str_addr
+//                  sta nv_str1_ptr
+//                  lda #>str_addr
+//                  sta nv_str1_ptr+1
+//  Accum: should contain the char that will be trimmed from the end
+//         of the string.  
+// 
 NvStrTrimEnd:
 {
     nv_str_trim_end_char_a_sr(nv_str1_ptr, trim_end_save_block)

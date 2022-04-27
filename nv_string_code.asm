@@ -272,9 +272,7 @@ trim_end_save_block:
 //////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////
-// Subroutine to call to concatenate the char in accumulator to the
-// null terminated string at the address pointed to by the specified 
-// pointer.
+// Subroutine to call to compare two strings.  
 // Before calling:
 //   nv_str1_ptr: setup to point to the str1.  If the string is
 //                at a label str_addr then the setup code could be:
@@ -290,8 +288,8 @@ trim_end_save_block:
 //                  sta nv_str2_ptr+1
 // After calling: The flags will be set as if cmp done
 //                Z flag set if strings are equal
-//                Carry flag set when str2 is less than or equal to str1
-//                Carry flag is clear when str2 is greater than str1
+//                Carry flag set when str1 is greater than or equal to str2
+//                Carry flag is clear when str1 is less than str2
 NvStrCmp:
 {
   nv_str_cmp_sr(nv_str1_ptr, nv_str2_ptr, nv_str_save_block)

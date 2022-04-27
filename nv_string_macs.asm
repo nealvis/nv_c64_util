@@ -130,9 +130,9 @@ Done:
 //   accum:  the char to trim
 //   save_block: the address of a two byte block of memory that can be
 //               used to save zero page contents
-// Accum: 
-// X Reg: 
-// Y Reg: 
+// Accum: changes
+// X Reg: changes
+// Y Reg: changes
 .macro nv_str_trim_end_char_a_sr(str_ptr, save_block)
 {
     sta TrimCharAddr    // save the char to trim
@@ -177,7 +177,18 @@ TrimCharAddr: .byte 0
 
 
 //////////////////////////////////////////////////////////////////////////////
-// macro to compare two strings 
+// inlne macro for a subroutine that compares two strings
+// macro params:
+//   str1_ptr: the address of a pointer to the first char of the string.  
+//             The string must be null terminated
+//   str2_ptr: the address of a pointer to the first char of another string
+//             for the comparison
+//   save_block: is the address of a word that can be used to save 2 zero 
+//               page bytes that will be used during the macro.
+// upon return the following status flags will be set:
+//   Zero flag: set if the strings are equal exactly, otherwise will be clear
+//   Carry flag: Set if the first string is >= the second string
+//               Clear if the first string is < the second string
 .macro nv_str_cmp_sr(str1_ptr, str2_ptr, save_block)
 {
     nv_save_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
@@ -215,7 +226,17 @@ temp_char: .byte $00
 
 
 //////////////////////////////////////////////////////////////////////////////
-// macro to copy source string to a destination string 
+// macro to copy a source string to a destination string.
+// The source string must be null terminated and 254 chars or less (255 if 
+// you include the null)
+// The destionation string mush have enough bytes to accomodate the copy
+// macro params:
+//   src_str_ptr: the address of a pointer to the source string for the copy 
+//             The string must be null terminated
+//   dest_str_ptr: the address of a pointer to the destination string
+//             for the copy.  
+//   save_block: is the address of a word that can be used to save 2 zero 
+//               page bytes that will be used during the macro.
 .macro nv_str_cpy(src_str_ptr, dest_str_ptr, save_block)
 {
     nv_save_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
@@ -250,7 +271,17 @@ Done:
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// macro to copy source string to a destination string 
+// macro for a subroutine to copy a source string to a destination string.
+// The source string must be null terminated and 254 chars or less (255 if 
+// you include the null)
+// The destionation string mush have enough bytes to accomodate the copy
+// macro params:
+//   src_str_ptr: the address of a pointer to the source string for the copy 
+//             The string must be null terminated
+//   dest_str_ptr: the address of a pointer to the destination string
+//             for the copy.  
+//   save_block: is the address of a word that can be used to save 2 zero 
+//               page bytes that will be used during the macro.
 .macro nv_str_cpy_sr(src_str_ptr, dest_str_ptr, save_block)
 {
     nv_str_cpy(src_str_ptr, dest_str_ptr, save_block)

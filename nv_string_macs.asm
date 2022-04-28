@@ -127,7 +127,8 @@ Done:
 //   str_ptr: the address of a pointer to the first char of the string.  
 //            The string must be null terminated because that is how the 
 //            end of string will be found  
-//   accum:  the char to trim
+//   accum: the char to trim
+//   x reg: max number of chars to trim.  set to 0 for no max (other than 254)
 //   save_block: the address of a two byte block of memory that can be
 //               used to save zero page contents
 // Accum: changes
@@ -136,7 +137,7 @@ Done:
 .macro nv_str_trim_end_char_a_sr(str_ptr, save_block)
 {
     sta TrimCharAddr    // save the char to trim
-
+    stx TrimCounter     // save the max number of chars to trim
     nv_save_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
 
     ldy #0              // start looking for end of string
@@ -155,7 +156,7 @@ BreakTopLoop:
 Loop2:
     // at this point str_ptr+y points to the null in the string
     cpy #$00        // check if the very first char is null
-    beq Done        // first char in strgin is null so nothing to trim
+    beq Done        // first char in string is null so nothing to trim
 
     dey
     nv_load_a_from_mem_ptr_plus_y_no_save(str_ptr, NV_PTR_DEFAULT_ZERO_LO)
@@ -165,12 +166,114 @@ Loop2:
     // if get here then need to trim this char and try the next
     lda #$00
     nv_store_a_to_mem_ptr_plus_y_no_save(str_ptr, NV_PTR_DEFAULT_ZERO_LO)
+
+    dec TrimCounter
+    beq Done
+
     jmp Loop2
 
 Done:
     nv_restore_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
     rts
 TrimCharAddr: .byte 0
+TrimCounter: .byte 0
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// macros subroutine that trims start of a null terminated string by 
+// removing any chars that match a specified char 
+// Note this macro relies on the string being null terminated.
+// Note that the string can be 254 chars max (or 255 bytes including null.)
+// macro params:
+//   str_ptr: the address of a pointer to the first char of the string.  
+//            The string must be null terminated.
+//   accum: the char to trim
+//   x reg: the max number of chars to trim.  set to zero for no limit
+//          other than the 254 max chars in the string.
+//   save_block: the address of a two byte block of memory that can be
+//               used to save zero page contents
+// Accum: changes
+// X Reg: changes
+// Y Reg: changes
+.macro nv_str_trim_start_char_a_sr(str_ptr, save_block)
+{
+    stx MaxTrimCounter
+    sta TrimCharAddr    // save the char to trim
+    lda #$00
+    sta TrimCounter     // start trim counter at 0
+
+    // save the values in the zero page addresses that will be used
+    // as a pointer to the string
+    nv_save_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
+
+    ldy #0              // start looking for matching chars
+TopLoop:
+    // get first char of string into Accum
+    nv_load_a_from_mem_ptr_plus_y_no_save(str_ptr, NV_PTR_DEFAULT_ZERO_LO)
+    cmp TrimCharAddr   // see if this byte is one we are trimming
+    bne BreakTopLoop   // if it is not then we are done with this loop
+
+    // if here then we need to trim this char, so inc the number of 
+    // chars to trim
+    inc TrimCounter
+
+    // dec our max trim counter that is the limit of most chars to trim
+    dec MaxTrimCounter
+    beq BreakTopLoop // we've hit the limit of chars to trim.
+
+    iny              // inc index to next char in string
+    beq DoneError    // never found the null, that can't be!
+    jmp TopLoop      // loop up to try next char.
+
+BreakTopLoop:
+
+    // At this point TrimCounter has the number of chars to trim 
+    // from the string.  It could be zero chars.
+
+    ldy TrimCounter
+    sty SaveY
+    beq Done        // were no chars to trim
+
+Loop2:
+
+    // here Y Reg must have the index of the char to copy
+
+    // get a char to move forward in the string to overwrite the 
+    // trimmed chars
+    nv_load_a_from_mem_ptr_plus_y_no_save(str_ptr, NV_PTR_DEFAULT_ZERO_LO)
+    pha     // save the byte to copy on stack
+
+    // now adjust y index to destination copy position
+    tya
+    sec
+    sbc TrimCounter
+    tay
+    pla
+    
+    // now save the char in accum to forward position in string
+    nv_store_a_to_mem_ptr_plus_y_no_save(str_ptr, NV_PTR_DEFAULT_ZERO_LO)
+
+    cmp #$00        // check if we just copied the null
+    beq Done        // we did, so done copying chars
+
+    // didn't copy null yet so increment the copy source index
+    inc SaveY
+    ldy SaveY
+
+    jmp Loop2
+
+DoneError:
+    // TODO. some error indicator here would be nice.
+
+Done:
+    nv_restore_zero_page_ptr(NV_PTR_DEFAULT_ZERO_LO, save_block)
+    rts
+TrimCharAddr: .byte 0
+TrimCounter: .byte 0
+MaxTrimCounter: .byte 0
+SaveY: .byte 0
 }
 //
 //////////////////////////////////////////////////////////////////////////////

@@ -234,20 +234,69 @@ NvStrCatChar_a:
 //                  sta nv_str1_ptr+1
 // After calling: 
 //   The null terminated string will be in the string at the address 
-//   pointed to by nv_str1_ptr.
+//   pointed to by nv_str1_ptr.  the string will be a decimal number 
+//   and always look have 4 digits on both sides of the decimal point 
+//   like this:  0001.5000 or if negative, then like this -0001.5000
 NvStrFP124xToStr:
   nv_str_fp124x_to_str_sr(nv_fp124_for_to_str, nv_str1_ptr)
   // rts is within macro above
 
-nv_fp124_for_to_str: .word $0000
+// same as NvStrFP124xToStr except the result is trimmed of 
+// leading and trailing zeros.  Also if the result is < 1 the leading 
+// zero is left.  If everything to right of decimal point is a zero
+// then the decimal point is also removed.
+// 0001.5000 becomes 1.5
+// 0001.0000 becomes 1
+// 0000.5000 becomes 0.5
+// sign will be included if negative only
+// 8001.5000 becomes -1.5
+NvStrFP124xToStrWithTrim:
+    
+    // get string in 0000.0000 format
+    jsr NvStrFP124xToStr
 
+    lda #'0'            // char to trim
+    ldx #$00            // max chars to trim (unlimited)
+    jsr NvStrTrimEnd    // trim the trailing zeros
+
+    lda #'.'            // char to trim
+    ldx #$00            // max chars to trim (unlimited)
+    jsr NvStrTrimEnd    // trim the trailing dec point if exists
+
+    // get the first char of the string
+    nv_load_a_from_mem_ptr(nv_str1_ptr, save_block_fp124_to_str)
+    cmp #'-'            // check if its minus sign
+    bne NoMinus         // if not minus then trim leading zeros
+
+IsMinus:
+    // the first char is a minus so add one to the pointer
+    // so that we skip the minus when trimming
+    nv_adc16x_mem_immed(nv_str1_ptr, 1, nv_str1_ptr)
+    lda #'0'            // char to trim
+    ldx #$03            // max chars to trim is 3
+    jsr NvStrTrimStart  // trim the zeros to right of minus
+
+    // subtract one to restore nv_str1_ptr
+    nv_adc16x_mem_immed(nv_str1_ptr, $FFFF, nv_str1_ptr)
+    rts
+    
+NoMinus:
+    lda #'0'            // char to trim
+    ldx #$03            // max chars to trim (unlimited)
+    jsr NvStrTrimStart  // trim the leading zeros
+
+    rts
+    
+    // the fp124x input parameter for NvStrFP124xToStr and NvStrFP124xToStrTrim
+    nv_fp124_for_to_str: .word $0000
+    save_block_fp124_to_str: .word $0000
 
 //
-////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
 
 //////////////////////////////////////////////////////////////////////////////
-// Trims all matching chars from the end of a string
+// Subroutine that Trims all matching chars from the end of a string
 // Before calling:
 //  nv_str1_ptr: setup to point to the string that will be trimmed.
 //                If the string to trim is at a label str_addr then 
@@ -258,6 +307,8 @@ nv_fp124_for_to_str: .word $0000
 //                  sta nv_str1_ptr+1
 //  Accum: should contain the char that will be trimmed from the end
 //         of the string.  
+//  X Reg: should be the set to max number of chars to trim.  set to 
+//         zero to have no max other than the 254 limit.
 // 
 NvStrTrimEnd:
 {
@@ -266,10 +317,37 @@ NvStrTrimEnd:
 
 trim_end_save_block:
     .word $0000
-
 }
 //
 //////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// Subroutine that Trims all matching chars from the start of a string
+// removing any chars that match a specified char 
+// Note this the string must being null terminated.
+// Note that the string can be 254 chars max (or 255 bytes including null.)
+// Before calling:
+//  nv_str1_ptr: setup to point to the string that will be trimmed.
+//                If the string to trim is at a label str_addr then 
+//                the setup code could be:
+//                  lda #<str_addr
+//                  sta nv_str1_ptr
+//                  lda #>str_addr
+//                  sta nv_str1_ptr+1
+//  Accum: should contain the char that will be trimmed from the end
+//         of the string.  
+// Accum: changes
+// X Reg: changes
+// Y Reg: changes
+NvStrTrimStart:
+{
+    nv_str_trim_start_char_a_sr(nv_str1_ptr, trim_start_save_block)
+    // rts is in macro above
+
+trim_start_save_block:
+    .word $0000
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // Subroutine to call to compare two strings.  

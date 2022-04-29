@@ -1,5 +1,5 @@
 # Nealvis' C64 Utilities
-This directory holds nv_c64_util which is just a collection of C64 utility routines and macros 
+This directory holds nv_c64_util which is just a collection of C64 utility routines and macros.
 
 ## Overview
 All the assembler code in this directory is written for Kick Assembler and in general the setup outlined in the [environment and tools setup](./env_setup.md)

@@ -47,7 +47,7 @@
 // struct that provides info for a sprite.  this is a construct of the assembler
 // it just provides an easy way to reference all these different compile time values.
 // No actual memory is created when an instance of the struct is created.
-.struct nv_sprite_info_struct{name, num, init_x, init_y, init_x_vel, init_y_vel, data_ptr, 
+.struct nv_sprite_info_struct{name, num, init_x_fp124s, init_y, init_x_vel, init_y_vel, data_ptr, 
                               base_addr, action_top, bounce_left, bounce_bottom, bounce_right,
                               top_min, left_min, bottom_max, right_max, enabled,
                               hitbox_left, hitbox_top,      // coords within sprite 
@@ -65,11 +65,11 @@
     *=spt_info.base_addr                                 // tell assembler where to put this stuff
     sprite_base_addr:                                    // the address of the first byte
     sprite_num_addr: .byte spt_info.num                  // the sprite number (0-7 only)
-    sprite_x_addr: .word spt_info.init_x                 // the sprite's x loc
+    sprite_x_fp124s_addr: .word spt_info.init_x          // the sprite's x loc
     sprite_y_addr: .byte spt_info.init_y                 // the sprite's y loc
     sprite_vel_x_addr: .byte spt_info.init_x_vel         // the sprite's x velocity in pixels
     sprite_vel_y_addr: .byte spt_info.init_y_vel         // the sprite's y velocity in pixels
-    sprite_data_ptr_addr: .word spt_info.data_ptr       // 16 bit addr of sprite data
+    sprite_data_ptr_addr: .word spt_info.data_ptr        // 16 bit addr of sprite data
     sprite_action_top: .byte spt_info.action_top         // set to 1 to bounce bottom or 0 not to
     sprite_bounce_left: .byte spt_info.bounce_left       // set to 1 to bounce bottom or 0 not to
     sprite_bounce_bottom: .byte spt_info.bounce_bottom   // set to 1 to bounce bottom or 0 not to

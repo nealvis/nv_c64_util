@@ -372,9 +372,49 @@ NvScreenPrintDecFP124u:
     clc                 // clear carry indicating an unsigned fp124
                         // fall through to do printing
 DoPrint:    
-    nv_screen_print_dec_fp124x_sr(nv_fp124_to_print, nv_fp124_str)
-    // rts is in macro above
+    //nv_screen_print_dec_fp124x_sr(nv_fp124_to_print, nv_fp124_str)
+    //// rts is in macro above
     
+    // set up the result string to hold the result
+    lda #<nv_fp124_str
+    sta nv_str1_ptr
+    lda #>nv_fp124_str
+    sta nv_str1_ptr+1
+ 
+    nv_xfer124_mem_mem(nv_fp124_to_print, nv_fp124_for_to_str)
+
+    jsr NvStrFP124xToStrWithTrim
+    nv_screen_print_str(nv_fp124_str)
+    rts
+
 nv_fp124_to_print: .word $0000
 nv_fp124_str: .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 #import "nv_string_code.asm"
+
+
+
+/*
+
+    // set up the result string to hold the result
+    lda #<result_str
+    sta nv_str1_ptr
+    lda #>result_str
+    sta nv_str1_ptr+1
+
+    // set the fp124x parameter for the subroutine
+    nv_xfer124_mem_mem(op124x, nv_fp124_for_to_str)
+
+    // set the carry flag to indicate signed or unsigned fp124
+    .if (is_signed)
+    {
+        sec
+    }
+    else
+    {
+        clc
+    }
+    
+    // call the string conversion subroutine
+    //jsr NvStrFP124xToStr
+    jsr NvStrFP124xToStrWithTrim
+*/

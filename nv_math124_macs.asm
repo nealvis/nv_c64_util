@@ -528,4 +528,110 @@ Done:
 //
 //////////////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////////////
+// inline function that returns an fp124s value.  
+.function NvBuildFp124s(sign, left_of_pt, right_of_pt)
+{
+    .var ret_val = $0000
+
+    .if (sign != 0 && sign != 1)
+    {
+        .error "NvBuild124s invalid sign"
+    }
+    .if (left_of_pt > $07FF)
+    {
+        .error "NvBuild124s left of pt to big."
+    }
+    .if (right_of_pt > $0F)
+    {
+        .error "NvBuild124s right of pt to big."
+    }
+
+    // Hi byte of the fp124s
+    .var hi_byte = (((left_of_pt << 4) >> 8) | (sign << 7))
+    //lda #(((left_of_pt << 4) >> 8) | (sign << 7))
+    //sta addr+1
+
+    // lo byte of fp124s
+    .var lo_byte = (right_of_pt | ((left_of_pt & $000F) << 4))
+    //lda #(right_of_pt | ((left_of_pt & $000F) << 4))
+    //sta addr
+
+    .eval ret_val = hi_byte << 8 | lo_byte
+    .return ret_val 
+}
+
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline function that returns an fp124u value.  
+.function NvBuildFp124u(left_of_pt, right_of_pt)
+{
+    .if (left_of_pt > $0FFF)
+    {
+        .error "NvBuildFp124u left of pt to big."
+    }
+    .if (right_of_pt > $0F)
+    {
+        .error "NvBuildFp124u right of pt to big."
+    }
+
+    .var ret_val = $0000
+
+    .var hi_byte = ((left_of_pt << 4) >> 8)
+    .var lo_byte = (right_of_pt | ((left_of_pt & $000F) << 4))
+
+    .eval ret_val = hi_byte << 8 | lo_byte
+    .return ret_val 
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline function to find the closest fp124s value for a given float
+// and return it 
+.function NvBuildClosest124s(num)
+{
+    .var sign = 0
+    .if (num < 0)
+    {
+        .eval sign = 1
+    }
+
+    .var left = round(abs(num) * 16) >> 4
+    .var right = round(abs(num) * 16) & $000F
+    
+    .var ret_val = 0
+    .eval ret_val = NvBuildFp124s(sign, left, right)
+
+    .return ret_val
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline function to find the closest fp124u value for a given float
+// and return it 
+.function NvBuildClosest124u(num)
+{
+    .if (num < 0)
+    {
+        .error "NvBuildClosest124u negative number passed"
+    }
+    .var left = round(num * 16) >> 4
+    .var right = round(num * 16) & $000F
+    
+    .var ret_val = 0
+    .eval ret_val = NvBuildFp124u(left, right)
+
+    .return ret_val
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
 

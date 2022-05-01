@@ -19,6 +19,8 @@
 
 #import "nv_sprite_raw_macs.asm"
 #import "nv_screen_rect_macs.asm"
+#import "nv_math124_macs.asm"
+#import "nv_branch124_macs.asm"
 
 // zero page pointer to use whenever a zero page pointer is needed
 // usually used to store and load to and from the sprite extra pointer
@@ -28,30 +30,46 @@
 // Constants for screen edges for bouncing.  
 
 // These are the default max position values when bouncing
-.const NV_SPRITE_LEFT_BOUNCE_DEFAULT = 23
-.const NV_SPRITE_RIGHT_BOUNCE_DEFAULT = 320
-.const NV_SPRITE_TOP_BOUNCE_DEFAULT = 50
-.const NV_SPRITE_BOTTOM_BOUNCE_DEFAULT = 234
+.const NV_SPRITE_LEFT_BOUNCE_FP124S_DEFAULT = NvBuildClosest124s(23)
+.const NV_SPRITE_RIGHT_BOUNCE_FP124S_DEFAULT = NvBuildClosest124s(320)
+.const NV_SPRITE_TOP_BOUNCE_FP124S_DEFAULT = NvBuildClosest124s(50)
+.const NV_SPRITE_BOTTOM_BOUNCE_FP124S_DEFAULT = NvBuildClosest124s(234)
 
 // These are the default max position values when wrapping
-.const NV_SPRITE_LEFT_WRAP_DEFAULT = 2
-.const NV_SPRITE_RIGHT_WRAP_DEFAULT = 339 
-.const NV_SPRITE_TOP_WRAP_DEFAULT = 32
-.const NV_SPRITE_BOTTOM_WRAP_DEFAULT = 249
+.const NV_SPRITE_LEFT_WRAP_FP124S_DEFAULT = NvBuildClosest124s(2)
+.const NV_SPRITE_RIGHT_WRAP_FP124S_DEFAULT = NvBuildClosest124s(339) 
+.const NV_SPRITE_TOP_WRAP_FP124S_DEFAULT = NvBuildClosest124s(32)
+.const NV_SPRITE_BOTTOM_WRAP_FP124S_DEFAULT = NvBuildClosest124s(249)
 
 // These are the possible actions when sprite would exceed max position
 .const NV_SPRITE_ACTION_WRAP = 0
 .const NV_SPRITE_ACTION_BOUNCE = 1
 
-
 // struct that provides info for a sprite.  this is a construct of the assembler
 // it just provides an easy way to reference all these different compile time values.
 // No actual memory is created when an instance of the struct is created.
-.struct nv_sprite_info_struct{name, num, init_x_fp124s, init_y, init_x_vel, init_y_vel, data_ptr, 
-                              base_addr, action_top, bounce_left, bounce_bottom, bounce_right,
-                              top_min, left_min, bottom_max, right_max, enabled,
-                              hitbox_left, hitbox_top,      // coords within sprite 
-                              hitbox_right, hitbox_bottom}  // coords within sprite
+.struct nv_sprite_info_struct{
+    name, 
+    num, 
+    init_x_fp124s, 
+    init_y_fp124s, 
+    init_x_vel_fp124s, 
+    init_y_vel_fp124s, 
+    data_ptr, 
+    base_addr, 
+    action_top, 
+    bounce_left, 
+    bounce_bottom, 
+    bounce_right,
+    top_min_fp124s, 
+    left_min_fp124s, 
+    bottom_max_fp124s, 
+    right_max_fp124s, 
+    enabled,
+    hitbox_left,    // left coord within sprite
+    hitbox_top,     // top coord within sprite 
+    hitbox_right,   // right coord within sprite
+    hitbox_bottom}  // bottom coord within sprite
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -65,10 +83,10 @@
     *=spt_info.base_addr                                 // tell assembler where to put this stuff
     sprite_base_addr:                                    // the address of the first byte
     sprite_num_addr: .byte spt_info.num                  // the sprite number (0-7 only)
-    sprite_x_fp124s_addr: .word spt_info.init_x          // the sprite's x loc
-    sprite_y_addr: .byte spt_info.init_y                 // the sprite's y loc
-    sprite_vel_x_addr: .byte spt_info.init_x_vel         // the sprite's x velocity in pixels
-    sprite_vel_y_addr: .byte spt_info.init_y_vel         // the sprite's y velocity in pixels
+    sprite_x_fp124s_addr: .word spt_info.init_x_fp124s   // the sprite's x loc
+    sprite_y_fp124s_addr: .word spt_info.init_y_fp124s   // the sprite's y loc
+    sprite_vel_x_fp124s_addr: .word spt_info.init_x_vel_fp124s // the sprite's x velocity in pixels
+    sprite_vel_y_fp124s_addr: .word spt_info.init_y_vel_fp124s // the sprite's y velocity in pixels
     sprite_data_ptr_addr: .word spt_info.data_ptr        // 16 bit addr of sprite data
     sprite_action_top: .byte spt_info.action_top         // set to 1 to bounce bottom or 0 not to
     sprite_bounce_left: .byte spt_info.bounce_left       // set to 1 to bounce bottom or 0 not to
@@ -76,16 +94,16 @@
     sprite_bounce_right: .byte spt_info.bounce_right     // set to 1 to bounce bottom or 0 not to
 
     // top boundry for the sprite
-    sprite_top_min_addr: .byte spt_info.top_min == 0 ? (spt_info.action_top == NV_SPRITE_ACTION_BOUNCE ? NV_SPRITE_TOP_BOUNCE_DEFAULT : NV_SPRITE_TOP_WRAP_DEFAULT) : spt_info.top_min
+    sprite_top_min_fp124s_addr: .word spt_info.top_min_fp124s == 0 ? (spt_info.action_top == NV_SPRITE_ACTION_BOUNCE ? NV_SPRITE_TOP_BOUNCE_FP124S_DEFAULT : NV_SPRITE_TOP_WRAP_FP124S_DEFAULT) : spt_info.top_min_fp124s
     
     // left boundry for the sprite
-    sprite_left_min_addr: .word spt_info.left_min == 0 ? (spt_info.bounce_left == 1 ? NV_SPRITE_LEFT_BOUNCE_DEFAULT : NV_SPRITE_LEFT_WRAP_DEFAULT) :spt_info.left_min 
+    sprite_left_min_fp124s_addr: .word spt_info.left_min == 0 ? (spt_info.bounce_left == 1 ? NV_SPRITE_LEFT_BOUNCE_FP124S_DEFAULT : NV_SPRITE_LEFT_WRAP_FP124S_DEFAULT) :spt_info.left_min_fp124s 
 
    // bottom boundry for the sprite
-    sprite_bottom_max_addr: .byte spt_info.bottom_max == 0 ? (spt_info.bounce_bottom == 1 ? NV_SPRITE_BOTTOM_BOUNCE_DEFAULT : NV_SPRITE_BOTTOM_WRAP_DEFAULT) :spt_info.bottom_max
+    sprite_bottom_max_fp124s_addr: .word spt_info.bottom_max == 0 ? (spt_info.bounce_bottom == 1 ? NV_SPRITE_BOTTOM_BOUNCE_FP124S_DEFAULT : NV_SPRITE_BOTTOM_WRAP_FP124S_DEFAULT) :spt_info.bottom_max_fp124s
 
     // right boundry for the sprite
-    sprite_right_max_addr: .word spt_info.right_max == 0 ? (spt_info.bounce_right == 1 ? NV_SPRITE_RIGHT_BOUNCE_DEFAULT : NV_SPRITE_RIGHT_WRAP_DEFAULT) : spt_info.right_max
+    sprite_right_max_fp124s_addr: .word spt_info.right_max == 0 ? (spt_info.bounce_right == 1 ? NV_SPRITE_RIGHT_BOUNCE_FP124S_DEFAULT : NV_SPRITE_RIGHT_WRAP_FP124S_DEFAULT) : spt_info.right_max_fp124s
 
     // sprite enabled flag.  nonzero is enabled, zero is disabled
     sprite_enabled: .byte 0
@@ -114,37 +132,37 @@
 //////////////////////////////////////////////////////////////////////////////
 // offsets to use to get to the different fields within the nv_sprite block
 .const NV_SPRITE_NUM_OFFSET = 0
-.const NV_SPRITE_X_OFFSET = 1
-.const NV_SPRITE_Y_OFFSET = 3
-.const NV_SPRITE_VEL_X_OFFSET = 4
-.const NV_SPRITE_VEL_Y_OFFSET = 5
-.const NV_SPRITE_DATA_PTR_OFFSET = 6
-.const NV_SPRITE_ACTION_TOP_OFFSET = 8
-.const NV_SPRITE_ACTION_LEFT_OFFSET = 9
-.const NV_SPRITE_ACTION_BOTTOM_OFFSET = 10
-.const NV_SPRITE_ACTION_RIGHT_OFFSET = 11
+.const NV_SPRITE_X_FP124S_OFFSET = NV_SPRITE_NUM_OFFSET + 1
+.const NV_SPRITE_Y_FP124S_OFFSET = NV_SPRITE_X_FP124S_OFFSET + 2
+.const NV_SPRITE_VEL_X_FP124S_OFFSET = NV_SPRITE_Y_FP124S_OFFSET + 2
+.const NV_SPRITE_VEL_Y_FP124S_OFFSET = NV_SPRITE_VEL_X_FP124S_OFFSET + 2
+.const NV_SPRITE_DATA_PTR_OFFSET = NV_SPRITE_VEL_Y_FP124S_OFFSET + 2
+.const NV_SPRITE_ACTION_TOP_OFFSET = NV_SPRITE_DATA_PTR_OFFSET + 2
+.const NV_SPRITE_ACTION_LEFT_OFFSET = NV_SPRITE_ACTION_TOP_OFFSET + 1
+.const NV_SPRITE_ACTION_BOTTOM_OFFSET = NV_SPRITE_ACTION_LEFT_OFFSET + 1
+.const NV_SPRITE_ACTION_RIGHT_OFFSET = NV_SPRITE_ACTION_BOTTOM_OFFSET + 1
 
-.const NV_SPRITE_TOP_MIN_OFFSET = 12
-.const NV_SPRITE_LEFT_MIN_OFFSET = 13
-.const NV_SPRITE_BOTTOM_MAX_OFFSET = 15
-.const NV_SPRITE_RIGHT_MAX_OFFSET = 16
+.const NV_SPRITE_TOP_MIN_FP124S_OFFSET = NV_SPRITE_ACTION_RIGHT_OFFSET + 1
+.const NV_SPRITE_LEFT_MIN_FP124S_OFFSET = NV_SPRITE_TOP_MIN_FP124S_OFFSET + 2
+.const NV_SPRITE_BOTTOM_MAX_FP124S_OFFSET = NV_SPRITE_LEFT_MIN_FP124S_OFFSET + 2
+.const NV_SPRITE_RIGHT_MAX_FP124S_OFFSET = NV_SPRITE_BOTTOM_MAX_FP124S_OFFSET + 2
 
-.const NV_SPRITE_ENABLED_OFFSET = 18
+.const NV_SPRITE_ENABLED_OFFSET = NV_SPRITE_RIGHT_MAX_FP124S_OFFSET + 2
 
-.const NV_SPRITE_HITBOX_LEFT_OFFSET = 19
-.const NV_SPRITE_HITBOX_TOP_OFFSET = 20
-.const NV_SPRITE_HITBOX_RIGHT_OFFSET = 21
-.const NV_SPRITE_HITBOX_BOTTOM_OFFSET = 22
+.const NV_SPRITE_HITBOX_LEFT_OFFSET = NV_SPRITE_ENABLED_OFFSET + 1
+.const NV_SPRITE_HITBOX_TOP_OFFSET = NV_SPRITE_HITBOX_LEFT_OFFSET + 1
+.const NV_SPRITE_HITBOX_RIGHT_OFFSET = NV_SPRITE_HITBOX_TOP_OFFSET + 1
+.const NV_SPRITE_HITBOX_BOTTOM_OFFSET = NV_SPRITE_HITBOX_RIGHT_OFFSET + 1
 
-.const NV_SPRITE_SCRATCH1_OFFSET = 23
-.const NV_SPRITE_SCRATCH2_OFFSET = 25
+.const NV_SPRITE_SCRATCH1_OFFSET = NV_SPRITE_HITBOX_BOTTOM_OFFSET + 1
+.const NV_SPRITE_SCRATCH2_OFFSET = NV_SPRITE_SCRATCH1_OFFSET + 2
 
 // 8 bytes to create four 16 bit coords for a rect (left, top, right, bottom)
-.const NV_SPRITE_SCRATCH_RECT_OFFSET = 27
-.const NV_SPRITE_SCRATCH_RECT_LEFT_OFFSET = 27
-.const NV_SPRITE_SCRATCH_RECT_TOP_OFFSET = 29
-.const NV_SPRITE_SCRATCH_RECT_RIGHT_OFFSET = 31
-.const NV_SPRITE_SCRATCH_RECT_BOTTOM_OFFSET = 33
+.const NV_SPRITE_SCRATCH_RECT_OFFSET = NV_SPRITE_SCRATCH2_OFFSET + 2
+.const NV_SPRITE_SCRATCH_RECT_LEFT_OFFSET = NV_SPRITE_SCRATCH_RECT_OFFSET
+.const NV_SPRITE_SCRATCH_RECT_TOP_OFFSET = NV_SPRITE_SCRATCH_RECT_LEFT_OFFSET + 2
+.const NV_SPRITE_SCRATCH_RECT_RIGHT_OFFSET = NV_SPRITE_SCRATCH_RECT_TOP_OFFSET + 2
+.const NV_SPRITE_SCRATCH_RECT_BOTTOM_OFFSET = NV_SPRITE_SCRATCH_RECT_RIGHT_OFFSET + 2
 
 //////////////////////////////////////////////////////////////////////////////
 // assembler function to return the address of the sprite number
@@ -159,18 +177,18 @@
 // assembler function to return the address of the sprite Y velocity
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_vel_y_addr(info) 
+.function nv_sprite_vel_y_fp124s_addr(info) 
 {
-    .return info.base_addr + NV_SPRITE_VEL_Y_OFFSET
+    .return info.base_addr + NV_SPRITE_VEL_Y_FP124S_OFFSET
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // assembler function to return the address of the sprite X velocity.  
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_vel_x_addr(info)
+.function nv_sprite_vel_x_fp124s_addr(info)
 {
-    .return info.base_addr + NV_SPRITE_VEL_X_OFFSET
+    .return info.base_addr + NV_SPRITE_VEL_X_FP124S_OFFSET
 }
 
 
@@ -179,18 +197,18 @@
 // This is a 16 bit value so the address of the LSB will be returned  
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_x_addr(info)
+.function nv_sprite_x_fp124s_addr(info)
 {
-    .return nv_sprite_x_lsb_addr(info)
+    .return nv_sprite_x_fp124s_lsb_addr(info)
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // Assembler function to return the address of the LSB of sprite X position.
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_x_lsb_addr(info)
+.function nv_sprite_x_fp124s_lsb_addr(info)
 {
-    .return info.base_addr + NV_SPRITE_X_OFFSET
+    .return info.base_addr + NV_SPRITE_X_FP124S_OFFSET
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -279,18 +297,18 @@
 // Assembler function to return the address of the MSB of sprite X position.
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_x_msb_addr(info)
+.function nv_sprite_x_fp124s_msb_addr(info)
 {
-    .return info.base_addr + NV_SPRITE_X_OFFSET+1
+    .return info.base_addr + NV_SPRITE_X_FP124S_OFFSET+1
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // Assembler function to return the address of the sprite Y position.
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_y_addr(info)
+.function nv_sprite_y_fp124s_addr(info)
 {
-    .return info.base_addr + NV_SPRITE_Y_OFFSET
+    .return info.base_addr + NV_SPRITE_Y_FP124S_OFFSET
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -369,85 +387,101 @@
 
 //////////////////////////////////////////////////////////////////////////////
 // Assembler function to return the address of the the sprite top min
-// position on the screen.  Values beyond this will result in the top action
+// position on the screen.  Attempting to move to a position less than
+// this will result in the top action being taken which could be bounce, 
+// wrap, etc.
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_top_min_addr(info)
+.function nv_sprite_top_min_fp124s_addr(info)
 {
-    .return info.base_addr + NV_SPRITE_TOP_MIN_OFFSET
+    .return info.base_addr + NV_SPRITE_TOP_MIN_FP124S_OFFSET
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // Assembler function to return the address of the the sprite left min
-// position on the screen.  Values beyond this will result in the left action.
+// position on the screen.  Attempting to move to a position less than
+// this will result in the left action being taken which could be bounce, 
+// wrap, etc.
 // This is a 16 bit value so the addr of the LSB will be returned
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_left_min_addr(info)
+.function nv_sprite_left_min_fp124s_addr(info)
 {
-    .return info.base_addr + NV_SPRITE_LEFT_MIN_OFFSET
+    .return info.base_addr + NV_SPRITE_LEFT_MIN_FP124S_OFFSET
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // Assembler function to return the address of the the LSB of sprite left min
-// position on the screen.  Values beyond this will result in the left action.
+// position on the screen.  Attempting to move to a position less than
+// this will result in the left action being taken which could be bounce, 
+// wrap, etc.
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_left_min_lsb_addr(info)
+.function nv_sprite_left_min_fp124s_lsb_addr(info)
 {
-    .return info.base_addr + NV_SPRITE_LEFT_MIN_OFFSET
+    .return info.base_addr + NV_SPRITE_LEFT_MIN_FP124S_OFFSET
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // Assembler function to return the address of the the MSB of sprite left min
-// position on the screen.  Values beyond this will result in the left action.
+// position on the screen.  Attempting to move to a position less than
+// this will result in the left action being taken which could be bounce, 
+// wrap, etc.
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_left_min_msb_addr(info)
+.function nv_sprite_left_min_fp124s_msb_addr(info)
 {
-    .return info.base_addr + NV_SPRITE_LEFT_MIN_OFFSET+1
+    .return info.base_addr + NV_SPRITE_LEFT_MIN_FP124S_OFFSET+1
 }
 
 
 //////////////////////////////////////////////////////////////////////////////
 // Assembler function to return the address of sprite bottom max
-// position on the screen.  Values beyond this will result in the bottom action.
+// position on the screen.  Attempting to move to a position greater than
+// this will result in the bottom action being taken which could be bounce, 
+// wrap, etc.
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_bottom_max_addr(info)
+.function nv_sprite_bottom_max_fp124s_addr(info)
 {
-    .return info.base_addr + NV_SPRITE_BOTTOM_MAX_OFFSET
+    .return info.base_addr + NV_SPRITE_BOTTOM_MAX_FP124S_OFFSET
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // Assembler function to return the address of the the sprite right max
-// position on the screen.  Values beyond this will result in the right action.
+// position on the screen.  Attempting to move to a position greater than
+// this will result in the right action being taken which could be bounce, 
+// wrap, etc.
 // This is a 16 bit value so the addr of the LSB will be returned
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_right_max_addr(info)
+.function nv_sprite_right_max_fp124s_addr(info)
 {
-    .return nv_sprite_right_max_lsb_addr(info)
+    .return nv_sprite_right_max_fp124s_lsb_addr(info)
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // Assembler function to return the address of the the LSB of sprite right max
-// position on the screen.  Values beyond this will result in the right action.
+// position on the screen.  Attempting to move to a position greater than
+// this will result in the right action being taken which could be bounce, 
+// wrap, etc.
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_right_max_lsb_addr(info)
+.function nv_sprite_right_max_fp124s_lsb_addr(info)
 {
-    .return info.base_addr + NV_SPRITE_RIGHT_MAX_OFFSET
+    .return info.base_addr + NV_SPRITE_RIGHT_MAX_FP124S_OFFSET
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // Assembler function to return the address of the the MSB of sprite right max
-// position on the screen.  Values beyond this will result in the right action.
+// position on the screen.  Attempting to move to a position greater than
+// this will result in the right action being taken which could be bounce, 
+// wrap, etc.
 // function parameters:
 //   info: nv_sprite_info_struct that contains the address to return
-.function nv_sprite_right_max_msb_addr(info)
+.function nv_sprite_right_max_fp124s_msb_addr(info)
 {
-    .return info.base_addr + NV_SPRITE_RIGHT_MAX_OFFSET+1
+    .return info.base_addr + NV_SPRITE_RIGHT_MAX_FP124S_OFFSET+1
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -664,15 +698,15 @@
 // subroutine to move a sprite based on information in the sprite extra 
 // struct (info) that is passed into the macro.  The sprite x and y location
 // in memory will be updated according to the x and y velocity.
-// Note if the sprite goes off the edge it will be reset to the opposite side
-// of the screen or bounce based on sprite extra data
+// Note if the sprite goes off the edge it will be take the appropriate action
+// like move to the opposite side of the screen or bounce based on sprite 
+// extra data.
 // Note that this only updates the location in memory, it doesn't update the
 // sprite location in sprite registers.  To update sprite location in registers
 // and on the screen, call nv_sprite_set_location_from_memory_sr after this.
 .macro nv_sprite_move_any_direction_sr(info)
 {
-    ldx nv_sprite_vel_y_addr(info)
-    bpl PosVelY
+    nv_blt124s_immed(nv_sprite_vel_y_fp124s_addr(info), NvBuildClosest124s(0), PosVelY)
 
 NegVelY:
     nv_sprite_move_negative_y(info)
@@ -707,7 +741,7 @@ FinishedUpdate:
     lda nv_sprite_vel_y_addr(info)
 
     ldx nv_sprite_bottom_action_addr(info)
-    beq DoWrap                                          // 0 = wrap, 1 = bounce
+    beq DoWrap                                      // 0 = wrap, 1 = bounce
 
 DoBounce:   
     clc

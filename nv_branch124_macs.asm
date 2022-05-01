@@ -1118,3 +1118,51 @@ Done:
 Done:
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// branch if minus (negative)
+// negaitve zero is treated as positive
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bmi124s(addr1, label)
+{
+    // load hi byte
+    lda addr1+1
+    bpl IsPositive
+
+    // Is negative but need to check for -0.0 in which case treat it 
+    // as positive
+    cmp #$80   // check hi byte for match with -0.0 hi byte
+    bne label  // its not negative zero but is negative so do branch
+    lda addr1
+    bne label  // its not negative zero, but is negative so do branch
+
+IsPositive:
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if plus (positive)
+// negaitve zero is treated as positive
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bpl124s(addr1, label)
+{
+    // load hi byte
+    lda addr1+1
+    bpl label       // its positive so do branch
+
+    // Is negative but need to check for -0.0 in which case treat it 
+    // as positive
+    cmp #$80        // check hi byte for match with -0.0 hi byte
+    bne IsNegative  // its not negative zero but is negative so done
+    lda addr1       // check lo byte for match with -0.0 lo byte
+    beq label       // its is negative zero so do the positive branch, 
+
+IsNegative:
+}
+//
+//////////////////////////////////////////////////////////////////////////////

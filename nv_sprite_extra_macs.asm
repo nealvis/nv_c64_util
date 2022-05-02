@@ -97,13 +97,13 @@
     sprite_top_min_fp124s_addr: .word spt_info.top_min_fp124s == 0 ? (spt_info.action_top == NV_SPRITE_ACTION_BOUNCE ? NV_SPRITE_TOP_BOUNCE_FP124S_DEFAULT : NV_SPRITE_TOP_WRAP_FP124S_DEFAULT) : spt_info.top_min_fp124s
     
     // left boundry for the sprite
-    sprite_left_min_fp124s_addr: .word spt_info.left_min == 0 ? (spt_info.bounce_left == 1 ? NV_SPRITE_LEFT_BOUNCE_FP124S_DEFAULT : NV_SPRITE_LEFT_WRAP_FP124S_DEFAULT) :spt_info.left_min_fp124s 
+    sprite_left_min_fp124s_addr: .word spt_info.left_min_fp124s == 0 ? (spt_info.bounce_left == 1 ? NV_SPRITE_LEFT_BOUNCE_FP124S_DEFAULT : NV_SPRITE_LEFT_WRAP_FP124S_DEFAULT) :spt_info.left_min_fp124s 
 
    // bottom boundry for the sprite
-    sprite_bottom_max_fp124s_addr: .word spt_info.bottom_max == 0 ? (spt_info.bounce_bottom == 1 ? NV_SPRITE_BOTTOM_BOUNCE_FP124S_DEFAULT : NV_SPRITE_BOTTOM_WRAP_FP124S_DEFAULT) :spt_info.bottom_max_fp124s
+    sprite_bottom_max_fp124s_addr: .word spt_info.bottom_max_fp124s == 0 ? (spt_info.bounce_bottom == 1 ? NV_SPRITE_BOTTOM_BOUNCE_FP124S_DEFAULT : NV_SPRITE_BOTTOM_WRAP_FP124S_DEFAULT) :spt_info.bottom_max_fp124s
 
     // right boundry for the sprite
-    sprite_right_max_fp124s_addr: .word spt_info.right_max == 0 ? (spt_info.bounce_right == 1 ? NV_SPRITE_RIGHT_BOUNCE_FP124S_DEFAULT : NV_SPRITE_RIGHT_WRAP_FP124S_DEFAULT) : spt_info.right_max_fp124s
+    sprite_right_max_fp124s_addr: .word spt_info.right_max_fp124s == 0 ? (spt_info.bounce_right == 1 ? NV_SPRITE_RIGHT_BOUNCE_FP124S_DEFAULT : NV_SPRITE_RIGHT_WRAP_FP124S_DEFAULT) : spt_info.right_max_fp124s
 
     // sprite enabled flag.  nonzero is enabled, zero is disabled
     sprite_enabled: .byte 0
@@ -706,7 +706,7 @@
 // and on the screen, call nv_sprite_set_location_from_memory_sr after this.
 .macro nv_sprite_move_any_direction_sr(info)
 {
-    nv_blt124s_immed(nv_sprite_vel_y_fp124s_addr(info), NvBuildClosest124s(0), PosVelY)
+    nv_bpl124s(nv_sprite_vel_y_fp124s_addr(info), PosVelY)
 
 NegVelY:
     nv_sprite_move_negative_y(info)
@@ -717,8 +717,7 @@ PosVelY:
     
 DoneY:
 // Y location done, now on to X
-    ldx nv_sprite_vel_x_addr(info)
-    bmi NegVelX
+    nv_bmi124s(nv_sprite_vel_x_fp124s_addr(info), NegVelX)
 
 PosVelX:
 // moving right (positive X velocity)
@@ -737,164 +736,129 @@ FinishedUpdate:
 //
 .macro nv_sprite_move_positive_y(info)
 {
-    
-    lda nv_sprite_vel_y_addr(info)
+    // put potential new y in the sprite's Y position
+    nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info))
 
-    ldx nv_sprite_bottom_action_addr(info)
-    beq DoWrap                                      // 0 = wrap, 1 = bounce
+    // if its less than bottom then no action to take, we are done
+    nv_blt124s(nv_sprite_y_fp124s_addr(info), nv_sprite_bottom_max_fp124s_addr(info), Done)
 
-DoBounce:   
-    clc
-    adc nv_sprite_y_addr(info)
+    // if get here then moving past bottom and need to take appropriate action
+    // bounce, wrap, etc
+    nv_beq8(nv_sprite_bottom_action_addr(info), NV_SPRITE_ACTION_WRAP, DoWrap)
 
-    cmp nv_sprite_bottom_max_addr(info)
-    bcc AccumHasNewY
-    // reverse the y velocity here to do that we do bitwise not + 1 (twos comp)
-    lda #$FF
-    eor nv_sprite_vel_y_addr(info)
-    tax
-    inx
-    stx nv_sprite_vel_y_addr(info)
-    jmp DoneY                            // don't actually update y
-                                         // when bouncing
-    
-// bounce bottom flag not set, Don't need to check for bounce
+DoBounce:
+    // bounce by reversing the sign of the y velocity
+    nv_ops124s(nv_sprite_vel_y_fp124s_addr(info))
+
+    // now put the y position back to where it was before we added velocity
+    // (undo the y position update above)
+    nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info))
+    jmp Done
+
 DoWrap:
-    clc
-    adc nv_sprite_y_addr(info)
-    cmp nv_sprite_bottom_max_addr(info)
-    bcc AccumHasNewY                     // if not off bottom then just update
+    // wrap to top by setting current y position to the top
+    nv_xfer124_mem_mem(nv_sprite_top_min_fp124s_addr(info), nv_sprite_y_fp124s_addr(info))
+    jmp Done
 
-// wrap to top of screen
-    lda nv_sprite_top_min_addr(info)
-AccumHasNewY:
-    sta nv_sprite_y_addr(info)
-DoneY:
-}
+Done:
+
+}    
 
 
 //////////////////////////////////////////////////////////////////////////////
 //
 .macro nv_sprite_move_negative_y(info)
 {
-    lda nv_sprite_vel_y_addr(info)                    // load y vel to accum
+    // put potential new y in the sprite's Y position
+    nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info))
 
-    ldx nv_sprite_top_action_addr(info)               // load x with top action
-    beq DoWrap                                        // 0 = wrap, 1 = bounce
+    // if its greater than top then no action to take, we are done
+    nv_bgt124s(nv_sprite_y_fp124s_addr(info), nv_sprite_top_min_fp124s_addr(info), Done)
+
+    // if get here then moving past bottom and need to take appropriate action
+    // bounce, wrap, etc
+    nv_beq8(nv_sprite_top_action_addr(info), NV_SPRITE_ACTION_WRAP, DoWrap)
 
 DoBounce:
-    clc
-    adc nv_sprite_y_addr(info)
-    cmp nv_sprite_top_min_addr(info)
-    bcs AccumHasNewY
-    // reverse the y velocity here to do that we do bitwise not + 1
-    lda #$FF
-    eor nv_sprite_vel_y_addr(info)
-    tax
-    inx
-    stx nv_sprite_vel_y_addr(info)
-    jmp DoneY                                        // don't update Y loc
+    // bounce by reversing the sign of the y velocity
+    nv_ops124s(nv_sprite_vel_y_fp124s_addr(info))
+
+    // now put the y position back to where it was before we added velocity
+    // (undo the y position update above)
+    nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info))
+    jmp Done
 
 DoWrap:
+    // wrap to bottom by setting current y position to the bottom
+    nv_xfer124_mem_mem(nv_sprite_bottom_max_fp124s_addr(info), nv_sprite_y_fp124s_addr(info))
+    jmp Done
 
-    // wrap to other side of screen
-    clc
-    adc nv_sprite_y_addr(info)
-    cmp nv_sprite_top_min_addr(info)
-    bcs AccumHasNewY              // branch if accum > min top
-
-    // sprite is less than min top so need to move it to bottom
-    lda nv_sprite_bottom_max_addr(info)
-
-AccumHasNewY:
-    sta nv_sprite_y_addr(info)
-DoneY:
+Done:
 }
-
 
 //////////////////////////////////////////////////////////////////////////////
 //
 .macro nv_sprite_move_positive_x(info)
 {
-    // add x offset + x velocity and put in scratch1
-    // already know x vel is positive only so unsigned add is fine.
-    nv_adc16x_mem16x_mem8u((nv_sprite_x_addr(info)), 
-               (nv_sprite_vel_x_addr(info)), 
-               (nv_sprite_scratch1_word_addr(info)))
+    // put potential new x in the sprite's x position
+    nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info))
 
+    // if its less than right then no action to take, we are done
+    nv_blt124s(nv_sprite_x_fp124s_addr(info), nv_sprite_right_max_fp124s_addr(info), Done)
 
-    // scratch1 now has potential new X location
-    nv_ble16(nv_sprite_scratch1_word_lsb_addr(info), nv_sprite_right_max_lsb_addr(info), NewLocInScratch1)
-
-    // New X is too far since didn't branch above
-    ldx nv_sprite_right_action_addr(info)
-    beq DoWrap                                              // 0 = wrap, 1 = bounce
+    // if get here then moving past right and need to take appropriate action
+    // bounce, wrap, etc
+    nv_beq8(nv_sprite_right_action_addr(info), NV_SPRITE_ACTION_WRAP, DoWrap)
 
 DoBounce:
-    // bounce off right side by changing vel to 2's compliment of vel
-    lda #$FF
-    eor nv_sprite_vel_x_addr(info)
-    tax
-    inx
-    stx nv_sprite_vel_x_addr(info)
+    // bounce by reversing the sign of the x velocity
+    nv_ops124s(nv_sprite_vel_x_fp124s_addr(info))
+
+    // now put the x position back to where it was before we added velocity
+    // (undo the x position update above)
+    nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info))
     jmp Done
 
 DoWrap:
-    // this sprite not set to bounce, so wrap it around
-    lda nv_sprite_left_min_lsb_addr(info)
-    sta nv_sprite_x_lsb_addr(info)
-    lda nv_sprite_left_min_msb_addr(info)
-    sta nv_sprite_x_msb_addr(info)
+    // wrap to left by setting current x position to the top
+    nv_xfer124_mem_mem(nv_sprite_left_min_fp124s_addr(info), nv_sprite_x_fp124s_addr(info))
     jmp Done
 
-NewLocInScratch1:
-    lda nv_sprite_scratch1_word_lsb_addr(info)
-    sta nv_sprite_x_lsb_addr(info)
-    lda nv_sprite_scratch1_word_msb_addr(info)
-    sta nv_sprite_x_msb_addr(info)
 Done:
-}
-
+}    
 
 //////////////////////////////////////////////////////////////////////////////
 //
 .macro nv_sprite_move_negative_x(info)
 {
-    nv_adc16x_mem16x_mem8s((nv_sprite_x_addr(info)), 
-                           (nv_sprite_vel_x_addr(info)), 
-                           (nv_sprite_scratch1_word_lsb_addr(info)))
+    // put potential new x in the sprite's X position
+    nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info))
 
-    // scratch1 now has potential new X location
-    nv_bgt16(nv_sprite_scratch1_word_lsb_addr(info), nv_sprite_left_min_lsb_addr(info), NewLocInScratch1)
+    // if its greater than left min then no action to take, we are done
+    nv_bgt124s(nv_sprite_x_fp124s_addr(info), nv_sprite_left_min_fp124s_addr(info), Done)
 
-    // moved too far left, either bounce or wrap
-    ldx nv_sprite_left_action_addr(info)
-    beq DoWrap
+    // if get here then moving past bottom and need to take appropriate action
+    // bounce, wrap, etc
+    nv_beq8(nv_sprite_left_action_addr(info), NV_SPRITE_ACTION_WRAP, DoWrap)
 
 DoBounce:
-// Bounce here, went off left side.  Change vel to 2's compliment of vel
-    lda #$FF
-    eor nv_sprite_vel_x_addr(info)
-    tax
-    inx
-    stx nv_sprite_vel_x_addr(info)
-    jmp Done    // don't update location this frame, just change vel
+    // bounce by reversing the sign of the x velocity
+    nv_ops124s(nv_sprite_vel_x_fp124s_addr(info))
 
-DoWrap: 
-// Wrap from left edge to right edge
-    lda nv_sprite_right_max_lsb_addr(info)
-    sta nv_sprite_x_lsb_addr(info)
-    lda nv_sprite_right_max_msb_addr(info)
-    sta nv_sprite_x_msb_addr(info)
+    // now put the x position back to where it was before we added velocity
+    // (undo the x position update above)
+    nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info))
     jmp Done
 
-NewLocInScratch1:
-    lda nv_sprite_scratch1_word_lsb_addr(info)
-    sta nv_sprite_x_lsb_addr(info)
-    lda nv_sprite_scratch1_word_msb_addr(info)
-    sta nv_sprite_x_msb_addr(info)
+DoWrap:
+    // wrap to right by setting current x position to the bottom
+    nv_xfer124_mem_mem(nv_sprite_right_max_fp124s_addr(info), nv_sprite_x_fp124s_addr(info))
+    jmp Done
+
 Done:
 }
+
+
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to set the action for the scenario when the sprite is 
@@ -1072,13 +1036,11 @@ Done:
     .const CHAR_PIXEL_HEIGHT = $0008
 
     /////////// put sprite's rectangle to rect1, use the hitbox not full sprite
-    nv_xfer16_mem_mem(nv_sprite_x_addr(info), r1_left)
+    nv_conv124s_mem16s(nv_sprite_x_fp124s_addr(info), r1_left)
     nv_adc16x_mem16x_mem8u(r1_left, nv_sprite_hitbox_right_addr(info), r1_right)
     nv_adc16x_mem16x_mem8u(r1_left, nv_sprite_hitbox_left_addr(info), r1_left)
-    lda nv_sprite_y_addr(info)     // 8 bit value so manually load MSB with $00
-    sta r1_top
-    lda #$00
-    sta r1_top+1
+
+    nv_conv124s_mem16s(nv_sprite_y_fp124s_addr(info), r1_top)
     nv_adc16x_mem16x_mem8u(r1_top, nv_sprite_hitbox_bottom_addr(info), r1_bottom)
     nv_adc16x_mem16x_mem8u(r1_top, nv_sprite_hitbox_top_addr(info), r1_top)
 

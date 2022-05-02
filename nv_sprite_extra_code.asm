@@ -333,22 +333,35 @@ save_lo: .byte 0
     // there x and y location together for each sprite.
     asl 
     tax
-    
-    // get sprite x location from extra data block to accum
-    nv_sprite_extra_byte_to_a(NV_SPRITE_X_OFFSET)
-
-    // store the x location to the correct sprite register
-    sta NV_SPRITE_0_X_REG_ADDR,x    // store in right sprite's x loc
-
 
     // get sprite y location from extra data block to accum
-    nv_sprite_extra_byte_to_a(NV_SPRITE_Y_OFFSET)
+    // nv_sprite_extra_byte_to_a(NV_SPRITE_Y_OFFSET)
+    nv_sprite_extra_word_to_mem(NV_SPRITE_Y_FP124S_OFFSET, temp_fp124s)
+    nv_conv124s_mem16s(temp_fp124s, temp16)
+
+    // load LSB of Y position in accum
+    lda temp16
 
     // store y position to correct sprite register
     sta NV_SPRITE_0_Y_REG_ADDR,x    // store in right sprites y loc
 
+
+    // get sprite x location from extra data block to accum
+    //nv_sprite_extra_byte_to_a(NV_SPRITE_X_OFFSET)
+
+    // changes A and Y
+    nv_sprite_extra_word_to_mem(NV_SPRITE_X_FP124S_OFFSET, temp_fp124s)
+    nv_conv124s_mem16s(temp_fp124s, temp16)
+
+    // load LSB of x position in accum
+    lda temp16
+
+    // store the LSB of x location to the correct sprite register
+    sta NV_SPRITE_0_X_REG_ADDR,x    // store in right sprite's x loc
+
     // load MSB of sprite X position to A 
-    nv_sprite_extra_byte_to_a(NV_SPRITE_X_OFFSET + 1)
+    //nv_sprite_extra_byte_to_a(NV_SPRITE_X_OFFSET + 1)
+    lda temp16+1
     bne SetBit                            // high byte was non zero, so set bit
     // clear bit
 
@@ -379,6 +392,8 @@ save_lo: .byte 0
 
 SaveBlock:
     nv_sprite_standard_alloc()
+    temp_fp124s: .word $0000
+    temp16: .word $0000
 }
 
 
@@ -399,9 +414,12 @@ SaveBlock:
     // load the extra pointer from accum/X reg to zero page location
     nv_sprite_load_extra_ptr()
 
-    // get sprite Y velocity in accum and branch for pos or negative
-    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_Y_OFFSET)
-    bpl PosVelY
+    // get sprite Y velocity and branch for pos or negative
+    //nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_Y_OFFSET)
+    //bpl PosVelY
+    nv_sprite_extra_word_to_mem(NV_SPRITE_VEL_Y_FP124S_OFFSET, temp_fp124s)
+    nv_bpl124s(temp_fp124s, PosVelY)
+
 NegVelY:
     jsr NvSpriteMoveInExtraNegY
     jmp DoneY
@@ -412,9 +430,11 @@ PosVelY:
 DoneY:
     // Y location done, now on to X
 
-    // get sprite x velocity in accum and branch for pos or negative
-    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
-    bpl PosVelX
+    // get sprite x velocity and branch for pos or negative
+    //nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
+    //bpl PosVelX
+    nv_sprite_extra_word_to_mem(NV_SPRITE_VEL_X_FP124S_OFFSET, temp_fp124s)
+    nv_bpl124s(temp_fp124s, PosVelX)
 
 NegVelX:
     jsr NvSpriteMoveInExtraNegX
@@ -433,123 +453,119 @@ FinishedUpdate:
 
 SaveBlock:
     nv_sprite_standard_alloc()
+
+    temp_fp124s: .word $0000
 }
 
 
 //////////////////////////////////////////////////////////////////////////////
-// move sprite in positive X direction and bounce or wrap around
+// move sprite in positive X direction in the extra data (not on screen)
+// and bounce or wrap as needed
+// params:
 // Before calling the following must be set
 //   ZERO_PAGE_LO: must have the LSB of the address of the sprite extra data
 //   ZERO_PAGE_HI: must have the MSB of the address of the sprite extra data
-//   Accumulator: must have the sprites X velocity which must be positive
 .macro nv_sprite_move_in_extra_pos_x_sr()
 {
-    sta velocity            // move x vel to memory
-    
-    nv_sprite_extra_word_to_mem(NV_SPRITE_RIGHT_MAX_OFFSET, max_x)
+    // save max x
+    nv_sprite_extra_word_to_mem(NV_SPRITE_RIGHT_MAX_FP124S_OFFSET, max_x_fp124s)
 
-    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
-    sta velocity
+    // save velocity
+    nv_sprite_extra_word_to_mem(NV_SPRITE_VEL_X_FP124S_OFFSET, velocity_fp124s)
 
-    nv_sprite_extra_word_to_mem(NV_SPRITE_X_OFFSET, cur_x)
+    // save current x locataion
+    nv_sprite_extra_word_to_mem(NV_SPRITE_X_FP124S_OFFSET, cur_x_fp124s)
 
-    nv_adc16x_mem16x_mem8s(cur_x, velocity, potential_new_x)
+    // calc new x based on old x and velocity
+    nv_adc124s(cur_x_fp124s, velocity_fp124s, potential_new_x_fp124s)
 
     // potential_new_x has the new x if not bouncing or wrapping
-    nv_ble16(potential_new_x, max_x, UsePotentialX)
-
+    nv_ble124s(potential_new_x_fp124s, max_x_fp124s, UsePotentialX)
 TooFar:
     // if didn't branch above then trying to move too far.  Need
     // to bounce or wrap to the other side
     nv_sprite_extra_byte_to_a(NV_SPRITE_ACTION_RIGHT_OFFSET)
+    cmp #NV_SPRITE_ACTION_WRAP
     beq WrapX                               // action 0=wrap, 1=bounce
 
 BounceX:
-    // didn't branch so bounce by setting X vel to twos compliement
-    lda #$ff
-    eor velocity 
-    sec
-    adc #$00
-    nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)
+    // didn't branch so bounce by setting X vel its opposite
+    nv_ops124s(velocity_fp124s)
+    nv_sprite_mem_word_to_extra(velocity_fp124s, NV_SPRITE_VEL_X_FP124S_OFFSET)
     jmp DoneX
 
 WrapX:
     // wrap by setting x to min position
-    nv_sprite_extra_word_to_mem(NV_SPRITE_LEFT_MIN_OFFSET, potential_new_x)
+    nv_sprite_extra_word_to_mem(NV_SPRITE_LEFT_MIN_FP124S_OFFSET, potential_new_x_fp124s)
     // fall through to UsePotentialX
 
 UsePotentialX:
-    nv_sprite_mem_word_to_extra(potential_new_x, NV_SPRITE_X_OFFSET)
+    nv_sprite_mem_word_to_extra(potential_new_x_fp124s, NV_SPRITE_X_FP124S_OFFSET)
 
 DoneX:
     rts
 
 // subroutine variables
-velocity: .byte 0
-potential_new_x: .word 0
-cur_x: .word 0
-max_x: .word 0
+velocity_fp124s: .word $0000
+potential_new_x_fp124s: .word $0000
+cur_x_fp124s: .word $0000
+max_x_fp124s: .word $0000
 }
 
 
 //////////////////////////////////////////////////////////////////////////////
-// move sprite in negative X direction and bounce or wrap around
+// move sprite in negative X direction in the extra data (not on screen)
+// and bounce or wrap around etc if needed
 // Before calling the following must be set
 //   ZERO_PAGE_LO: must have the LSB of the address of the sprite extra data
 //   ZERO_PAGE_HI: must have the MSB of the address of the sprite extra data
-//   Accumulator: must have the sprites X velocity which must be positive
 .macro nv_sprite_move_in_extra_neg_x_sr()
 {
-    sta velocity            // move x vel to memory
-    
-    nv_sprite_extra_word_to_mem(NV_SPRITE_LEFT_MIN_OFFSET, min_x)
-    nv_sprite_extra_word_to_mem(NV_SPRITE_RIGHT_MAX_OFFSET, max_x)
+    // save min x
+    nv_sprite_extra_word_to_mem(NV_SPRITE_LEFT_MIN_FP124S_OFFSET, min_x_fp124s)
 
-    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
-    sta velocity
+    // save velocity
+    nv_sprite_extra_word_to_mem(NV_SPRITE_VEL_X_FP124S_OFFSET, velocity_fp124s)
 
-    nv_sprite_extra_word_to_mem(NV_SPRITE_X_OFFSET, cur_x)
+    // save current x locataion
+    nv_sprite_extra_word_to_mem(NV_SPRITE_X_FP124S_OFFSET, cur_x_fp124s)
 
-    nv_adc16x_mem16x_mem8s(cur_x, velocity, potential_new_x)
+    // calc new x based on old x and velocity
+    nv_adc124s(cur_x_fp124s, velocity_fp124s, potential_new_x_fp124s)
 
-    // potential_new_x has the new x if not off left edge
-
-    nv_bgt16(potential_new_x, max_x, TooFar)
-    nv_bgt16(potential_new_x, min_x, UsePotentialX)
-
+    // potential_new_x has the new x if not bouncing or wrapping
+    nv_bge124s(potential_new_x_fp124s, min_x_fp124s, UsePotentialX)
 TooFar:
     // if didn't branch above then trying to move too far.  Need
     // to bounce or wrap to the other side
-    nv_sprite_extra_byte_to_a(NV_SPRITE_ACTION_LEFT_OFFSET)
+    nv_sprite_extra_byte_to_a(NV_SPRITE_ACTION_RIGHT_OFFSET)
+    cmp #NV_SPRITE_ACTION_WRAP
     beq WrapX                               // action 0=wrap, 1=bounce
 
 BounceX:
-    // didn't branch above, so bounce by setting X vel to twos compliement
-    lda #$ff
-    eor velocity 
-    sec
-    adc #$00
-    nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)
+    // didn't branch so bounce by setting X vel its opposite
+    nv_ops124s(velocity_fp124s)
+    nv_sprite_mem_word_to_extra(velocity_fp124s, NV_SPRITE_VEL_X_FP124S_OFFSET)
     jmp DoneX
 
 WrapX:
     // wrap by setting x to max position
-    nv_sprite_extra_word_to_mem(NV_SPRITE_RIGHT_MAX_OFFSET, potential_new_x)
+    nv_sprite_extra_word_to_mem(NV_SPRITE_RIGHT_MAX_FP124S_OFFSET, potential_new_x_fp124s)
     // fall through to UsePotentialX
 
 UsePotentialX:
-    nv_sprite_mem_word_to_extra(potential_new_x, NV_SPRITE_X_OFFSET)
+    nv_sprite_mem_word_to_extra(potential_new_x_fp124s, NV_SPRITE_X_FP124S_OFFSET)
 
 DoneX:
     rts
 
 // subroutine variables
-velocity: .byte 0
-potential_new_x: .word 0
-cur_x: .word 0
-min_x: .word 0
-max_x: .word 0
+velocity_fp124s: .word $0000
+potential_new_x_fp124s: .word $0000
+cur_x_fp124s: .word $0000
+min_x_fp124s: .word $0000
 }
+
 
 //////////////////////////////////////////////////////////////////////////////
 // move sprite in negative Y direction and bounce or wrap around
@@ -559,49 +575,49 @@ max_x: .word 0
 //   Accumulator: must have the sprites Y velocity which must be negative
 .macro nv_sprite_move_in_extra_neg_y_sr()
 {
-    sta velocity            // move y vel to memory
-    
-    nv_sprite_extra_byte_to_a(NV_SPRITE_TOP_MIN_OFFSET)
-    sta min_position
+    // save min y
+    nv_sprite_extra_word_to_mem(NV_SPRITE_TOP_MIN_FP124S_OFFSET, min_y_fp124s)
 
-    // get sprite Y position in accum 
-    nv_sprite_extra_byte_to_a(NV_SPRITE_Y_OFFSET)
-    clc
-    adc velocity            // add the velocity to the position
-                            // accum has potential next position
-    cmp min_position        // compare with max y position
-    bcs AccumHasNewY        // if not past max y then we are done
-    
+    // save velocity
+    nv_sprite_extra_word_to_mem(NV_SPRITE_VEL_Y_FP124S_OFFSET, velocity_fp124s)
+
+    // save current y locataion
+    nv_sprite_extra_word_to_mem(NV_SPRITE_Y_FP124S_OFFSET, cur_y_fp124s)
+
+    // calc new position based on old position and velocity
+    nv_adc124s(cur_y_fp124s, velocity_fp124s, potential_new_y_fp124s)
+
+    // potential_new_y has the new y if not bouncing or wrapping
+    nv_bge124s(potential_new_y_fp124s, min_y_fp124s, UsePotentialY)
 TooFar:
-    // new position is too far, either bounce or wrap
-    nv_sprite_extra_byte_to_a(NV_SPRITE_ACTION_TOP_OFFSET)
-    beq WrapY               // action 0 = Wrap, 1 = bounce
+    // if didn't branch above then trying to move too far.  Need
+    // to bounce or wrap to the other side
+    nv_sprite_extra_byte_to_a(NV_SPRITE_ACTION_RIGHT_OFFSET)
+    cmp #NV_SPRITE_ACTION_WRAP
+    beq Wrap                               // action 0=wrap, 1=bounce
 
-BounceY:
-    // bounce by setting y velocity to its twos compliment
-    lda #$ff
-    eor velocity 
-    sec
-    adc #$00
-    nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)
-    jmp DoneY
+Bounce:
+    // didn't branch so bounce by setting vel its opposite
+    nv_ops124s(velocity_fp124s)
+    nv_sprite_mem_word_to_extra(velocity_fp124s, NV_SPRITE_VEL_Y_FP124S_OFFSET)
+    jmp Done
 
-WrapY:
-    // wrap by setting y to min position
-    // bounce by negating y velocity
-    nv_sprite_extra_byte_to_a(NV_SPRITE_BOTTOM_MAX_OFFSET)
-    nv_sprite_a_to_extra(NV_SPRITE_Y_OFFSET)
-    // fall through to AccumHasNewY
+Wrap:
+    // wrap by setting y to max position
+    nv_sprite_extra_word_to_mem(NV_SPRITE_BOTTOM_MAX_FP124S_OFFSET, potential_new_y_fp124s)
+    // fall through to Use Potential new value
 
-AccumHasNewY:
-    nv_sprite_a_to_extra(NV_SPRITE_Y_OFFSET)
+UsePotentialY:
+    nv_sprite_mem_word_to_extra(potential_new_y_fp124s, NV_SPRITE_Y_FP124S_OFFSET)
 
-DoneY:
+Done:
     rts
 
 // subroutine variables
-velocity: .byte 0
-min_position: .byte 0
+velocity_fp124s: .word $0000
+potential_new_y_fp124s: .word $0000
+cur_y_fp124s: .word $0000
+min_y_fp124s: .word $0000
 }
 
 
@@ -610,52 +626,51 @@ min_position: .byte 0
 // Before calling the following must be set
 //   ZERO_PAGE_LO: must have the LSB of the address of the sprite extra data
 //   ZERO_PAGE_HI: must have the MSB of the address of the sprite extra data
-//   Accumulator: must have the sprites Y velocity which must be positive
 .macro nv_sprite_move_in_extra_pos_y_sr()
 {
-    sta velocity            // move y vel to memory
-    
-    nv_sprite_extra_byte_to_a(NV_SPRITE_BOTTOM_MAX_OFFSET)
-    sta max_position
+    // save max y
+    nv_sprite_extra_word_to_mem(NV_SPRITE_BOTTOM_MAX_FP124S_OFFSET, max_y_fp124s)
 
-    // get sprite Y position in accum 
-    nv_sprite_extra_byte_to_a(NV_SPRITE_Y_OFFSET)
-    clc
-    adc velocity            // add the velocity to the position
-                            // accum has potential next position
-    cmp max_position        // compare with max y position
-    bcc AccumHasNewY        // if not past max y then we are done
+    // save velocity
+    nv_sprite_extra_word_to_mem(NV_SPRITE_VEL_Y_FP124S_OFFSET, velocity_fp124s)
 
+    // save current y locataion
+    nv_sprite_extra_word_to_mem(NV_SPRITE_Y_FP124S_OFFSET, cur_y_fp124s)
+
+    // calc new position based on old position and velocity
+    nv_adc124s(cur_y_fp124s, velocity_fp124s, potential_new_y_fp124s)
+
+    // potential_new_y has the new y if not bouncing or wrapping
+    nv_ble124s(potential_new_y_fp124s, max_y_fp124s, UsePotentialY)
 TooFar:
-    // new position is too far, either bounce or wrap
-    nv_sprite_extra_byte_to_a(NV_SPRITE_ACTION_BOTTOM_OFFSET)
-    beq WrapY               // action 0 = wrap, 1 = bounce
+    // if didn't branch above then trying to move too far.  Need
+    // to bounce or wrap to the other side
+    nv_sprite_extra_byte_to_a(NV_SPRITE_ACTION_RIGHT_OFFSET)
+    cmp #NV_SPRITE_ACTION_WRAP
+    beq Wrap                               // action 0=wrap, 1=bounce
 
-BounceY:
-    // bounce by setting y velocity to its twos compliment
-    lda #$ff
-    eor velocity 
-    sec
-    adc #$00
-    nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)
-    jmp DoneY
+Bounce:
+    // didn't branch so bounce by setting vel its opposite
+    nv_ops124s(velocity_fp124s)
+    nv_sprite_mem_word_to_extra(velocity_fp124s, NV_SPRITE_VEL_Y_FP124S_OFFSET)
+    jmp Done
 
-WrapY:
+Wrap:
     // wrap by setting y to min position
-    // bounce by negating y velocity
-    nv_sprite_extra_byte_to_a(NV_SPRITE_TOP_MIN_OFFSET)
-    nv_sprite_a_to_extra(NV_SPRITE_Y_OFFSET)
-    // fall through to AccumHasNewY
+    nv_sprite_extra_word_to_mem(NV_SPRITE_TOP_MIN_FP124S_OFFSET, potential_new_y_fp124s)
+    // fall through to Use Potential new value
 
-AccumHasNewY:
-    nv_sprite_a_to_extra(NV_SPRITE_Y_OFFSET)
+UsePotentialY:
+    nv_sprite_mem_word_to_extra(potential_new_y_fp124s, NV_SPRITE_Y_FP124S_OFFSET)
 
-DoneY:
+Done:
     rts
 
 // subroutine variables
-velocity: .byte 0
-max_position: .byte 0
+velocity_fp124s: .word $0000
+potential_new_y_fp124s: .word $0000
+cur_y_fp124s: .word $0000
+max_y_fp124s: .word $0000
 }
 
 
@@ -727,17 +742,21 @@ SaveBlock:
     nv_sprite_load_extra_ptr()
 
     // load accum with x velocity
-    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
+    //nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
+    nv_sprite_extra_word_to_mem(NV_SPRITE_VEL_X_FP124S_OFFSET, velocity_fp124s)
     
-    nv_twos_comp8x_a()
+    //nv_twos_comp8x_a()
+    nv_ops124s(velocity_fp124s)
 
-    nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)
+    //nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)
+    nv_sprite_mem_word_to_extra(velocity_fp124s, NV_SPRITE_VEL_X_FP124S_OFFSET)
 
     nv_sprite_standard_restore(SaveBlock)
     rts
     
 SaveBlock:
     nv_sprite_standard_alloc()
+velocity_fp124s: .word $0000
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -751,17 +770,22 @@ SaveBlock:
     nv_sprite_load_extra_ptr()
 
     // load accum with x velocity
-    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_Y_OFFSET)
+    //nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_Y_OFFSET)
+    nv_sprite_extra_word_to_mem(NV_SPRITE_VEL_Y_FP124S_OFFSET, velocity_fp124s)
     
-    nv_twos_comp8x_a()
+    //nv_twos_comp8x_a()
+    nv_ops124s(velocity_fp124s)
 
-    nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)
+    //nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)
+    nv_sprite_mem_word_to_extra(velocity_fp124s, NV_SPRITE_VEL_Y_FP124S_OFFSET)
 
     nv_sprite_standard_restore(SaveBlock)
     rts
     
 SaveBlock:
     nv_sprite_standard_alloc()
+
+velocity_fp124s: .word $0000 
 }
 
 
@@ -777,13 +801,17 @@ SaveBlock:
     nv_sprite_load_extra_ptr()
 
     // load accum with x velocity
-    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
-    
-    bpl NothingToDo         // x velocity already positive, just return
+    //nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
+    nv_sprite_extra_word_to_mem(NV_SPRITE_VEL_X_FP124S_OFFSET, velocity_fp124s)
 
-    nv_twos_comp8x_a()   // reverse the x velocity
+    //bpl NothingToDo         // x velocity already positive, just return
+    nv_bpl124s(velocity_fp124s, NothingToDo)
 
-    nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)  // save back to extra data
+    //nv_twos_comp8x_a()   // reverse the x velocity
+    nv_ops124s(velocity_fp124s)
+
+    //nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)  // save back to extra data
+    nv_sprite_mem_word_to_extra(velocity_fp124s, NV_SPRITE_VEL_X_FP124S_OFFSET)
 
 NothingToDo:
     nv_sprite_standard_restore(SaveBlock)
@@ -791,7 +819,10 @@ NothingToDo:
     
 SaveBlock:
     nv_sprite_standard_alloc()
+
+velocity_fp124s: .word $0000
 }
+
 
 //////////////////////////////////////////////////////////////////////////////
 // make sure the sprite's x velocity is negative, if its positive, then 
@@ -805,13 +836,17 @@ SaveBlock:
     nv_sprite_load_extra_ptr()
 
     // load accum with x velocity
-    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
+    //nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_X_OFFSET)
+    nv_sprite_extra_word_to_mem(NV_SPRITE_VEL_X_FP124S_OFFSET, velocity_fp124s)
     
-    bmi NothingToDo         // x velocity already positive, just return
+    //bmi NothingToDo         // x velocity already positive, just return
+    nv_bmi124s(velocity_fp124s, NothingToDo)
 
-    nv_twos_comp8x_a()   // reverse the x velocity
+    //nv_twos_comp8x_a()   // reverse the x velocity
+    nv_ops124s(velocity_fp124s)
 
-    nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)  // save back to extra data
+    //nv_sprite_a_to_extra(NV_SPRITE_VEL_X_OFFSET)  // save back to extra data
+    nv_sprite_mem_word_to_extra(velocity_fp124s, NV_SPRITE_VEL_X_FP124S_OFFSET)
 
 NothingToDo:
     nv_sprite_standard_restore(SaveBlock)
@@ -819,6 +854,8 @@ NothingToDo:
     
 SaveBlock:
     nv_sprite_standard_alloc()
+
+velocity_fp124s: .word $0000
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -833,13 +870,17 @@ SaveBlock:
     nv_sprite_load_extra_ptr()
 
     // load accum with x velocity
-    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_Y_OFFSET)
-    
-    bpl NothingToDo             // if already positive, then done
+    //nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_Y_OFFSET)
+    nv_sprite_extra_word_to_mem(NV_SPRITE_VEL_Y_FP124S_OFFSET, velocity_fp124s)
 
-    nv_twos_comp8x_a()       // reverse velocity
+    //bpl NothingToDo             // if already positive, then done
+    nv_bpl124s(velocity_fp124s, NothingToDo)
 
-    nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)  // save vel back to extra
+    //nv_twos_comp8x_a()       // reverse velocity
+    nv_ops124s(velocity_fp124s)
+
+    //nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)  // save vel back to extra
+    nv_sprite_mem_word_to_extra(velocity_fp124s, NV_SPRITE_VEL_Y_FP124S_OFFSET)
 
 NothingToDo:
     nv_sprite_standard_restore(SaveBlock)
@@ -847,6 +888,7 @@ NothingToDo:
     
 SaveBlock:
     nv_sprite_standard_alloc()
+velocity_fp124s: .word $0000
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -861,13 +903,17 @@ SaveBlock:
     nv_sprite_load_extra_ptr()
 
     // load accum with x velocity
-    nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_Y_OFFSET)
-    
-    bmi NothingToDo             // if already negative, then done
+    //nv_sprite_extra_byte_to_a(NV_SPRITE_VEL_Y_OFFSET)
+    nv_sprite_extra_word_to_mem(NV_SPRITE_VEL_Y_FP124S_OFFSET, velocity_fp124s)
 
-    nv_twos_comp8x_a()       // reverse velocity
+    //bmi NothingToDo             // if already negative, then done
+    nv_bmi124s(velocity_fp124s, NothingToDo)
 
-    nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)  // save vel back to extra
+    //nv_twos_comp8x_a()       // reverse velocity
+    nv_ops124s(velocity_fp124s)
+
+    //nv_sprite_a_to_extra(NV_SPRITE_VEL_Y_OFFSET)  // save vel back to extra
+    nv_sprite_mem_word_to_extra(velocity_fp124s, NV_SPRITE_VEL_Y_FP124S_OFFSET)
 
 NothingToDo:
     nv_sprite_standard_restore(SaveBlock)
@@ -875,9 +921,8 @@ NothingToDo:
     
 SaveBlock:
     nv_sprite_standard_alloc()
+velocity_fp124s: .word $0000
 }
-
-
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -898,7 +943,10 @@ SaveBlock:
     nv_sprite_load_extra_ptr()
 
     // get the sprite x center location
-    nv_sprite_extra_word_to_mem(NV_SPRITE_X_OFFSET, center_x_addr)
+    //nv_sprite_extra_word_to_mem(NV_SPRITE_X_OFFSET, center_x_addr)
+    nv_sprite_extra_word_to_mem(NV_SPRITE_X_FP124S_OFFSET, center_x_addr)
+    nv_conv124s_mem16s(center_x_addr, center_x_addr)
+
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_LEFT_OFFSET, HitboxLeft)
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_RIGHT_OFFSET, HitboxRight)
     nv_sbc8x(HitboxRight, HitboxLeft, HitboxWidth)
@@ -906,10 +954,13 @@ SaveBlock:
     nv_adc16x_mem16x_mem8u(center_x_addr, HitboxWidth, center_x_addr)
 
     // get the sprite y center location
-    nv_sprite_extra_byte_to_a(NV_SPRITE_Y_OFFSET)
-    sta center_y_addr
-    lda #$00
-    sta center_y_addr+1
+    //nv_sprite_extra_byte_to_a(NV_SPRITE_Y_OFFSET)
+    //sta center_y_addr
+    //lda #$00
+    //sta center_y_addr+1
+    nv_sprite_extra_word_to_mem(NV_SPRITE_Y_FP124S_OFFSET, center_y_addr)
+    nv_conv124s_mem16s(center_y_addr, center_y_addr)
+
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_TOP_OFFSET, HitboxTop)
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_BOTTOM_OFFSET, HitboxBottom)
 
@@ -920,7 +971,7 @@ SaveBlock:
     nv_sprite_standard_restore(SaveBlock)
     rts
 
-// use same words for left/top, right/bottom, width/height
+// use same memory locations for left/top, right/bottom, width/height
 HitboxTop:
 HitboxLeft: .byte $00
 HitboxBottom:
@@ -970,7 +1021,10 @@ SaveBlock:
     
     // get the sprite left and right hitbox coords as screen pixel coords
     // and put in r1_left, r1_right
-    nv_sprite_extra_word_to_mem(NV_SPRITE_X_OFFSET, r1_left)
+    //nv_sprite_extra_word_to_mem(NV_SPRITE_X_OFFSET, r1_left)
+    nv_sprite_extra_word_to_mem(NV_SPRITE_X_FP124S_OFFSET, r1_left)
+    nv_conv124s_mem16s(r1_left, r1_left)
+
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_RIGHT_OFFSET, hitbox_right)
     nv_adc16x_mem16x_mem8u(r1_left, hitbox_right, r1_right)
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_LEFT_OFFSET, hitbox_left)
@@ -978,10 +1032,13 @@ SaveBlock:
 
     // get the sprite top and bottom hitbox coords as screen pixel coords
     // and put in r1_top, r1_bottom
-    nv_sprite_extra_byte_to_a(NV_SPRITE_Y_OFFSET)
-    sta r1_top
-    lda #$00
-    sta r1_top+1
+    //nv_sprite_extra_byte_to_a(NV_SPRITE_Y_OFFSET)
+    //sta r1_top
+    //lda #$00
+    //sta r1_top+1
+    nv_sprite_extra_word_to_mem(NV_SPRITE_Y_FP124S_OFFSET, r1_top)
+    nv_conv124s_mem16s(r1_top, r1_top)
+
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_TOP_OFFSET, hitbox_top)
     nv_sprite_extra_byte_to_mem(NV_SPRITE_HITBOX_BOTTOM_OFFSET, hitbox_bottom)
     nv_adc16x_mem16x_mem8u(r1_top, hitbox_bottom, r1_bottom)
@@ -992,12 +1049,15 @@ SaveBlock:
     
     // use hitbox_left as a temp, finished with it above
     // the standard restore will mess up our accumulator so save it here
-    sta hitbox_left 
+    //sta hitbox_left 
+    pha     // push/save accum on stack
 
     nv_sprite_standard_restore(SaveBlock)
 
     // restore the accumulator from our temp
-    lda hitbox_left
+    //lda hitbox_left
+    pla     // pull/restore accum from stack
+    
     rts
     
 SaveBlock:
@@ -1085,8 +1145,10 @@ NvSpriteMoveInExtraNegX:
 
 //////////////////////////////////////////////////////////////////////////////
 // Params: 
-//   Accum: MSB of address of nv_sprite_extra_data
-//   X Reg: LSB of address of the nv_sprite_extra_data
+// Before calling the following must be set
+//   ZERO_PAGE_LO: must have the LSB of the address of the sprite extra data
+//   ZERO_PAGE_HI: must have the MSB of the address of the sprite extra data
+//   sprite_x_vel_to_move: must have the sprites X velocity which must be positive
 NvSpriteMoveInExtraPosX:
     nv_sprite_move_in_extra_pos_x_sr()
 

@@ -1142,6 +1142,24 @@ IsPositive:
 //
 //////////////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////////////
+// branch if minus (negative)
+// negaitve zero is treated as positive
+// The branch label's address can be farther than +127/-128 bytes away
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bmi124s_far(addr1, label)
+{
+    nv_bpl124s(addr1, IsPositive)  // check if its positive and 
+    jmp label                      // if not positive then neg so branch/jump   
+
+IsPositive:
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
 
 //////////////////////////////////////////////////////////////////////////////
 // branch if plus (positive)
@@ -1166,3 +1184,21 @@ IsNegative:
 }
 //
 //////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// branch if plus (positive)
+// negaitve zero is treated as positive
+// The branch label's address can be farther than +127/-128 bytes away
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_bpl124s_far(addr1, label)
+{
+    nv_bmi124s(addr1, IsNegative)  // check if its negative and 
+    jmp label                      // if not neg, then its positive so branch  
+
+IsNegative:
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+

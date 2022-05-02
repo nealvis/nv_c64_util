@@ -706,7 +706,7 @@
 // and on the screen, call nv_sprite_set_location_from_memory_sr after this.
 .macro nv_sprite_move_any_direction_sr(info)
 {
-    nv_bpl124s(nv_sprite_vel_y_fp124s_addr(info), PosVelY)
+    nv_bpl124s_far(nv_sprite_vel_y_fp124s_addr(info), PosVelY)
 
 NegVelY:
     nv_sprite_move_negative_y(info)
@@ -717,7 +717,7 @@ PosVelY:
     
 DoneY:
 // Y location done, now on to X
-    nv_bmi124s(nv_sprite_vel_x_fp124s_addr(info), NegVelX)
+    nv_bmi124s_far(nv_sprite_vel_x_fp124s_addr(info), NegVelX)
 
 PosVelX:
 // moving right (positive X velocity)
@@ -740,11 +740,11 @@ FinishedUpdate:
     nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info))
 
     // if its less than bottom then no action to take, we are done
-    nv_blt124s(nv_sprite_y_fp124s_addr(info), nv_sprite_bottom_max_fp124s_addr(info), Done)
+    nv_blt124s_far(nv_sprite_y_fp124s_addr(info), nv_sprite_bottom_max_fp124s_addr(info), Done)
 
     // if get here then moving past bottom and need to take appropriate action
     // bounce, wrap, etc
-    nv_beq8(nv_sprite_bottom_action_addr(info), NV_SPRITE_ACTION_WRAP, DoWrap)
+    nv_beq8_immed_far(nv_sprite_bottom_action_addr(info), NV_SPRITE_ACTION_WRAP, DoWrap)
 
 DoBounce:
     // bounce by reversing the sign of the y velocity
@@ -773,11 +773,11 @@ Done:
     nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info))
 
     // if its greater than top then no action to take, we are done
-    nv_bgt124s(nv_sprite_y_fp124s_addr(info), nv_sprite_top_min_fp124s_addr(info), Done)
+    nv_bgt124s_far(nv_sprite_y_fp124s_addr(info), nv_sprite_top_min_fp124s_addr(info), Done)
 
     // if get here then moving past bottom and need to take appropriate action
     // bounce, wrap, etc
-    nv_beq8(nv_sprite_top_action_addr(info), NV_SPRITE_ACTION_WRAP, DoWrap)
+    nv_beq8_immed_far(nv_sprite_top_action_addr(info), NV_SPRITE_ACTION_WRAP, DoWrap)
 
 DoBounce:
     // bounce by reversing the sign of the y velocity
@@ -804,11 +804,11 @@ Done:
     nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info))
 
     // if its less than right then no action to take, we are done
-    nv_blt124s(nv_sprite_x_fp124s_addr(info), nv_sprite_right_max_fp124s_addr(info), Done)
+    nv_blt124s_far(nv_sprite_x_fp124s_addr(info), nv_sprite_right_max_fp124s_addr(info), Done)
 
     // if get here then moving past right and need to take appropriate action
     // bounce, wrap, etc
-    nv_beq8(nv_sprite_right_action_addr(info), NV_SPRITE_ACTION_WRAP, DoWrap)
+    nv_beq8_immed_far(nv_sprite_right_action_addr(info), NV_SPRITE_ACTION_WRAP, DoWrap)
 
 DoBounce:
     // bounce by reversing the sign of the x velocity
@@ -835,11 +835,11 @@ Done:
     nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info))
 
     // if its greater than left min then no action to take, we are done
-    nv_bgt124s(nv_sprite_x_fp124s_addr(info), nv_sprite_left_min_fp124s_addr(info), Done)
+    nv_bgt124s_far(nv_sprite_x_fp124s_addr(info), nv_sprite_left_min_fp124s_addr(info), Done)
 
     // if get here then moving past bottom and need to take appropriate action
     // bounce, wrap, etc
-    nv_beq8(nv_sprite_left_action_addr(info), NV_SPRITE_ACTION_WRAP, DoWrap)
+    nv_beq8_immed_far(nv_sprite_left_action_addr(info), NV_SPRITE_ACTION_WRAP, DoWrap)
 
 DoBounce:
     // bounce by reversing the sign of the x velocity

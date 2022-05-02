@@ -538,7 +538,7 @@ max_x_fp124s: .word $0000
 TooFar:
     // if didn't branch above then trying to move too far.  Need
     // to bounce or wrap to the other side
-    nv_sprite_extra_byte_to_a(NV_SPRITE_ACTION_RIGHT_OFFSET)
+    nv_sprite_extra_byte_to_a(NV_SPRITE_ACTION_LEFT_OFFSET)
     cmp #NV_SPRITE_ACTION_WRAP
     beq WrapX                               // action 0=wrap, 1=bounce
 
@@ -592,7 +592,7 @@ min_x_fp124s: .word $0000
 TooFar:
     // if didn't branch above then trying to move too far.  Need
     // to bounce or wrap to the other side
-    nv_sprite_extra_byte_to_a(NV_SPRITE_ACTION_RIGHT_OFFSET)
+    nv_sprite_extra_byte_to_a(NV_SPRITE_ACTION_TOP_OFFSET)
     cmp #NV_SPRITE_ACTION_WRAP
     beq Wrap                               // action 0=wrap, 1=bounce
 
@@ -645,7 +645,7 @@ min_y_fp124s: .word $0000
 TooFar:
     // if didn't branch above then trying to move too far.  Need
     // to bounce or wrap to the other side
-    nv_sprite_extra_byte_to_a(NV_SPRITE_ACTION_RIGHT_OFFSET)
+    nv_sprite_extra_byte_to_a(NV_SPRITE_ACTION_BOTTOM_OFFSET)
     cmp #NV_SPRITE_ACTION_WRAP
     beq Wrap                               // action 0=wrap, 1=bounce
 

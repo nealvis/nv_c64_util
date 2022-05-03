@@ -406,6 +406,9 @@ SaveBlock:
 // Note that this only updates the location in memory, it doesn't update the
 // sprite location in sprite registers.  To update sprite location in registers
 // and on the screen, call nv_sprite_set_location_from_memory_sr after this.
+// Params:
+//   Accum: MSB of address of nv_sprite_extra_data
+//   X Reg: LSB of address of the nv_sprite_extra_data
 .macro nv_sprite_move_in_extra_sr()
 {
     // save standard regs and memory values
@@ -445,7 +448,6 @@ PosVelX:
     //jmp DoneX
 
 DoneX:
-
 
 FinishedUpdate:
     nv_sprite_standard_restore(SaveBlock)

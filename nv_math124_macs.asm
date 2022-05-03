@@ -319,8 +319,11 @@ Done:
 //      Zero flag is not reliably set
 .macro nv_conv124u_mem16u(addr1, result_addr)
 {
-    // move operand into result
-    nv_xfer16_mem_mem(addr1, result_addr)
+    .if (addr1 != result_addr)
+    {
+        // move operand into result
+        nv_xfer16_mem_mem(addr1, result_addr)
+    }
 
     // shift result right to remove all but the most significant fraction digit
     nv_lsr16u_mem16u_immed8u(result_addr, 3)
@@ -361,8 +364,11 @@ Done:
     bpl ItsPositive
 
 ItsNegative:
-    // copy operand to result
-    nv_xfer16_mem_mem(addr1, result_addr)
+    .if (addr1 != result_addr)
+    {
+        // copy operand to result
+        nv_xfer16_mem_mem(addr1, result_addr)
+    }
 
     // clear negative flag in result
     lda #$7F

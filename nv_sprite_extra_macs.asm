@@ -737,7 +737,7 @@ FinishedUpdate:
 .macro nv_sprite_move_positive_y(info)
 {
     // put potential new y in the sprite's Y position
-    nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info))
+    nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info), scratch16_a, scratch16_b)
 
     // if its less than bottom then no action to take, we are done
     nv_blt124s_far(nv_sprite_y_fp124s_addr(info), nv_sprite_bottom_max_fp124s_addr(info), Done)
@@ -752,7 +752,7 @@ DoBounce:
 
     // now put the y position back to where it was before we added velocity
     // (undo the y position update above)
-    nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info))
+    nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info), scratch16_a, scratch16_b)
     jmp Done
 
 DoWrap:
@@ -770,7 +770,7 @@ Done:
 .macro nv_sprite_move_negative_y(info)
 {
     // put potential new y in the sprite's Y position
-    nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info))
+    nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info), scratch16_a, scratch16_b)
 
     // if its greater than top then no action to take, we are done
     nv_bgt124s_far(nv_sprite_y_fp124s_addr(info), nv_sprite_top_min_fp124s_addr(info), Done)
@@ -785,7 +785,7 @@ DoBounce:
 
     // now put the y position back to where it was before we added velocity
     // (undo the y position update above)
-    nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info))
+    nv_adc124s(nv_sprite_y_fp124s_addr(info), nv_sprite_vel_y_fp124s_addr(info), nv_sprite_y_fp124s_addr(info), scratch16_a, scratch16_b)
     jmp Done
 
 DoWrap:
@@ -801,7 +801,7 @@ Done:
 .macro nv_sprite_move_positive_x(info)
 {
     // put potential new x in the sprite's x position
-    nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info))
+    nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info), scratch16_a, scratch16_b)
 
     // if its less than right then no action to take, we are done
     nv_blt124s_far(nv_sprite_x_fp124s_addr(info), nv_sprite_right_max_fp124s_addr(info), Done)
@@ -816,7 +816,7 @@ DoBounce:
 
     // now put the x position back to where it was before we added velocity
     // (undo the x position update above)
-    nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info))
+    nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info), scratch16_a, scratch16_b)
     jmp Done
 
 DoWrap:
@@ -832,7 +832,7 @@ Done:
 .macro nv_sprite_move_negative_x(info)
 {
     // put potential new x in the sprite's X position
-    nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info))
+    nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info), scratch16_a, scratch16_b)
 
     // if its greater than left min then no action to take, we are done
     nv_bgt124s_far(nv_sprite_x_fp124s_addr(info), nv_sprite_left_min_fp124s_addr(info), Done)
@@ -847,7 +847,7 @@ DoBounce:
 
     // now put the x position back to where it was before we added velocity
     // (undo the x position update above)
-    nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info))
+    nv_adc124s(nv_sprite_x_fp124s_addr(info), nv_sprite_vel_x_fp124s_addr(info), nv_sprite_x_fp124s_addr(info), scratch16_a, scratch16_b)
     jmp Done
 
 DoWrap:

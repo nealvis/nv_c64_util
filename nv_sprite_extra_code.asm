@@ -479,7 +479,7 @@ SaveBlock:
     nv_sprite_extra_word_to_mem(NV_SPRITE_X_FP124S_OFFSET, cur_x_fp124s)
 
     // calc new x based on old x and velocity
-    nv_adc124s(cur_x_fp124s, velocity_fp124s, potential_new_x_fp124s)
+    nv_adc124s(cur_x_fp124s, velocity_fp124s, potential_new_x_fp124s, scratch16_a, scratch16_b)
 
     // potential_new_x has the new x if not bouncing or wrapping
     nv_ble124s(potential_new_x_fp124s, max_x_fp124s, UsePotentialX)
@@ -533,7 +533,7 @@ max_x_fp124s: .word $0000
     nv_sprite_extra_word_to_mem(NV_SPRITE_X_FP124S_OFFSET, cur_x_fp124s)
 
     // calc new x based on old x and velocity
-    nv_adc124s(cur_x_fp124s, velocity_fp124s, potential_new_x_fp124s)
+    nv_adc124s(cur_x_fp124s, velocity_fp124s, potential_new_x_fp124s, scratch16_a, scratch16_b)
 
     // potential_new_x has the new x if not bouncing or wrapping
     nv_bge124s(potential_new_x_fp124s, min_x_fp124s, UsePotentialX)
@@ -587,7 +587,7 @@ min_x_fp124s: .word $0000
     nv_sprite_extra_word_to_mem(NV_SPRITE_Y_FP124S_OFFSET, cur_y_fp124s)
 
     // calc new position based on old position and velocity
-    nv_adc124s(cur_y_fp124s, velocity_fp124s, potential_new_y_fp124s)
+    nv_adc124s(cur_y_fp124s, velocity_fp124s, potential_new_y_fp124s, scratch16_a, scratch16_b)
 
     // potential_new_y has the new y if not bouncing or wrapping
     nv_bge124s(potential_new_y_fp124s, min_y_fp124s, UsePotentialY)
@@ -640,7 +640,7 @@ min_y_fp124s: .word $0000
     nv_sprite_extra_word_to_mem(NV_SPRITE_Y_FP124S_OFFSET, cur_y_fp124s)
 
     // calc new position based on old position and velocity
-    nv_adc124s(cur_y_fp124s, velocity_fp124s, potential_new_y_fp124s)
+    nv_adc124s(cur_y_fp124s, velocity_fp124s, potential_new_y_fp124s, scratch16_a, scratch16_b)
 
     // potential_new_y has the new y if not bouncing or wrapping
     nv_ble124s(potential_new_y_fp124s, max_y_fp124s, UsePotentialY)

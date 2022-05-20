@@ -576,9 +576,41 @@ Done:
 // Y Reg: unchanged
 .macro nv_twos_comp_16(addr16, result_addr16)
 {
-    negate16(addr16, result_addr16)
-    nv_adc16x_mem_immed(result_addr16, 1, result_addr16)
+    // Twos Compliment is achieved by:
+    //   bitwise negate of all 16 bits then 
+    //   add with carry a 1
+    // This could be done with the following macros:
+    //    negate16(addr16, result_addr16)
+    //    nv_adc16x_mem_immed(result_addr16, 1, result_addr16)
+    // But to make it a little faster we'll combine the two steps
+    // and save a few loads and stores
+
+    // negate the LSB of the operand and leave in accum
+    // to do the first step of the add 
+    lda addr16
+    eor #$FF
+
+    // do the add of the negated LSB and immediate #1
+    // store this in the LSB of the result, its the final LSB of result
+    clc
+    adc #$01
+    sta result_addr16
+
+    // done with the LSB the carry flag is set if the LSB addition had carry
+    // Now we need to negate the Operand MSB and then add (with carry)
+    // the immediate value of #0
+
+    // negate the MSB of the operand and keep in accum
+    lda addr16+1
+    eor #$FF
+
+    // add in the #0 (with carry)
+    adc #$00
+
+    // store the final MSB into the result
+    sta result_addr16+1
 }
+
 //
 //////////////////////////////////////////////////////////////////////////////
 

@@ -30,16 +30,17 @@
 #importonce
 
 #if !NV_C64_UTIL_DATA
-.error "Error - nv_math16_macs.asm: NV_C64_UTIL_DATA not defined.  Import nv_c64_util_data.asm"
+.error "Error - nv_math124_macs.asm: NV_C64_UTIL_DATA not defined.  Import nv_c64_util_data.asm"
 #endif
 
 // the #if above doesn't seem to always work so..
 // if data hasn't been imported yet, import it into default location
 #importif !NV_C64_UTIL_DATA "nv_c64_util_default_data.asm"
 
-#import "nv_branch16_macs.asm"
 #import "nv_processor_status_macs.asm"
 #import "nv_math16_macs.asm"
+#import "nv_branch16_macs.asm"
+#import "nv_branch124_macs.asm"
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to set a signed FP124 value the absolute value of itself
@@ -127,13 +128,118 @@
 
 
 //////////////////////////////////////////////////////////////////////////////
-// inline macro to add two fp124u bit values and store the result in another
-// fp124u bit value.  Carry and overflow bits set appropriately
-// full name: nv_adc124x_mem16x_mem16x
+// inline macro to add two fp124s bit values and store the result in another
+// fp124s bit value.  Overflow bit set appropriately
+// full name: nv_adc124s_mem124s_mem124s
 // params:
-//   addr1 is the address of the low byte of op1 (FP124u format)
-//   addr2 is the address of the low byte of op2 (FP124u format)
-//   result_addr is the address to store the result. (FP124u format)
+//   addr1 is the address of the LSB of op1 (FP124s format)
+//   addr2 is the address of the LSB of op2 (FP124s format)
+//   result_addr is the address to store the result. (FP124s format)
+//   temp16a is a temporary 16bit location to use within macro
+//   temp16b is another temporary 16 bit location to use within macro.
+// Accum changes
+// X Reg unchanged
+// Y Reg unchanged
+// Status flags:
+//   Carry not reliably set
+//   Overflow: Set result would be outside the valid fp124s values.  Usually this
+//             is when both operands have same high bit value and result
+//             has a different high bit value
+//             For example: $7FF.F + $001.0 = $800.F    V=1
+//                          $800.0 + $800.0 = $000.0    V=1
+//             
+//             Note that when overflow is set, the result isn't very useful
+.macro nv_adc124s(addr1, addr2, result_addr, temp16a, temp16b)
+{
+    .label temp_op1 = temp16a
+    .label temp_op2 = temp16b
+
+    //nv_xfer16_mem_mem(addr1, temp_op1)
+    lda addr1+1
+    bpl Op1Positive
+Op1Negative:
+    and #$7F                         // clear negative bit
+    sta addr1+1                      // store it back in temp as cleared
+    nv_twos_comp_16(addr1, temp_op1) // do twos compliment to get 16 bit signed int
+    jmp DoneOp1
+
+Op1Positive:
+    nv_xfer16_mem_mem(addr1, temp_op1)
+
+DoneOp1:    
+    //nv_xfer16_mem_mem(addr2, temp_op2)
+    lda addr2+1
+    bpl Op2Positive
+
+Op2Negative:
+    and #$7F 
+    sta addr2+1
+    nv_twos_comp_16(addr2, temp_op2)
+    jmp DoneOp2
+
+Op2Positive:
+    nv_xfer16_mem_mem(addr2, temp_op2)
+
+DoneOp2:
+
+    nv_adc16x(temp_op1, temp_op2, result_addr)
+    
+    // save processor flags specifically overflow
+    php
+
+    lda result_addr+1
+    bpl ResultPositive 
+ResultNegative:
+    nv_twos_comp_16(result_addr, result_addr)
+    lda result_addr+1
+    bpl ResultWasNot8000
+    // result was $8000 which we know because its the the only neg num for which
+    // twos compliment will return a negative number (itself)
+    // This is a special case the overflow bit won't be set because its a 
+    // valid 16bit signed result but its not valid FP124s value because its 
+    // outside range of valid values.  To handle this case we'll set overflow flag 
+    // manually and be done.
+    plp                         // pull the status flags overflow not set
+    nv_flags_set_overflow()     // manually set the overflow flag
+    bvs DoneNoPullFlags         // branch over the rest to the end.
+    
+ResultWasNot8000:
+    ora #$80
+    sta result_addr+1
+
+ResultPositive:
+    plp
+
+DoneNoPullFlags:
+
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that expands the nv_adc124s macro with dedicated 
+// temporary 16bit values and also adds an rts at the end
+// see the nv_adc124s macro for details
+.macro nv_adc124s_sr(addr1, addr2, result_addr)
+{
+    nv_adc124s(addr1, addr2, result_addr, temp_op1, temp_op2)
+    rts
+
+temp_op1: .word $0000
+temp_op2: .word $0000
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro that does the same thing as nv_adc124s
+// except the addr1 and addr1 locations will not be preserved, they
+// will be ruined.
+// If ruining the operand values can be tolerated this 
+// will run a little faster than nv_adc124s
+// params:
+//   addr1 is the address of the low byte of op1 (FP124s format)
+//         after the macro runs this value will be ruined
+//   addr2 is the address of the low byte of op2 (FP124s format)
+//         after the macro runs this value will be ruined
+//   result_addr is the address to store the result. (FP124s format)
 // Accum changes
 // X Reg unchanged
 // Y Reg unchanged
@@ -144,66 +250,77 @@
 //             For example: $7FF.F + $001.0 = $800.F    V=1
 //                          $800.0 + $800.0 = $000.0    V=1
 //             Note that when overflow is set, the result isnt very useful
-.macro nv_adc124s(addr1, addr2, result_addr)
+.macro nv_adc124s_ruin_ops(addr1, addr2, result_addr)
 {
-    nv_xfer16_mem_mem(addr1, scratch_op16_a)
-    nv_xfer16_mem_mem(addr2, scratch_op16_b)
+    //nv_xfer16_mem_mem(addr1, temp_op1)
+    lda addr1+1
+    bpl Op1Positive
+Op1Negative:
+    and #$7F                      // clear negative bit
+    sta addr1+1                   // store it back in temp as cleared
+    nv_twos_comp_16(addr1, addr1) // do twos compliment to get 16 bit signed int
+    jmp DoneOp1
 
-    // use Y reg to count number of negative operands
-    ldy #0
+Op1Positive:
+    //nv_xfer16_mem_mem(addr1, addr1)
 
-    lda scratch_op16_a+1 
-    bpl Addr1Positive
+DoneOp1:    
+    //nv_xfer16_mem_mem(addr2, temp_op2)
+    lda addr2+1
+    bpl Op2Positive
 
-Addr1Negative:
+Op2Negative:
     and #$7F 
-    sta scratch_op16_a+1
-    nv_twos_comp_16(scratch_op16_a, scratch_op16_a)
-    iny // add one negative operand counter
-    
-Addr1Positive:
-    lda scratch_op16_b+1 
-    bpl Addr2Positive
+    sta addr2+1
+    nv_twos_comp_16(addr2, addr2)
+    jmp DoneOp2
 
-Addr2Negative:
-    and #$7F 
-    sta scratch_op16_b+1
-    nv_twos_comp_16(scratch_op16_b, scratch_op16_b)
-    iny // add one negative operand counter
-    
-Addr2Positive:
+Op2Positive:
+    //nv_xfer16_mem_mem(addr2, addr2)
 
-    // Add the two together result 
-    nv_adc16x(scratch_op16_a, scratch_op16_b, result_addr)
-    // y still contains the number of negative operands
-    clv // clear the overflow bit, we'll set it below if needed
+DoneOp2:
+
+    nv_adc16x(addr1, addr2, result_addr)
+    
+    // save processor flags specifically overflow
+    php
+
     lda result_addr+1
-    bpl ResultPositive
-
+    bpl ResultPositive 
 ResultNegative:
-    // result is negative, need to change from twos compliment to our
-    // FP 124 format by turning it positive then setting the high bit
     nv_twos_comp_16(result_addr, result_addr)
-    lda #$80
-    ora result_addr+1
+    lda result_addr+1
+    bpl ResultWasNot8000
+    // result was $8000 which we know because its the the only neg num for which
+    // twos compliment will return a negative number (itself)
+    // This is a special case the overflow bit won't be set because its a 
+    // valid 16bit signed result but its not valid FP124s value because its 
+    // outside range of valid values.  To handle this case we'll set overflow flag 
+    // manually and be done.
+    plp                         // pull the status flags overflow not set
+    nv_flags_set_overflow()     // manually set the overflow flag
+    bvs DoneNoPullFlags         // branch over the rest to the end.
+    
+ResultWasNot8000:
+    ora #$80
     sta result_addr+1
-    cpy #0  // check if there were no negative operands
-    bne Done
-
-    // set overflow here
-    nv_flags_set_overflow()
-    jmp Done
 
 ResultPositive:
-    cpy #2  // check if there were two negative operands
-    bne Done
-    // set overflow here
-    nv_flags_set_overflow()    
+    plp
 
-Done:
+DoneNoPullFlags:
 }
-//
+
+
 //////////////////////////////////////////////////////////////////////////////
+// inline macro that does the same as nv_adc124s_ruin_ops but also does 
+// rts at the end.  
+// See nv_adc124s_ruin_ops for details
+.macro nv_adc124s_ruin_ops_sr(addr1, addr2, result_addr)
+{
+    nv_adc124s_ruin_ops(addr1, addr2, result_addr)
+    rts
+}
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -419,6 +536,8 @@ Done:
 }
 //
 //////////////////////////////////////////////////////////////////////////////
+
+
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to create one fp124u value in memory location specified

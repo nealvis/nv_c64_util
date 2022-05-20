@@ -159,8 +159,10 @@
     bpl Op1Positive
 Op1Negative:
     and #$7F                         // clear negative bit
-    sta addr1+1                      // store it back in temp as cleared
-    nv_twos_comp_16(addr1, temp_op1) // do twos compliment to get 16 bit signed int
+    sta temp_op1+1                      // store it back in temp as cleared
+    lda addr1
+    sta temp_op1
+    nv_twos_comp_16(temp_op1, temp_op1) // do twos compliment to get 16 bit signed int
     jmp DoneOp1
 
 Op1Positive:
@@ -173,8 +175,10 @@ DoneOp1:
 
 Op2Negative:
     and #$7F 
-    sta addr2+1
-    nv_twos_comp_16(addr2, temp_op2)
+    sta temp_op2+1
+    lda addr2
+    sta temp_op2    
+    nv_twos_comp_16(temp_op2, temp_op2)
     jmp DoneOp2
 
 Op2Positive:

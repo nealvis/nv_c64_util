@@ -66,38 +66,30 @@ NvAdc124sResult: .word $0000
 // will still be preserved though.
 // macro parameters:
 //   op1_fp124s: address of LSB of fp124s value for operand 1 to be copied
-//               to the subroutine parameter NvAdc124sOp1.  Pass 0 to 
-//               just use existing value in NvAdc124sOp1 
+//               to the subroutine parameter NvAdc124sOp1.  
 //   op2_fp124s: address of LSB of fp124s value for operand 2 to be copied
-//               to the subroutine parameter NvAdc124sOp2.  Pass 0 to 
-//               just use existing value in NvAdc124sOp2 
+//               to the subroutine parameter NvAdc124sOp2.  
 //   result_fp124s: address of the LSB of an fp124s word into which the
-//                  result (NvAdc124sResult) will be copied.  Pass a 0 to
-//                  not copy the result anywhere, in which case it will be
-//                  left in NvAdc124sResult
-.macro nv_call_NvAdc124sRuinOps(op1_fp124s, op2_fp124s, result_fp124s)
+//                  result (NvAdc124sResult) will be copied. 
+//   copy_result: boolean flag indicating if the result (NvAdc124sResult) 
+//                should be copyied to result_fp124s.  If false then
+//                the result will be left in NvAdc123sResult but not
+//                copied to result_fp124s 
+.macro nv_call_NvAdc124sRuinOps(op1_fp124s, op2_fp124s, result_fp124s, copy_result)
 {
-    // copy parameters to subroutine fixed parameters if the passed value isn't zero
-    .if (op1_fp124s != 0)
-    {
-        nv_xfer124_mem_mem(op1_fp124s, NvAdc124sOp1)
-    }
-
-    .if (op2_fp124s != 0)
-    {
-        nv_xfer124_mem_mem(op2_fp124s, NvAdc124sOp2)
-    }
+    // copy parameters to subroutine fixed parameters 
+    nv_xfer124_mem_mem(op1_fp124s, NvAdc124sOp1)
+    nv_xfer124_mem_mem(op2_fp124s, NvAdc124sOp2)
 
     // call subroutine
     jsr NvAdc124sRuinOps
 
     // copy subroutine result if macro param for result wasn't zero
-    .if (result_fp124s != 0)
+    .if (copy_result)
     {
         nv_xfer124_mem_mem(NvAdc124sResult, result_fp124s)
     }
 }
-
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
@@ -105,33 +97,26 @@ NvAdc124sResult: .word $0000
 // and then copy the result.
 // macro parameters: 
 //   op1_fp124s: address of LSB of fp124s value for operand 1 to be copied
-//               to the subroutine parameter NvAdc124sOp1.  Pass 0 to 
-//               just use existing value in NvAdc124sOp1 
+//               to the subroutine parameter NvAdc124sOp1.  
 //   op2_fp124s: address of LSB of fp124s value for operand 2 to be copied
-//               to the subroutine parameter NvAdc124sOp2.  Pass 0 to 
-//               just use existing value in NvAdc124sOp2 
+//               to the subroutine parameter NvAdc124sOp2.  
 //   result_fp124s: address of the LSB of an fp124s word into which the
-//                  result (NvAdc124sResult) will be copied.  Pass a 0 to
-//                  not copy the result anywhere, in which case it will be
-//                  left in NvAdc124sResult
-.macro nv_call_NvAdc124s(op1_fp124s, op2_fp124s, result_fp124s)
+//                  result (NvAdc124sResult) will be copied.  
+//   copy_result: boolean flag indicating if the result (NvAdc124sResult) 
+//                should be copyied to result_fp124s.  If false then
+//                the result will be left in NvAdc123sResult but not
+//                copied to result_fp124s 
+.macro nv_call_NvAdc124s(op1_fp124s, op2_fp124s, result_fp124s, copy_result)
 {
-   // copy parameters to subroutine fixed parameters if the passed value isn't zero
-    .if (op1_fp124s != 0)
-    {
-        nv_xfer124_mem_mem(op1_fp124s, NvAdc124sOp1)
-    }
-
-    .if (op2_fp124s != 0)
-    {
-        nv_xfer124_mem_mem(op2_fp124s, NvAdc124sOp2)
-    }
+    // copy parameters to subroutine fixed parameters 
+    nv_xfer124_mem_mem(op1_fp124s, NvAdc124sOp1)
+    nv_xfer124_mem_mem(op2_fp124s, NvAdc124sOp2)
 
     // call subroutine
     jsr NvAdc124s
 
     // copy subroutine result if macro param for result wasn't zero
-    .if (result_fp124s != 0)
+    .if (copy_result)
     {
         nv_xfer124_mem_mem(NvAdc124sResult, result_fp124s)
     }

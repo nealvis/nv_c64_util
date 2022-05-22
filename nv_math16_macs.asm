@@ -218,6 +218,26 @@ SkipAdd:
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
+// inline macro to increment a 16bit value in memory
+// macro params: 
+//   addr16: the address of the LSB of a 16bit value in memory to increment
+//           after the increment operation this value will be incremented.
+//           if the value was $FFFF it will be $0000 after the operation.
+//   flags: 
+//     Zero flag will be set if the result of the inc is $0000
+//     Negative flag will not be set reliably
+.macro nv_inc16x_mem16x(addr16)
+{
+    inc addr16
+    bne Done      // if the result was zero then need to carry to MSB
+    inc addr16+1  // inc the MSB
+Done:
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
 // inline macro to multiply one unsigned 16 bit value by an 8 bit immed value
 // and store the result in another 16bit value.  
 // result16_addr = addr1 * num8
@@ -574,7 +594,7 @@ Done:
 // Accum: changes
 // X Reg: unchanged
 // Y Reg: unchanged
-.macro nv_twos_comp_16(addr16, result_addr16)
+.macro nv_twos_comp_16_old(addr16, result_addr16)
 {
     // Twos Compliment is achieved by:
     //   bitwise negate of all 16 bits then 
@@ -613,6 +633,36 @@ Done:
 
 //
 //////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to do twos compliment on a 16 but number in memory
+// and place result in specified memory location.
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_twos_comp_16(addr16, result_addr16)
+{
+    // Twos Compliment is achieved by:
+    //   bitwise negate of all 16 bits then 
+    //   add with carry a 1
+    // This could be done with the following macros:
+    //    negate16(addr16, result_addr16)
+    //    nv_adc16x_mem_immed(result_addr16, 1, result_addr16)
+    // but twos compliment of a number is also the same as 0 - number, so we'll 
+    // use this as a slightly faster way to get the result
+
+    sec 
+    lda #$00
+    sbc addr16
+    sta result_addr16 
+    lda #$00
+    sbc addr16+1
+    sta result_addr16+1
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
 
 //////////////////////////////////////////////////////////////////////////////
 // inline mcaro to subtract contents at addr2 from those at addr1

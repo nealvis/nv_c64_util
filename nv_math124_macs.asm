@@ -448,7 +448,9 @@ Done:
 
     // add 0.5 (decimal) to the number.  There is now only one fraction digit
     // because shifted the rest off already
+    // NPS TODO, try nv_inc16x_mem16x,  see if its faster
     nv_adc16x_mem_immed(result_addr, $0001, result_addr)
+    //nv_inc16x_mem16x(result_addr)
 
     // shift right to remove final fraction digit
     nv_lsr16u_mem16u_immed8u(result_addr, 1)

@@ -25,6 +25,7 @@
 #import "nv_sprite_extra_macs.asm"
 #import "nv_sprite_raw_macs.asm"
 #import "nv_math16_macs.asm"
+#import "nv_math124_code.asm"
 #import "nv_screen_macs.asm"
 
 .macro nv_sprite_load_extra_ptr()
@@ -321,6 +322,7 @@ save_lo: .byte 0
 // X Reg: LSB of address of the nv_sprite_extra_data
 .macro nv_sprite_set_location_from_extra_sr()
 {
+
     nv_sprite_standard_save(SaveBlock)
 
     nv_sprite_load_extra_ptr()

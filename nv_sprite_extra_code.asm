@@ -339,7 +339,8 @@ save_lo: .byte 0
     // get sprite y location from extra data block to accum
     // nv_sprite_extra_byte_to_a(NV_SPRITE_Y_OFFSET)
     nv_sprite_extra_word_to_mem(NV_SPRITE_Y_FP124S_OFFSET, temp_fp124s)
-    nv_conv124s_mem16s(temp_fp124s, temp16)
+    //nv_conv124s_mem16s(temp_fp124s, temp16)
+    nv_transform124s_mem16s(temp_fp124s) // temp16 same as temp_fp124s
 
     // load LSB of Y position in accum
     lda temp16
@@ -353,7 +354,8 @@ save_lo: .byte 0
 
     // changes A and Y
     nv_sprite_extra_word_to_mem(NV_SPRITE_X_FP124S_OFFSET, temp_fp124s)
-    nv_conv124s_mem16s(temp_fp124s, temp16)
+    //nv_conv124s_mem16s(temp_fp124s, temp16)
+    nv_transform124s_mem16s(temp_fp124s)      // temp16 same as temp_fp124s
 
     // load LSB of x position in accum
     lda temp16
@@ -394,8 +396,9 @@ save_lo: .byte 0
 
 SaveBlock:
     nv_sprite_standard_alloc()
+    temp16:
     temp_fp124s: .word $0000
-    temp16: .word $0000
+    //temp16: .word $0000
 }
 
 

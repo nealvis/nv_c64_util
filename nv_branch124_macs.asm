@@ -90,9 +90,10 @@ DiffSigns:
     // then we were comparing neg and positive zero
     lda addr1+1
     ora addr2+1
-    ora addr1 
-    ora addr2
     cmp #$80
+    bne NotPosAndNegZero
+    lda addr1 
+    ora addr2
     beq Done    // if we branch then zero flag was set
                 // if did not branch then zero flag must be clear
 
@@ -100,7 +101,7 @@ NotPosAndNegZero:
     // if we get here then addr1 and addr2 had different signs 
     // and they weren't -0 and +0 so the negative number is less
     // than the positive number
-    // so we know the values are not equal and zero flag needs to be clear
+    // so we know the values are not equal (zero flag needs to be clear)
     lda addr1+1
     bmi NegativeAddr1
 
@@ -109,7 +110,6 @@ PositiveAddr1:
     lda #$01              // just clear zero flag incase lda addr1+1 was zero
     sec
     bcs Done              // unconditional branch (because carry set above)
-    // zero flag already clear because didn't beq Done above
 
 NegativeAddr1:
     // addr1 is NOT >= addr2 so clear carry

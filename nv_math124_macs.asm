@@ -432,7 +432,7 @@ Done:
 //     store the result.
 // Accum changes
 // X Reg unchanged
-// Y Reg changed
+// Y Reg unchanged
 // Status flags:
 //      Carry flag not reliably set
 //      Negative flag is not reliably set but result will always be positive
@@ -442,18 +442,50 @@ Done:
 {
     // move operand into result
     nv_xfer16_mem_mem(addr1, result_addr)
+    nv_transform124u_mem16u(result_addr)
+}
+//
+//////////////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to transform a 16bit word in memory from an fp124s value
+// to the closest 16s value by rounding.
+// Note that the original fp124s value is lost and because its overwritten
+//      by the resulting 16s value.
+// Macro Params:
+//   addr1: is the address of the LSB of an fp124s value befor executing.
+//          and after executing it contains the resulting 16s value
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_transform124u_mem16u(addr1)
+{
     // shift result right to remove all but the most significant fraction digit
-    nv_lsr16u_mem16u_immed8u(result_addr, 3)
+    // NPS TODO should do this optimization for nv_conv124u_mem16u too
+    clc
+    lsr addr1+1
+    ror addr1
+    lsr addr1+1
+    ror addr1
+    lsr addr1+1
+    ror addr1
 
     // add 0.5 (decimal) to the number.  There is now only one fraction digit
-    // because shifted the rest off already
-    // NPS TODO, try nv_inc16x_mem16x,  see if its faster
-    nv_adc16x_mem_immed(result_addr, $0001, result_addr)
-    //nv_inc16x_mem16x(result_addr)
+    // because shifted the rest off already so adding .5 is done by adding #$01
+    clc
+    lda #$01
+    adc addr1
+    sta addr1
+    lda #$00
+    adc addr1+1
+    sta addr1+1
 
     // shift right to remove final fraction digit
-    nv_lsr16u_mem16u_immed8u(result_addr, 1)
+    //nv_lsr16u_mem16u_immed8u(addr1, 1)
+    // NPS TODO should optimize nv_conv124s_mem16s with this too
+    clc
+    lsr addr1+1
+    ror addr1
 }
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -465,8 +497,6 @@ Done:
 // truncated input value (ex $123.4 -> $0123)  or the next greater magnitude
 // number in positive or negative direction  (ex $234.8 -> $0235) 
 // depending on if the decimal part is >= half. 
-// if the input value's whole number part is $FFF and it rounds up then the
-// result will be $0000 and the carry flag will be set
 // full name: nv_conv124s_mem16s
 // params:
 //   addr1: is the address of the low byte of unsigned FP124 number to round
@@ -480,20 +510,25 @@ Done:
 .macro nv_conv124s_mem16s(addr1, result_addr)
 {
     // set N flag for high bit of operand
-    bit addr1+1
+    //bit addr1+1
+    lda addr1+1
     bpl ItsPositive
 
 ItsNegative:
     // copy operand to result
-    nv_xfer16_mem_mem(addr1, result_addr)
+    //nv_xfer16_mem_mem(addr1, result_addr)
 
     // clear negative flag in result
-    lda #$7F
-    and result_addr+1
+    //lda #$7F
+    //and result_addr+1
+    and #$7F
     sta result_addr+1
+    lda addr1
+    sta result_addr
 
     // now do the unsigned conversion
-    nv_conv124u_mem16u(result_addr, result_addr)
+    //nv_conv124u_mem16u(result_addr, result_addr)
+    nv_transform124u_mem16u(result_addr)
 
     // since the original number was negative the result will be negative
     // do a 2s comp to make result negative
@@ -510,6 +545,59 @@ Done:
 }
 //
 //////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to convert and round a fp124s value to 16s int and store the 
+// result in the same word. The result will either be the
+// truncated input value (ex $123.4 -> $0123)  or the next greater magnitude
+// number in positive or negative direction  (ex $234.8 -> $0235) 
+// depending on if the decimal part is >= half. 
+// full name: nv_conv124s_mem16s
+// params:
+//   addr1: is the address of the low byte of unsigned FP124 number to round
+//   result_addr: is the address of an signed 16 bit word in which to 
+//     store the result.
+// Accum changes
+// X Reg unchanged
+// Y Reg unchanged
+// Status flags: will not be reliably set.  will never cause overflow or carry
+//               because will always fit in the 16 bit signed result
+.macro nv_transform124s_mem16s(addr1)
+{
+    // set N flag for high bit of operand
+    lda addr1+1
+    bpl ItsPositive
+
+ItsNegative:
+    // copy operand to result
+    //nv_xfer16_mem_mem(addr1, addr1)
+
+    // clear negative flag in result
+    // #$7F
+    //and addr1+1
+    and #$7F
+    sta addr1+1
+
+    // now do the unsigned conversion
+    nv_transform124u_mem16u(addr1)
+
+    // since the original number was negative the result will be negative
+    // do a 2s comp to make result negative
+    nv_twos_comp_16(addr1, addr1)
+
+    jmp Done
+
+ItsPositive: 
+    // signed conversion for a positive value is same as unsigned 
+    nv_transform124u_mem16u(addr1)
+
+Done:
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to convert an unsigned 16bit int to an unsigned fp124 

@@ -35,6 +35,7 @@
     nv_cmp16(addr1, addr2)
 }
 
+
 //////////////////////////////////////////////////////////////////////////////
 // compare the contents of two 12.4 signed fixed pt values and 
 // set flags accordingly.
@@ -60,57 +61,64 @@ SameSigns:
     bpl BothPositive
 BothNegative:
     // reverse the operands to comp when both negative
-    nv_cmp16(addr2, addr1)
+    // first compare the MSBs
+    lda addr2+1
+    cmp addr1+1
+    bne Done
+
+    // MSBs are equal so need to compare LSBs
+    lda addr2
+    cmp addr1
+
     jmp Done
 
 BothPositive:
-    nv_cmp16(addr1, addr2)
+    // assume that the addr1+1 (MSB) is in Accum from above
+    // first compare the MSBs
+    cmp addr2+1
+    bne Done
+
+    // MSBs are equal so need to compare LSBs
+    lda addr1
+    cmp addr2
+
     jmp Done
 
 DiffSigns:
     // first check if we are comparing pos zero and neg zero
-    // which is a special case.
-    lda addr1+1  
-    and #$7F
-    bne NotPosAndNegZero
-    lda addr2+1  
-    and #$7F
-    bne NotPosAndNegZero
-    lda addr1
-    and #$FF
-    bne NotPosAndNegZero
-    lda addr2
-    and #$FF
-    bne NotPosAndNegZero
-
-WasPosAndNegZero:
-    // had pos and neg zeros, Accum has zero in it now
-    cmp #$00    // do a cmp with zero to set flags right
-    jmp Done    // we are done
+    // which is a special case.  if or all 4 bytes and get #$80
+    // then we were comparing neg and positive zero
+    lda addr1+1
+    ora addr2+1
+    ora addr1 
+    ora addr2
+    cmp #$80
+    beq Done    // if we branch then zero flag was set
+                // if did not branch then zero flag must be clear
 
 NotPosAndNegZero:
     // if we get here then addr1 and addr2 had different signs 
     // and they weren't -0 and +0 so the negative number is less
     // than the positive number
-
+    // so we know the values are not equal and zero flag needs to be clear
     lda addr1+1
     bmi NegativeAddr1
 
 PositiveAddr1:
     // addr1 is >= addr2 so set carry
+    lda #$01              // just clear zero flag incase lda addr1+1 was zero
     sec
-    bcs ClearZeroAndDone  // unconditional branch (because carry set above)
+    bcs Done              // unconditional branch (because carry set above)
+    // zero flag already clear because didn't beq Done above
 
 NegativeAddr1:
     // addr1 is NOT >= addr2 so clear carry
     clc
-
-ClearZeroAndDone:
-    // clear zero flag, they aren't equal
-    lda #$01  // just load a nonzero number to clear zero flag
+    // zero flag already clear because lda addr1+1 was negative (nonzero)
 
 Done:
 }
+
 
 
 //////////////////////////////////////////////////////////////////////////////

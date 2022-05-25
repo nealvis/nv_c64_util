@@ -219,6 +219,121 @@ DoneNoPullFlags:
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// inline macro to add two positive fp124s bit values and store the result
+// in another fp124s bit value.  Overflow bit set optionally
+// full name: nv_adc124s_op1Pos_op2Pos
+// params:
+//   op1Pos: is the address of the LSB of op1 (FP124s format)
+//   op2Pos: is the address of the LSB of op2 (FP124s format)
+//   result_addr is the address to store the result. (FP124s format)
+//   careOverflow: boolean, pass true if you care that the overflow bit
+//                 in the status register is set approprately, or false
+//                 if you don't care about the overflow bit.  
+// Accum changes
+// X Reg unchanged
+// Y Reg unchanged
+// Status flags:
+//   Carry not reliably set
+//   Overflow: If careOverflow is true then the overflow bit will be 
+//             Set if the result would be outside the valid fp124s values.
+//             Usually this is when both operands have same high bit value and result
+//             has a different high bit value
+//             For example: $7FF.F + $001.0 = $800.F    V=1
+//             
+//             Note that when overflow is set, the result isn't very useful
+.macro nv_adc124s_op1Pos_op2Pos(op1Pos, op2Pos, result_addr, careOverflow)
+{
+    // do the addition as though 16 bit int since both are postive fp124s vals
+    nv_adc16x(op1Pos, op2Pos, result_addr)
+
+    .if (careOverflow)
+    {
+        // check if the sign changed to negative, in which case there was an overflow
+        // with regard to fp124
+        lda result_addr+1
+        bpl ResultPositive 
+ResultNegative:
+        nv_flags_set_overflow()     // manually set the overflow flag
+    }
+ResultPositive:
+Done:
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to add one positive fp124s with one negative fp124s value
+// and store the result in another fp124s bit value.  
+// Overflow bit is optionally set appropriately 
+// full name: nv_adc124s_op1Pos_op2Neg
+// params:
+//   op1Pos is the address of the LSB of the positive FP124s operand
+//   op2Neg is the address of the LSB of the negative FP124s operand
+//   result_addr is the address of the LSB of the fp124s word for the result.
+//   temp16b is a temporary 16 bit location to use within macro.
+// Accum changes
+// X Reg unchanged
+// Y Reg unchanged
+// Status flags:
+//   Carry not reliably set
+//   Overflow: there is no case where overflow would need to be set when
+//             adding one positive and one negative number
+//             Note that when overflow is set, the result isn't very useful
+.macro nv_adc124s_op1Pos_op2Neg(op1Pos, op2Neg, result_addr, temp16b)
+{
+    .label temp_op2 = temp16b
+
+    lda op2Neg+1
+    and #$7F 
+    sta temp_op2+1
+    lda op2Neg
+    sta temp_op2    
+    nv_twos_comp_16(temp_op2, temp_op2)
+
+    nv_adc16x(op1Pos, temp_op2, result_addr)
+    
+    //.if (careOverflow)
+    //{
+    //    // save processor flags specifically overflow
+    //    php
+    //}
+    lda result_addr+1
+    bpl ResultPositive 
+ResultNegative:
+    nv_twos_comp_16(result_addr, result_addr)
+    //.if (careOverflow)
+    //{
+    //    lda result_addr+1
+    //    bpl ResultWasNot8000
+    //    // result was $8000 which we know because its the the only neg num for which
+    //    // twos compliment will return a negative number (itself)
+    //    // This is a special case the overflow bit won't be set because its a 
+    //    // valid 16bit signed result but its not valid FP124s value because its 
+    //    // outside range of valid values.  To handle this case we'll set overflow flag 
+    //    // manually and be done.
+    //    plp                         // pull the status flags overflow not set
+    //    nv_flags_set_overflow()     // manually set the overflow flag
+    //    bvs DoneNoPullFlags         // branch over the rest to the end.
+    //}
+//ResultWasNot8000:
+    //.if (!careOverflow)
+    //{   // if we dont care overflow then accum needs to be loaded 
+    //    // here because wasn't loaded above
+        lda result_addr+1
+    //}
+    ora #$80
+    sta result_addr+1
+
+ResultPositive:
+    //.if (careOverflow)
+    //{
+    //    plp
+    //}
+
+//DoneNoPullFlags:
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
 // inline macro that expands the nv_adc124s macro with dedicated 
 // temporary 16bit values and also adds an rts at the end
 // see the nv_adc124s macro for details

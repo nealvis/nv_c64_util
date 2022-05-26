@@ -185,10 +185,11 @@
 // Subroutine params:
 //   Accum: set to the sprite number for the sprite to be dissabled
 //  
-.macro nv_sprite_raw_disable_from_reg()
+//.macro nv_sprite_raw_disable_from_reg()
+.macro nv_sprite_raw_disable_from_x()
 {
     // change sprite number to negated sprite mask
-    nv_create_bitmask8x_a(true)
+    nv_create_bitmask8x_x(true)
 
     // negated mask now in accum
     and NV_SPRITE_ENABLE_REG_ADDR
@@ -203,10 +204,11 @@
 // Subroutine params:
 //   Accum: set to the sprite number for the sprite to be dissabled
 //  
-.macro nv_sprite_raw_enable_from_reg()
+//.macro nv_sprite_raw_enable_from_reg()
+.macro nv_sprite_raw_enable_from_x()
 {
     // change sprite number to negated sprite mask
-    nv_create_bitmask8x_a(false)
+    nv_create_bitmask8x_x(false)
 
     // negated mask now in accum
     ora NV_SPRITE_ENABLE_REG_ADDR

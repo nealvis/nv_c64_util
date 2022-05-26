@@ -28,8 +28,8 @@
 // subroutine disable a specified sprite
 // Subroutine params:
 //   Accum: set to the sprite number for the sprite to be dissabled
-NvSpriteRawDisableFromReg:
-    nv_sprite_raw_disable_from_reg()
+NvSpriteRawDisableFromX:
+    nv_sprite_raw_disable_from_x()
     rts
 
 

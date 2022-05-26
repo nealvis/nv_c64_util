@@ -292,6 +292,7 @@ save_hi: .byte 0
 save_lo: .byte 0 
 }
 
+
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to create an 8 bit mask for the sprite number that is in
 // the x register.  
@@ -301,17 +302,33 @@ save_lo: .byte 0
 //          num in X is 1 then the 1 bit in mask will be set, ie: $02, etc. 
 .macro nv_sprite_get_mask_in_a()
 {
-    // sprite number assumed to be in X register already
-
-    lda #0      // load Accum with 0
-    sec         // set carry flag so first rol will rotate in a 1
- Loop:
-    rol         // rotate the 1 until we get to our sprite's bit
-    dex         // dec X reg until beyond 0  when we can stop rotating
-    bpl Loop    // when dex cause us to roll from 0 to FF then exit loop
-
-    // now the accumulator has the sprite mask for sprite num
+    lda SpriteMaskBase, x
 }
+
+// negated version of mask
+.macro nv_sprite_get_mask_neg_in_a()
+{
+    lda SpriteMaskNegBase, x
+}
+
+SpriteMaskBase: 
+.byte $01
+.byte $02 
+.byte $04 
+.byte $08 
+.byte $10 
+.byte $20 
+.byte $40 
+.byte $80
+SpriteMaskNegBase:
+.byte $FE
+.byte $FD 
+.byte $FB 
+.byte $F7 
+.byte $EF 
+.byte $DF 
+.byte $BF 
+.byte $7F
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -332,7 +349,8 @@ save_lo: .byte 0
     pha     // push accum (sprite number 0-7)
     
     // multiply by 2 and put in x reg.  Need to multiply by 2 because
-    // there x and y location together for each sprite.
+    // the x and y location together for each sprite.  This will 
+    // be the offset to the correct register from base addr
     asl 
     tax
 
@@ -372,8 +390,9 @@ save_lo: .byte 0
     // create a sprite mask for our sprite number in accumulator and negate it
     pla         // pop sprite number off stack to accum
     tax         // move sprite number to X reg
-    nv_sprite_get_mask_in_a()
-    eor #$ff    // negate mask so our bit is 0, other bits 1s
+    //nv_sprite_get_mask_in_a()
+    //eor #$ff    // negate mask so our bit is 0, other bits 1s
+    nv_sprite_get_mask_neg_in_a()
 
     // and with reg that holds all the sprite x hi bits
     // then store it back to the same register so our sprite's bit is clear
@@ -488,7 +507,7 @@ SaveBlock:
     nv_adc124s_op1Pos_op2Pos(cur_x_fp124s, velocity_fp124s, potential_new_x_fp124s, false)
 
     // potential_new_x has the new x if not bouncing or wrapping
-    nv_ble124s(potential_new_x_fp124s, max_x_fp124s, UsePotentialX)
+    nv_ble124s_op1Pos_op2Pos(potential_new_x_fp124s, max_x_fp124s, UsePotentialX)
 TooFar:
     // if didn't branch above then trying to move too far.  Need
     // to bounce or wrap to the other side
@@ -543,7 +562,17 @@ max_x_fp124s: .word $0000
     nv_adc124s_op1Pos_op2Neg(cur_x_fp124s, velocity_fp124s, potential_new_x_fp124s, scratch16_b)
 
     // potential_new_x has the new x if not bouncing or wrapping
-    nv_bge124s(potential_new_x_fp124s, min_x_fp124s, UsePotentialX)
+    //nv_bge124s(potential_new_x_fp124s, min_x_fp124s, UsePotentialX)
+    lda potential_new_x_fp124s+1
+    bmi TooFar
+    cmp min_x_fp124s+1
+    beq Equal
+    bcs UsePotentialX
+Equal:  // MSBs are equal, try LSBs
+    lda potential_new_x_fp124s
+    cmp min_x_fp124s
+    bcs UsePotentialX
+
 TooFar:
     // if didn't branch above then trying to move too far.  Need
     // to bounce or wrap to the other side
@@ -598,7 +627,20 @@ min_x_fp124s: .word $0000
     nv_adc124s_op1Pos_op2Neg(cur_y_fp124s, velocity_fp124s, potential_new_y_fp124s, scratch16_b)
 
     // potential_new_y has the new y if not bouncing or wrapping
-    nv_bge124s(potential_new_y_fp124s, min_y_fp124s, UsePotentialY)
+    //nv_bge124s(potential_new_y_fp124s, min_y_fp124s, UsePotentialY)
+    //nv_bmi124s(potential_new_y_fp124s, TooFar)
+    //nv_bge124s_op1Pos_op2Pos(potential_new_y_fp124s, min_y_fp124s, UsePotentialY)
+    lda potential_new_y_fp124s+1
+    bmi TooFar
+    cmp min_y_fp124s+1
+    beq Equal
+    bcs UsePotentialY
+Equal:  // MSBs are equal, try LSBs
+    lda potential_new_y_fp124s
+    cmp min_y_fp124s
+    bcs UsePotentialY
+
+
 TooFar:
     // if didn't branch above then trying to move too far.  Need
     // to bounce or wrap to the other side
@@ -652,7 +694,10 @@ min_y_fp124s: .word $0000
     nv_adc124s_op1Pos_op2Pos(cur_y_fp124s, velocity_fp124s, potential_new_y_fp124s, false)
 
     // potential_new_y has the new y if not bouncing or wrapping
-    nv_ble124s(potential_new_y_fp124s, max_y_fp124s, UsePotentialY)
+    // we know both ops are positive already, so use special version of ble124s
+    //nv_ble124s(potential_new_y_fp124s, max_y_fp124s, UsePotentialY)
+    nv_ble124s_op1Pos_op2Pos(potential_new_y_fp124s, max_y_fp124s, UsePotentialY)
+
 TooFar:
     // if didn't branch above then trying to move too far.  Need
     // to bounce or wrap to the other side
@@ -701,10 +746,10 @@ max_y_fp124s: .word $0000
     nv_sprite_a_to_extra(NV_SPRITE_ENABLED_OFFSET)
 
     // get sprite number in accum
-    nv_sprite_extra_byte_to_a(NV_SPRITE_NUM_OFFSET)
+    nv_sprite_extra_byte_to_x(NV_SPRITE_NUM_OFFSET)
 
     // now enable the sprite 
-    nv_sprite_raw_enable_from_reg()
+    nv_sprite_raw_enable_from_x()
 
     nv_sprite_standard_restore(SaveBlock)
     rts
@@ -729,10 +774,10 @@ SaveBlock:
     nv_sprite_a_to_extra(NV_SPRITE_ENABLED_OFFSET)
 
     // get sprite number in accum
-    nv_sprite_extra_byte_to_a(NV_SPRITE_NUM_OFFSET)
+    nv_sprite_extra_byte_to_x(NV_SPRITE_NUM_OFFSET)
 
     // now enable the sprite 
-    nv_sprite_raw_disable_from_reg()
+    nv_sprite_raw_disable_from_x()
 
     nv_sprite_standard_restore(SaveBlock)
     rts

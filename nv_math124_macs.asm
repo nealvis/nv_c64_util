@@ -149,16 +149,15 @@
 //                          $800.0 + $800.0 = $000.0    V=1
 //             
 //             Note that when overflow is set, the result isn't very useful
-.macro nv_adc124s(addr1, addr2, result_addr, temp16a, temp16b)
+.macro nv_adc124s(addr1, addr2, result_addr, temp16a, temp16b, care_overflow)
 {
     .label temp_op1 = temp16a
     .label temp_op2 = temp16b
 
-    //nv_xfer16_mem_mem(addr1, temp_op1)
     lda addr1+1
     bpl Op1Positive
 Op1Negative:
-    and #$7F                         // clear negative bit
+    and #$7F                            // clear negative bit
     sta temp_op1+1                      // store it back in temp as cleared
     lda addr1
     sta temp_op1
@@ -169,7 +168,6 @@ Op1Positive:
     nv_xfer16_mem_mem(addr1, temp_op1)
 
 DoneOp1:    
-    //nv_xfer16_mem_mem(addr2, temp_op2)
     lda addr2+1
     bpl Op2Positive
 
@@ -187,32 +185,39 @@ Op2Positive:
 DoneOp2:
 
     nv_adc16x(temp_op1, temp_op2, result_addr)
-    
-    // save processor flags specifically overflow
-    php
+    .if (care_overflow)
+    {
+        // save processor flags specifically overflow
+        php
+    }
 
     lda result_addr+1
     bpl ResultPositive 
 ResultNegative:
     nv_twos_comp_16(result_addr, result_addr)
     lda result_addr+1
-    bpl ResultWasNot8000
-    // result was $8000 which we know because its the the only neg num for which
-    // twos compliment will return a negative number (itself)
-    // This is a special case the overflow bit won't be set because its a 
-    // valid 16bit signed result but its not valid FP124s value because its 
-    // outside range of valid values.  To handle this case we'll set overflow flag 
-    // manually and be done.
-    plp                         // pull the status flags overflow not set
-    nv_flags_set_overflow()     // manually set the overflow flag
-    bvs DoneNoPullFlags         // branch over the rest to the end.
-    
+    .if (care_overflow)
+    {
+        bpl ResultWasNot8000
+        // result was $8000 which we know because its the the only neg num for which
+        // twos compliment will return a negative number (itself)
+        // This is a special case the overflow bit won't be set because its a 
+        // valid 16bit signed result but its not valid FP124s value because its 
+        // outside range of valid values.  To handle this case we'll set overflow flag 
+        // manually and be done.
+        plp                         // pull the status flags overflow not set
+        nv_flags_set_overflow()     // manually set the overflow flag
+        bvs DoneNoPullFlags         // branch over the rest to the end.
+    }    
 ResultWasNot8000:
     ora #$80
     sta result_addr+1
 
 ResultPositive:
+.if (care_overflow)
+{
     plp
+}
 
 DoneNoPullFlags:
 
@@ -226,7 +231,7 @@ DoneNoPullFlags:
 //   op1Pos: is the address of the LSB of op1 (FP124s format)
 //   op2Pos: is the address of the LSB of op2 (FP124s format)
 //   result_addr is the address to store the result. (FP124s format)
-//   careOverflow: boolean, pass true if you care that the overflow bit
+//   care_overflow: boolean, pass true if you care that the overflow bit
 //                 in the status register is set approprately, or false
 //                 if you don't care about the overflow bit.  
 // Accum changes
@@ -234,19 +239,19 @@ DoneNoPullFlags:
 // Y Reg unchanged
 // Status flags:
 //   Carry not reliably set
-//   Overflow: If careOverflow is true then the overflow bit will be 
+//   Overflow: If care_overflow is true then the overflow bit will be 
 //             Set if the result would be outside the valid fp124s values.
 //             Usually this is when both operands have same high bit value and result
 //             has a different high bit value
 //             For example: $7FF.F + $001.0 = $800.F    V=1
 //             
 //             Note that when overflow is set, the result isn't very useful
-.macro nv_adc124s_op1Pos_op2Pos(op1Pos, op2Pos, result_addr, careOverflow)
+.macro nv_adc124s_op1Pos_op2Pos(op1Pos, op2Pos, result_addr, care_overflow)
 {
     // do the addition as though 16 bit int since both are postive fp124s vals
     nv_adc16x(op1Pos, op2Pos, result_addr)
 
-    .if (careOverflow)
+    .if (care_overflow)
     {
         // check if the sign changed to negative, in which case there was an overflow
         // with regard to fp124
@@ -290,45 +295,15 @@ Done:
 
     nv_adc16x(op1Pos, temp_op2, result_addr)
     
-    //.if (careOverflow)
-    //{
-    //    // save processor flags specifically overflow
-    //    php
-    //}
     lda result_addr+1
     bpl ResultPositive 
 ResultNegative:
     nv_twos_comp_16(result_addr, result_addr)
-    //.if (careOverflow)
-    //{
-    //    lda result_addr+1
-    //    bpl ResultWasNot8000
-    //    // result was $8000 which we know because its the the only neg num for which
-    //    // twos compliment will return a negative number (itself)
-    //    // This is a special case the overflow bit won't be set because its a 
-    //    // valid 16bit signed result but its not valid FP124s value because its 
-    //    // outside range of valid values.  To handle this case we'll set overflow flag 
-    //    // manually and be done.
-    //    plp                         // pull the status flags overflow not set
-    //    nv_flags_set_overflow()     // manually set the overflow flag
-    //    bvs DoneNoPullFlags         // branch over the rest to the end.
-    //}
-//ResultWasNot8000:
-    //.if (!careOverflow)
-    //{   // if we dont care overflow then accum needs to be loaded 
-    //    // here because wasn't loaded above
-        lda result_addr+1
-    //}
+    lda result_addr+1
     ora #$80
     sta result_addr+1
 
 ResultPositive:
-    //.if (careOverflow)
-    //{
-    //    plp
-    //}
-
-//DoneNoPullFlags:
 }
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -337,9 +312,9 @@ ResultPositive:
 // inline macro that expands the nv_adc124s macro with dedicated 
 // temporary 16bit values and also adds an rts at the end
 // see the nv_adc124s macro for details
-.macro nv_adc124s_sr(addr1, addr2, result_addr)
+.macro nv_adc124s_sr(addr1, addr2, result_addr, care_overflow)
 {
-    nv_adc124s(addr1, addr2, result_addr, temp_op1, temp_op2)
+    nv_adc124s(addr1, addr2, result_addr, temp_op1, temp_op2, care_overflow)
     rts
 
 temp_op1: .word $0000
@@ -359,6 +334,9 @@ temp_op2: .word $0000
 //   addr2 is the address of the low byte of op2 (FP124s format)
 //         after the macro runs this value will be ruined
 //   result_addr is the address to store the result. (FP124s format)
+//   care_overflow: pass true if the caller cares that the overflow
+//                  bit in status register is set upon overflow, 
+//                  pass false if the caller doesn't care about overflow.
 // Accum changes
 // X Reg unchanged
 // Y Reg unchanged
@@ -369,7 +347,7 @@ temp_op2: .word $0000
 //             For example: $7FF.F + $001.0 = $800.F    V=1
 //                          $800.0 + $800.0 = $000.0    V=1
 //             Note that when overflow is set, the result isnt very useful
-.macro nv_adc124s_ruin_ops(addr1, addr2, result_addr)
+.macro nv_adc124s_ruin_ops(addr1, addr2, result_addr, care_overflow)
 {
     //nv_xfer16_mem_mem(addr1, temp_op1)
     lda addr1+1
@@ -400,32 +378,38 @@ Op2Positive:
 DoneOp2:
 
     nv_adc16x(addr1, addr2, result_addr)
-    
-    // save processor flags specifically overflow
-    php
-
+    .if (care_overflow)
+    {
+        // save processor flags specifically overflow
+        php
+    }
     lda result_addr+1
     bpl ResultPositive 
 ResultNegative:
     nv_twos_comp_16(result_addr, result_addr)
     lda result_addr+1
-    bpl ResultWasNot8000
-    // result was $8000 which we know because its the the only neg num for which
-    // twos compliment will return a negative number (itself)
-    // This is a special case the overflow bit won't be set because its a 
-    // valid 16bit signed result but its not valid FP124s value because its 
-    // outside range of valid values.  To handle this case we'll set overflow flag 
-    // manually and be done.
-    plp                         // pull the status flags overflow not set
-    nv_flags_set_overflow()     // manually set the overflow flag
-    bvs DoneNoPullFlags         // branch over the rest to the end.
-    
+    .if (care_overflow)
+    {
+        bpl ResultWasNot8000
+        // result was $8000 which we know because its the the only neg num for which
+        // twos compliment will return a negative number (itself)
+        // This is a special case the overflow bit won't be set because its a 
+        // valid 16bit signed result but its not valid FP124s value because its 
+        // outside range of valid values.  To handle this case we'll set overflow flag 
+        // manually and be done.
+        plp                         // pull the status flags overflow not set
+        nv_flags_set_overflow()     // manually set the overflow flag
+        bvs DoneNoPullFlags         // branch over the rest to the end.
+    }        
 ResultWasNot8000:
     ora #$80
     sta result_addr+1
 
 ResultPositive:
-    plp
+    .if (care_overflow)
+    {
+        plp
+    }
 
 DoneNoPullFlags:
 }
@@ -435,9 +419,9 @@ DoneNoPullFlags:
 // inline macro that does the same as nv_adc124s_ruin_ops but also does 
 // rts at the end.  
 // See nv_adc124s_ruin_ops for details
-.macro nv_adc124s_ruin_ops_sr(addr1, addr2, result_addr)
+.macro nv_adc124s_ruin_ops_sr(addr1, addr2, result_addr, care_overflow)
 {
-    nv_adc124s_ruin_ops(addr1, addr2, result_addr)
+    nv_adc124s_ruin_ops(addr1, addr2, result_addr, care_overflow)
     rts
 }
 
@@ -855,6 +839,25 @@ Done:
 }
 //
 //////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to set overflow flag in status register
+// Accum: changes
+// X Reg: unchanged
+// Y Reg: unchanged
+.macro nv_flags_clear_overflow()
+{
+    // set overflow here
+    php         // push processor flags to stack
+    pla         // pull stack to accum (accum now has flags)
+    and #$BF    // clear the overflow bit in accum
+    pha         // push updated flags from accum to stack
+    plp         // pull updated flags from stack to status register
+
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
 
 //////////////////////////////////////////////////////////////////////////////
 // inline function that returns an fp124s value.  

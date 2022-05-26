@@ -37,12 +37,19 @@
 // Y Reg unchanged
 NvAdc124s:
 {
-    nv_adc124s_sr(NvAdc124sOp1, NvAdc124sOp2, NvAdc124sResult)
+    nv_adc124s_sr(NvAdc124sOp1, NvAdc124sOp2, NvAdc124sResult, true)
 }
-
+NvAdc124sNoCareOverflow:
+{
+    nv_adc124s_sr(NvAdc124sOp1, NvAdc124sOp2, NvAdc124sResult, false)
+}
 NvAdc124sRuinOps:
 {
-    nv_adc124s_ruin_ops_sr(NvAdc124sOp1, NvAdc124sOp2, NvAdc124sResult)
+    nv_adc124s_ruin_ops_sr(NvAdc124sOp1, NvAdc124sOp2, NvAdc124sResult, true)
+}
+NvAdc124sRuinOpsNoCareOverflow:
+{
+    nv_adc124s_ruin_ops_sr(NvAdc124sOp1, NvAdc124sOp2, NvAdc124sResult, false)
 }
 
 // Op1 for both subroutines
@@ -75,15 +82,21 @@ NvAdc124sResult: .word $0000
 //                should be copyied to result_fp124s.  If false then
 //                the result will be left in NvAdc123sResult but not
 //                copied to result_fp124s 
-.macro nv_call_NvAdc124sRuinOps(op1_fp124s, op2_fp124s, result_fp124s, copy_result)
+.macro nv_call_NvAdc124sRuinOps(op1_fp124s, op2_fp124s, result_fp124s, copy_result, careOverflow)
 {
     // copy parameters to subroutine fixed parameters 
     nv_xfer124_mem_mem(op1_fp124s, NvAdc124sOp1)
     nv_xfer124_mem_mem(op2_fp124s, NvAdc124sOp2)
 
     // call subroutine
-    jsr NvAdc124sRuinOps
-
+    .if (careOverflow)
+    {
+        jsr NvAdc124sRuinOps
+    }
+    else
+    {
+        jsr NvAdc124sRuinOpsNoCareOverflow
+    }
     // copy subroutine result if macro param for result wasn't zero
     .if (copy_result)
     {
@@ -106,16 +119,22 @@ NvAdc124sResult: .word $0000
 //                should be copyied to result_fp124s.  If false then
 //                the result will be left in NvAdc123sResult but not
 //                copied to result_fp124s 
-.macro nv_call_NvAdc124s(op1_fp124s, op2_fp124s, result_fp124s, copy_result)
+.macro nv_call_NvAdc124s(op1_fp124s, op2_fp124s, result_fp124s, copy_result, careOverflow)
 {
     // copy parameters to subroutine fixed parameters 
     nv_xfer124_mem_mem(op1_fp124s, NvAdc124sOp1)
     nv_xfer124_mem_mem(op2_fp124s, NvAdc124sOp2)
 
-    // call subroutine
-    jsr NvAdc124s
-
-    // copy subroutine result if macro param for result wasn't zero
+    // call the appropriate subroutine based on careOverflow
+    .if (careOverflow)
+    {
+        jsr NvAdc124s
+    }
+    else
+    {
+        jsr NvAdc124sNoCareOverflow
+    }
+    // copy subroutine result if specified
     .if (copy_result)
     {
         nv_xfer124_mem_mem(NvAdc124sResult, result_fp124s)

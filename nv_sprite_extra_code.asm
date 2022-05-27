@@ -339,7 +339,6 @@ SpriteMaskNegBase:
 // X Reg: LSB of address of the nv_sprite_extra_data
 .macro nv_sprite_set_location_from_extra_sr()
 {
-
     nv_sprite_standard_save(SaveBlock)
 
     nv_sprite_load_extra_ptr()
@@ -411,6 +410,7 @@ SpriteMaskNegBase:
     sta NV_SPRITE_ALL_X_HIGH_BIT_REG_ADDR   // store back with our bit set
 
     nv_sprite_standard_restore(SaveBlock)
+
     rts
 
 SaveBlock:

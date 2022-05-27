@@ -561,7 +561,7 @@ Done:
 {
     // shift result right to remove all but the most significant fraction digit
     // NPS TODO should do this optimization for nv_conv124u_mem16u too
-    clc
+    //clc
     lsr addr1+1
     ror addr1
     lsr addr1+1
@@ -582,7 +582,7 @@ Done:
     // shift right to remove final fraction digit
     //nv_lsr16u_mem16u_immed8u(addr1, 1)
     // NPS TODO should optimize nv_conv124s_mem16s with this too
-    clc
+    //clc
     lsr addr1+1
     ror addr1
 }

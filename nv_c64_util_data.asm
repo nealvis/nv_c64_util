@@ -28,6 +28,26 @@ hex_digit_lookup:
 hex_digit_lookup_poke:
     .byte $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $01, $02, $03, $04, $05, $06 
 
+SingleBitMaskBase: 
+.byte $01
+.byte $02 
+.byte $04 
+.byte $08 
+.byte $10 
+.byte $20 
+.byte $40 
+.byte $80
+SingleBitMaskNegBase:
+.byte $FE
+.byte $FD 
+.byte $FB 
+.byte $F7 
+.byte $EF 
+.byte $DF 
+.byte $BF 
+.byte $7F
+
+
 
 wait_counter: .byte 0
 

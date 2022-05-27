@@ -704,7 +704,15 @@ Done:
     bcc label
     beq label
 }
+.macro nv_ble124s_op1Pos_op2Pos(op1_pos, op2_pos, label)
+{
+    nv_cmp16(op1_pos, op2_pos)
+    // Carry Flag	Set if addr1 >= addr2
+    // Zero Flag	Set if addr1 == addr2
 
+    bcc label
+    beq label
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to branch if the contents of an fp124u value at one memory 
@@ -1016,7 +1024,13 @@ Done:
     // Carry Flag	Set if addr1 >= addr2
 
     bcs label
+}
+.macro nv_bge124s_op1Pos_op2Pos(op1_pos, op2_pos, label)
+{
+    nv_cmp16(op1_pos, op2_pos)
+    // Carry Flag	Set if addr1 >= addr2
 
+    bcs label
 }
 
 

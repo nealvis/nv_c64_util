@@ -410,7 +410,6 @@ SpriteMaskNegBase:
     sta NV_SPRITE_ALL_X_HIGH_BIT_REG_ADDR   // store back with our bit set
 
     nv_sprite_standard_restore(SaveBlock)
-
     rts
 
 SaveBlock:

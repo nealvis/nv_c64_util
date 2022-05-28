@@ -302,15 +302,17 @@ save_lo: .byte 0
 //          num in X is 1 then the 1 bit in mask will be set, ie: $02, etc. 
 .macro nv_sprite_get_mask_in_a()
 {
-    lda SpriteMaskBase, x
+    // lda SpriteMaskBase, x
+    nv_create_bitmask8x_a(false)
 }
 
 // negated version of mask
 .macro nv_sprite_get_mask_neg_in_a()
 {
-    lda SpriteMaskNegBase, x
+    //lda SpriteMaskNegBase, x
+    nv_create_bitmask8x_a(true)
 }
-
+/*
 SpriteMaskBase: 
 .byte $01
 .byte $02 
@@ -329,7 +331,7 @@ SpriteMaskNegBase:
 .byte $DF 
 .byte $BF 
 .byte $7F
-
+*/
 
 //////////////////////////////////////////////////////////////////////////////
 // subroutine macro to set sprite's location in the sprite registers based on

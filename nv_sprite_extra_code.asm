@@ -312,26 +312,6 @@ save_lo: .byte 0
     //lda SpriteMaskNegBase, x
     nv_create_bitmask8x_a(true)
 }
-/*
-SpriteMaskBase: 
-.byte $01
-.byte $02 
-.byte $04 
-.byte $08 
-.byte $10 
-.byte $20 
-.byte $40 
-.byte $80
-SpriteMaskNegBase:
-.byte $FE
-.byte $FD 
-.byte $FB 
-.byte $F7 
-.byte $EF 
-.byte $DF 
-.byte $BF 
-.byte $7F
-*/
 
 //////////////////////////////////////////////////////////////////////////////
 // subroutine macro to set sprite's location in the sprite registers based on

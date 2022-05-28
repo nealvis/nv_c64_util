@@ -58,9 +58,9 @@
     data_ptr, 
     base_addr, 
     action_top, 
-    bounce_left, 
-    bounce_bottom, 
-    bounce_right,
+    action_left, 
+    action_bottom, 
+    action_right,
     top_min_fp124s, 
     left_min_fp124s, 
     bottom_max_fp124s, 
@@ -89,21 +89,21 @@
     sprite_vel_y_fp124s_addr: .word spt_info.init_y_vel_fp124s // the sprite's y velocity in pixels
     sprite_data_ptr_addr: .word spt_info.data_ptr        // 16 bit addr of sprite data
     sprite_action_top: .byte spt_info.action_top         // set to 1 to bounce bottom or 0 not to
-    sprite_bounce_left: .byte spt_info.bounce_left       // set to 1 to bounce bottom or 0 not to
-    sprite_bounce_bottom: .byte spt_info.bounce_bottom   // set to 1 to bounce bottom or 0 not to
-    sprite_bounce_right: .byte spt_info.bounce_right     // set to 1 to bounce bottom or 0 not to
+    sprite_action_left: .byte spt_info.action_left       // set to 1 to bounce bottom or 0 not to
+    sprite_action_bottom: .byte spt_info.action_bottom   // set to 1 to bounce bottom or 0 not to
+    sprite_action_right: .byte spt_info.action_right     // set to 1 to bounce bottom or 0 not to
 
     // top boundry for the sprite
     sprite_top_min_fp124s_addr: .word spt_info.top_min_fp124s == 0 ? (spt_info.action_top == NV_SPRITE_ACTION_BOUNCE ? NV_SPRITE_TOP_BOUNCE_FP124S_DEFAULT : NV_SPRITE_TOP_WRAP_FP124S_DEFAULT) : spt_info.top_min_fp124s
     
     // left boundry for the sprite
-    sprite_left_min_fp124s_addr: .word spt_info.left_min_fp124s == 0 ? (spt_info.bounce_left == 1 ? NV_SPRITE_LEFT_BOUNCE_FP124S_DEFAULT : NV_SPRITE_LEFT_WRAP_FP124S_DEFAULT) :spt_info.left_min_fp124s 
+    sprite_left_min_fp124s_addr: .word spt_info.left_min_fp124s == 0 ? (spt_info.action_left == 1 ? NV_SPRITE_LEFT_BOUNCE_FP124S_DEFAULT : NV_SPRITE_LEFT_WRAP_FP124S_DEFAULT) :spt_info.left_min_fp124s 
 
    // bottom boundry for the sprite
-    sprite_bottom_max_fp124s_addr: .word spt_info.bottom_max_fp124s == 0 ? (spt_info.bounce_bottom == 1 ? NV_SPRITE_BOTTOM_BOUNCE_FP124S_DEFAULT : NV_SPRITE_BOTTOM_WRAP_FP124S_DEFAULT) :spt_info.bottom_max_fp124s
+    sprite_bottom_max_fp124s_addr: .word spt_info.bottom_max_fp124s == 0 ? (spt_info.action_bottom == 1 ? NV_SPRITE_BOTTOM_BOUNCE_FP124S_DEFAULT : NV_SPRITE_BOTTOM_WRAP_FP124S_DEFAULT) :spt_info.bottom_max_fp124s
 
     // right boundry for the sprite
-    sprite_right_max_fp124s_addr: .word spt_info.right_max_fp124s == 0 ? (spt_info.bounce_right == 1 ? NV_SPRITE_RIGHT_BOUNCE_FP124S_DEFAULT : NV_SPRITE_RIGHT_WRAP_FP124S_DEFAULT) : spt_info.right_max_fp124s
+    sprite_right_max_fp124s_addr: .word spt_info.right_max_fp124s == 0 ? (spt_info.action_right == 1 ? NV_SPRITE_RIGHT_BOUNCE_FP124S_DEFAULT : NV_SPRITE_RIGHT_WRAP_FP124S_DEFAULT) : spt_info.right_max_fp124s
 
     // sprite enabled flag.  nonzero is enabled, zero is disabled
     sprite_enabled: .byte 0

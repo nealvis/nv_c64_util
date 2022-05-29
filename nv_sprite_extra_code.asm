@@ -338,8 +338,9 @@ save_lo: .byte 0
     // get sprite y location from extra data block to accum
     // nv_sprite_extra_byte_to_a(NV_SPRITE_Y_OFFSET)
     nv_sprite_extra_word_to_mem(NV_SPRITE_Y_FP124S_OFFSET, temp_fp124s)
-    //nv_conv124s_mem16s(temp_fp124s, temp16)
-    nv_transform124s_mem16s(temp_fp124s) // temp16 same as temp_fp124s
+    // the Y location must be positive so its ok to use the 
+    // unsigned transform here, its faster
+    nv_transform124u_mem16u(temp_fp124s) // temp16 same as temp_fp124s
 
     // load LSB of Y position in accum
     lda temp16
@@ -353,8 +354,9 @@ save_lo: .byte 0
 
     // changes A and Y
     nv_sprite_extra_word_to_mem(NV_SPRITE_X_FP124S_OFFSET, temp_fp124s)
-    //nv_conv124s_mem16s(temp_fp124s, temp16)
-    nv_transform124s_mem16s(temp_fp124s)      // temp16 same as temp_fp124s
+    // the x location must be positive so its ok to use the 
+    // unsigned transform here, its faster
+    nv_transform124u_mem16u(temp_fp124s)      // temp16 same as temp_fp124s
 
     // load LSB of x position in accum
     lda temp16

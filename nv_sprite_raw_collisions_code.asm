@@ -73,9 +73,9 @@
     nv_xfer8x_immed_mem($FF, closest_sprite)
 
     lda collision_bit
-    nv_debug_print_labeled_byte_mem_coll(10, 0, collision_bit_label1, 17, 
+/*    nv_debug_print_labeled_byte_mem_coll(10, 0, collision_bit_label1, 17, 
                                          collision_bit, true, false)    
-
+*/
     and #sprite_mask
     bne HaveCollisionWithSpriteNum
     jmp ClosestSpriteSet    
@@ -89,10 +89,10 @@ HaveCollisionWithSpriteNum:
     lda #sprite_mask_negated
     and collision_bit
     sta collision_bit
-
+/*
     nv_debug_print_labeled_byte_mem_coll(11, 0, collision_bit_label2, 17, 
                                          collision_bit, true, false)    
-
+*/
 CheckSprite0:
     ror collision_bit        // rotate bit for sprite 0 (ship) bit to carry
     bcs WasSprite0
@@ -101,9 +101,10 @@ WasSprite0:
     ldx #sprite_num
     ldy #0
     jsr NvSpriteRawGetRelDistReg      // load temp_rel_dist with rel distance
+    /*
     nv_debug_print_labeled_word_mem_coll(12, 0, spt_0_dist_label, 14, 
                                     temp_rel_dist, true, false)    
-
+    */
     
     nv_bge16(temp_rel_dist, closest_rel_dist, CheckSprite1)
 
@@ -122,9 +123,10 @@ WasSprite1:
     ldx #sprite_num
     ldy #1
     jsr NvSpriteRawGetRelDistReg      // load temp_rel_dist with rel distance
+    /*
     nv_debug_print_labeled_word_mem_coll(13, 0, spt_1_dist_label, 14, 
                                     temp_rel_dist, true, false)    
-
+    */
     nv_bge16(temp_rel_dist, closest_rel_dist, CheckSprite2)
 
     // save the new closest rel distance
@@ -142,9 +144,10 @@ WasSprite2:
     ldx #sprite_num
     ldy #2
     jsr NvSpriteRawGetRelDistReg      // load temp_rel_dist with rel distance
+    /*
     nv_debug_print_labeled_word_mem_coll(14, 0, spt_2_dist_label, 14, 
                                     temp_rel_dist, true, false)    
-
+    */
     nv_bge16(temp_rel_dist, closest_rel_dist, CheckSprite3)
 
     // save the new closest rel distance
@@ -162,9 +165,10 @@ WasSprite3:
     ldx #sprite_num
     ldy #3
     jsr NvSpriteRawGetRelDistReg      // load temp_rel_dist with rel distance
+    /*
     nv_debug_print_labeled_word_mem_coll(15, 0, spt_3_dist_label, 14, 
                                     temp_rel_dist, true, false)    
-
+    */
     nv_bge16(temp_rel_dist, closest_rel_dist, CheckSprite4)
 
     // save the new closest rel distance
@@ -182,9 +186,10 @@ WasSprite4:
     ldx #sprite_num
     ldy #4
     jsr NvSpriteRawGetRelDistReg      // load temp_rel_dist with rel distance
+    /*
     nv_debug_print_labeled_word_mem_coll(16, 0, spt_4_dist_label, 14, 
                                     temp_rel_dist, true, false)    
-
+    */
     nv_bge16(temp_rel_dist, closest_rel_dist, CheckSprite5)
     
     // save the new closest rel distance
@@ -202,10 +207,11 @@ WasSprite5:
     ldx #sprite_num
     ldy #5
     jsr NvSpriteRawGetRelDistReg      // load temp_rel_dist with rel distance
+    /*
     nv_debug_print_labeled_word_mem_coll(17, 21, nv_g16_label, 8, nv_g16, true, false)
     nv_debug_print_labeled_word_mem_coll(17, 0, spt_5_dist_label, 14, 
                                     temp_rel_dist, true, false)    
-
+    */
     nv_bge16(temp_rel_dist, closest_rel_dist, CheckSprite6)
 
      // save the new closest rel distance
@@ -223,9 +229,10 @@ WasSprite6:
     ldx #sprite_num
     ldy #6
     jsr NvSpriteRawGetRelDistReg      // load temp_rel_dist with rel distance
+    /*
     nv_debug_print_labeled_word_mem_coll(18, 0, spt_6_dist_label, 14, 
                                     temp_rel_dist, true, false)    
-
+    */
     nv_bge16(temp_rel_dist, closest_rel_dist, CheckSprite7)
     
     // save the new closest rel distance
@@ -243,8 +250,10 @@ WasSprite7:
     ldx #sprite_num
     ldy #7
     jsr NvSpriteRawGetRelDistReg      // load temp_rel_dist with rel distance
+    /*
     nv_debug_print_labeled_word_mem_coll(19, 0, spt_7_dist_label, 14, 
                                     temp_rel_dist, true, false)    
+    */
     nv_bge16(temp_rel_dist, closest_rel_dist, DoneChecking)
     
     // save the new closest rel distance
@@ -286,8 +295,10 @@ ClosestSpriteSet:
                                             include_dollar, wait)
 {
     #if DEBUG_COLLISIONS
+    /*
         nv_debug_print_labeled_word_mem(row, col, label_addr, label_len, 
                                         value_addr, include_dollar, wait)
+    */
     #endif
 }
 
@@ -319,7 +330,7 @@ temp_label_str:  .text  @"temp\$00"
 //////////////////////////////////////////////////////////////////////////////
 // some data for the code in this file.
 
-
+/*
 // Debugging labels for collision code
 collision_bit_label1: .text  @"nv a8 inside 1: \$00"
 collision_bit_label2: .text  @"nv a8 inside 2: \$00"
@@ -334,3 +345,4 @@ spt_7_dist_label: .text @"sprite7 dist: \$00"
 
 nv_g16_label: .text @"nv g16: \$00"
 // end debugging labels
+*/

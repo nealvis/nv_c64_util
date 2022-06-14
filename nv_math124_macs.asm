@@ -264,6 +264,49 @@ ResultPositive:
 Done:
 }
 
+
+//////////////////////////////////////////////////////////////////////////////
+// inline macro to add two positive fp124s bit values and store the result
+// in another fp124s bit value.  Overflow bit set optionally
+// full name: nv_adc124s_op1Pos_op2Pos
+// params:
+//   op1Pos: is the address of the LSB of op1 (FP124s format)
+//   op2Pos: is the address of the LSB of op2 (FP124s format)
+//   result_addr is the address to store the result. (FP124s format)
+//   care_overflow: boolean, pass true if you care that the overflow bit
+//                 in the status register is set approprately, or false
+//                 if you don't care about the overflow bit.  
+// Accum changes
+// X Reg unchanged
+// Y Reg unchanged
+// Status flags:
+//   Carry not reliably set
+//   Overflow: If care_overflow is true then the overflow bit will be 
+//             Set if the result would be outside the valid fp124s values.
+//             Usually this is when both operands have same high bit value and result
+//             has a different high bit value
+//             For example: $7FF.F + $001.0 = $800.F    V=1
+//             
+//             Note that when overflow is set, the result isn't very useful
+.macro nv_adc124s_mem124s_immed124s_op1Pos_immedPos(op1Pos, immedPos, result_addr, care_overflow)
+{
+    // do the addition as though 16 bit int since both are postive fp124s vals
+    nv_adc16x_mem_immed(op1Pos, immedPos, result_addr)
+
+    .if (care_overflow)
+    {
+        // check if the sign changed to negative, in which case there was an overflow
+        // with regard to fp124
+        lda result_addr+1
+        bpl ResultPositive 
+ResultNegative:
+        nv_flags_set_overflow()     // manually set the overflow flag
+    }
+ResultPositive:
+Done:
+}
+
+
 //////////////////////////////////////////////////////////////////////////////
 // inline macro to add one positive fp124s with one negative fp124s value
 // and store the result in another fp124s bit value.  
